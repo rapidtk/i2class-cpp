@@ -1,0 +1,11 @@
+USEUNIT("rpgconsole.cpp");
+USE("E:\bcb\Projects\RPGYacc\yyin.txt", File);
+USE("\\Qasc406\ANDREWC\oo\rpg.y", File);
+USEUNIT("\\Qasc406\ANDREWC\oo\Node.cpp");
+USE("\\Ascserver1\IPCS404\bcb\Projects\RPGYacc\rpg.l", File);
+USEUNIT("\\Qasc406\ANDREWC\oo\rpg_tab.cpp");
+USEUNIT("\\Ascserver1\IPCS404\bcb\Projects\RPGYacc\lex.yy.cpp");
+//---------------------------------------------------------------------------
+This file is used by the project manager only and should be treated like the project file
+
+main
