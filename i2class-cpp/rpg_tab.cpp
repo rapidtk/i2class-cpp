@@ -753,7 +753,7 @@ case 13:
     break;}
 case 14:
 #line 64 "rpg.y"
-{ yyval.nPtr = opr('.', yyvsp[-2].nPtr, yyvsp[0].nPtr); ;
+{ yyval.nPtr = dot_opr('.', yyvsp[-2].nPtr, yyvsp[0].nPtr); ;
     break;}
 case 15:
 #line 65 "rpg.y"

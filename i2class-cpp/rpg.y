@@ -61,7 +61,7 @@ expr:
         | IDENTIFIER '(' parm_list ')' { $$ = procedure($1, $3); }
         | IDENTIFIER '[' expr ']' { $$ = array($1, $3); }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, $2, NULL); }
-        | expr '.' expr         { $$ = opr('.', $1, $3); }
+        | expr '.' expr         { $$ = dot_opr('.', $1, $3); }
         | expr '+' expr         { $$ = opr('+', $1, $3); }
         | expr '-' expr         { $$ = opr('-', $1, $3); }
         | expr '*' expr         { $$ = opr('*', $1, $3); }

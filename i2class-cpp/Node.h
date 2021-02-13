@@ -25,6 +25,7 @@ public:
    char *printNode(char *buf);
    char *printValue(char *buf);
 };
+
 // A generic operator class
 class NodeOpr : public Node
 {
@@ -33,9 +34,17 @@ public:
    ~NodeOpr();
    char *printNode(char *buf);
    char *printValue(char *buf);
-private:
+protected:
    Node *_arg1, *_arg2;
 };
+// A generic operator class
+class NodeDotOpr : public NodeOpr
+{
+public:
+   NodeDotOpr(int type, Node *arg1, Node *arg2);
+   ~NodeDotOpr();
+};
+
 // A generic procedure class
 class NodeProcedure : public NodeId
 {
@@ -56,6 +65,8 @@ public:
 
 NodeId *id(int type, char *value);
 NodeOpr *opr(int type, Node *arg1, Node *arg2);
+NodeDotOpr *dot_opr(int type, Node *arg1, Node *arg2);
 NodeProcedure *procedure(char *value, Node *arg);
 NodeArray *array(char *value, Node *arg);
+
 void walkResults(Node *node);
