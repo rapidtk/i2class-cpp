@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #define MIN(a,b) a<=b ? a : b
+#define LEN_NMLONG 256 // length of longest name i.e. LEN(NMLONG)
 
 extern "C" char * yytext;
 extern "C" char *GET_NFUNC(char *identifier, bool &isClass);
@@ -187,29 +188,16 @@ NodeOpr::NodeOpr(int type, Node *arg1, Node *arg2)
    _type = type;
    _arg1 = arg1;
    _arg2 = arg2;
-
-   //If this is the dot operator e.g. customers(1).name then get qualified name
-   if (_type == '.') {
-      char valueBuf[512];
-      printValue(valueBuf);
-      // Get numeric function
-      char *n=GET_NFUNC(valueBuf, _isClass);
-      _numFunc = new char[strlen(n)];
-      strcpy(_numFunc, n);
-   }
 }
 NodeOpr::~NodeOpr()
 {
    delete _arg1;
    if (_arg2)
       delete _arg2;
-   //If this is the dot operator e.g. customers(1).name, then delete _numFunc
-   if (_type == '.')
-      delete[] _numFunc;
 }
 char *NodeOpr::printValue(char *buf)
 {
-   char oprBuffer[256];
+   char oprBuffer[LEN_NMLONG];
    *_arg1->printValue(oprBuffer)='\0'; // Add null string to returned buffer
    // Write out left leaf
    buf += sprintf(buf, "%s", oprBuffer);
@@ -243,7 +231,7 @@ char *NodeOpr::printNode(char *buf)
    const char *javaop[]={"assign","plus","minus","times","dividedBy","equals","compareTo"};
    char *op=(char *)strchr(cOp, _type);
 
-   char oprBuffer[256];
+   char oprBuffer[LEN_NMLONG];
    *_arg1->printNode(oprBuffer)='\0'; // Add null string to returned buffer
 
    // Assume that this node type is the same as the left leaf type,
