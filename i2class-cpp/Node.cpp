@@ -1,3 +1,4 @@
+// CRTCPPMOD MODULE(CLA0105/NODE) SRCSTMF('/i2class#/node.cpp') DBGVIEW(*ALL) TGTRLS(V7R1M0) INCDIR('/i2class#') OUTPUT(*PRINT)                     
 #include "Node.h"
 #include "clp_tab.cpp.h" // THE CLP/RPG_TAB.CPP IDENTS MUST MATCH!
 
@@ -30,7 +31,8 @@ NodeId::NodeId(int type, char *value)
    	value="UDAY";
    _value = new char[strlen(value)+1]; // Add length for null-terminator
    strcpy(_value, value);
-   if (_type != IDENTIFIER)
+   // _PROCEDURE could actually be an array at this point...
+   if (_type != IDENTIFIER && _type != PROCEDURE && _type != DOT_IDENTIFIER)
    {
    	_numFunc="";
       _isClass=false;
@@ -79,26 +81,66 @@ char *NodeProcedure::printNode(char *buf)
       _isClass = _arg->_isClass;
    }
    *buf++=')';
-   const int LAST_INT=0;
-   // Some BIFs switch the return type.  Most of them are listed here
-   // TODO: add support for DATE BIFs
-   const char *bif[]={"check", "checkr", "days", "diff", "elem",
-    "elem", "lookup", "scan", "xfoot", "editc", "editflt", "editw"};
-   for (int i=0; i<sizeof(bif)/sizeof(bif[0]); i++)
+   
+   /* Some BIFs (can) switch the return type.  Most of them are listed here */
+
+   // Functions that return int values
+   const char *intBif[]={"check", "checkr", "days", "decpos", "diff", "div", "elem", "elem", "len", "lookup", "occur", "rem", "scan", "size", "subdt", "testn", "testz"};
+   for (int i=0; i<sizeof(intBif)/sizeof(intBif[0]); i++)
    {
       // Only check first-six positions so that we can match LOOKUPxx
-   	if (strncmp(bif[i], _value, 6)==0) // 6=len('lookup')
+   	if (strncmp(intBif[i], _value, 6)==0) // 6=len('lookup')
       {
-      	if (i<=LAST_INT)
-         {
-         	_numFunc="int";
-            _isClass=false;
-         }
-         else
-         {
-         	_numFunc="fixed";
-            _isClass=true;
-         }
+		_numFunc="int";
+		_isClass=false;
+        return buf;
+      }
+   }
+   
+   // Functions that return long values
+   const char *longBif[]={"int", "Int", "inth", "rem"};
+   for (int i=0; i<sizeof(longBif)/sizeof(longBif[0]); i++)
+   {
+   	if (strcmp(longBif[i], _value)==0)
+      {
+		_numFunc="int";
+		_isClass=false;
+        return buf;
+      }
+   }
+   
+   // Functions that return double values
+   const char *doubleBif[]={"abs", "log10", "xfoot"};
+   for (int i=0; i<sizeof(doubleBif)/sizeof(doubleBif[0]); i++)
+   {
+   	if (strcmp(doubleBif[i], _value)==0)
+      {
+		_numFunc="double";
+		_isClass=false;
+        return buf;
+      }
+   }
+
+   // Functions that return String values
+   const char *stringBif[]={"char", "Char", "editc", "editflt", "editw", "trim", "triml", "trimr", "xlate"};
+   for (int i=0; i<sizeof(stringBif)/sizeof(stringBif[0]); i++)
+   {
+   	if (strcmp(stringBif[i], _value)==0)
+      {
+		_numFunc="String";
+		_isClass=false;
+        return buf;
+      }
+   }
+
+   // Functions that return Durations or Fixed values
+   const char *fixedBif[]={"date", "days", "hours", "minutes", "months", "mseconds", "replace", "subst", "time", "years" };
+   for (int i=0; i<sizeof(fixedBif)/sizeof(fixedBif[0]); i++)
+   {
+   	if (strcmp(fixedBif[i], _value)==0)
+      {
+		_numFunc="String";
+		_isClass=true;
          break;
       }
    }
