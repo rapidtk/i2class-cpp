@@ -1,4 +1,4 @@
-// CRTCPPMOD MODULE(CLA0105/NODE) SRCSTMF('/i2class#/node.cpp') DBGVIEW(*ALL) TGTRLS(V7R1M0) INCDIR('/i2class#') OUTPUT(*PRINT)                     
+// CRTCPPMOD MODULE(CLA0105/NODE) SRCSTMF('/i2class/node.cpp') DBGVIEW(*ALL) TGTRLS(V7R1M0) INCDIR('/i2class') OUTPUT(*PRINT)
 #include "Node.h"
 #include "clp_tab.cpp.h" // THE CLP/RPG_TAB.CPP IDENTS MUST MATCH!
 
