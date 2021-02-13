@@ -1,4 +1,9 @@
-#include "rport400.h"
+//#include "rport400.h"
+#  define bool int
+#  define true -1
+#  define false 0
+#  define NO_FUNCTION_TEMPLATE
+
 class Node
 {
 public:
