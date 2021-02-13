@@ -20,43 +20,43 @@ Node::Node() : _isBracketed(false) {}
 NodeId::NodeId(int type, char *value)
 {
    _type = type;
-	// Translate BLANK to BLANKS, ZERO to ZEROS, *MONTH/*DAY to UMONTH/UDAY
+   // Translate BLANK to BLANKS, ZERO to ZEROS, *MONTH/*DAY to UMONTH/UDAY
    if (strcmp(value, "BLANK")==0)
-   	value="BLANKS";
+      value="BLANKS";
    else if (strcmp(value, "ZERO")==0)
-   	value="ZEROS";
+      value="ZEROS";
    else if (strcmp(value, "MONTH")==0)
-   	value="UMONTH";
+      value="UMONTH";
    else if (strcmp(value, "DAY")==0)
-   	value="UDAY";
-	// Translate Date/Time constants Y/M/D/H/MN/S/MS to YEARS/MONTHS/DAYS/HOURS/MINUTES/SECONDS/MSECONDS
+      value="UDAY";
+   // Translate Date/Time constants Y/M/D/H/MN/S/MS to YEARS/MONTHS/DAYS/HOURS/MINUTES/SECONDS/MSECONDS
    else if (strcmp(value, "Y")==0)
-   	value="YEARS";
+      value="YEARS";
    else if (strcmp(value, "M")==0)
-   	value="MONTHS";
+      value="MONTHS";
    else if (strcmp(value, "D")==0)
-   	value="DAYS";
+      value="DAYS";
    else if (strcmp(value, "H")==0)
-   	value="HOURS";
+      value="HOURS";
    else if (strcmp(value, "MN")==0)
-   	value="MINUTES";
+      value="MINUTES";
    else if (strcmp(value, "S")==0)
-   	value="SECONDS";
+      value="SECONDS";
    else if (strcmp(value, "MS")==0)
-   	value="MSECONDS";
+      value="MSECONDS";
    _value = new char[strlen(value)+1]; // Add length for null-terminator
    strcpy(_value, value);
    // _PROCEDURE could actually be an array at this point...
    if (_type != IDENTIFIER && _type != PROCEDURE)
    {
-   	_numFunc="";
+      _numFunc="";
       _isClass=false;
    }
    else
    {
-	   char *n=GET_NFUNC(_value, _isClass);
+      char *n=GET_NFUNC(_value, _isClass);
       _numFunc = new char[strlen(n)];
-		strcpy(_numFunc, n);
+      strcpy(_numFunc, n);
    }
 }
 NodeId::~NodeId()
@@ -66,14 +66,14 @@ NodeId::~NodeId()
 }
 char *NodeId::printValue(char *buf)
 {
-	char *b=buf; // for debugging
-	int i = sprintf(buf, "%s", _value);
-	buf += i;
+   char *b=buf; // for debugging
+   int i = sprintf(buf, "%s", _value);
+   buf += i;
    return buf;
 }
 char *NodeId::printNode(char *buf)
 {
-	return printValue(buf);
+   return printValue(buf);
 }
 
 // NodeProcedure
@@ -88,13 +88,13 @@ NodeProcedure::~NodeProcedure()
 }
 char *NodeProcedure::printNode(char *buf)
 {
-	char *b=buf;  // for debugging
-	buf=NodeId::printNode(buf);
+   char *b=buf;  // for debugging
+   buf=NodeId::printNode(buf);
    *buf++='(';
    // There may be no parameters e.g. funct()...
    if (_arg)
    {
-	   buf=_arg->printNode(buf);
+      buf=_arg->printNode(buf);
       // If this is a BIF, assume that the return type is the same as the first parameter
       _numFunc = _arg->_numFunc;
       _isClass = _arg->_isClass;
@@ -108,10 +108,10 @@ char *NodeProcedure::printNode(char *buf)
    for (int i=0; i<sizeof(intBif)/sizeof(intBif[0]); i++)
    {
       // Only check first-six positions so that we can match LOOKUPxx
-   	if (strncmp(intBif[i], _value, 6)==0) // 6=len('lookup')
+      if (strncmp(intBif[i], _value, 6)==0) // 6=len('lookup')
       {
-		_numFunc="int";
-		_isClass=false;
+      _numFunc="int";
+      _isClass=false;
         return buf;
       }
    }
@@ -120,10 +120,10 @@ char *NodeProcedure::printNode(char *buf)
    const char *longBif[]={"int", "Int", "inth", "rem"};
    for (int i=0; i<sizeof(longBif)/sizeof(longBif[0]); i++)
    {
-   	if (strcmp(longBif[i], _value)==0)
+      if (strcmp(longBif[i], _value)==0)
       {
-		_numFunc="int";
-		_isClass=false;
+      _numFunc="int";
+      _isClass=false;
         return buf;
       }
    }
@@ -132,10 +132,10 @@ char *NodeProcedure::printNode(char *buf)
    const char *doubleBif[]={"abs", "log10", "xfoot"};
    for (int i=0; i<sizeof(doubleBif)/sizeof(doubleBif[0]); i++)
    {
-   	if (strcmp(doubleBif[i], _value)==0)
+      if (strcmp(doubleBif[i], _value)==0)
       {
-		_numFunc="double";
-		_isClass=false;
+      _numFunc="double";
+      _isClass=false;
         return buf;
       }
    }
@@ -144,10 +144,10 @@ char *NodeProcedure::printNode(char *buf)
    const char *stringBif[]={"char", "Char", "editc", "editflt", "editw", "trim", "triml", "trimr", "xlate"};
    for (int i=0; i<sizeof(stringBif)/sizeof(stringBif[0]); i++)
    {
-   	if (strcmp(stringBif[i], _value)==0)
+      if (strcmp(stringBif[i], _value)==0)
       {
-		_numFunc="String";
-		_isClass=false;
+      _numFunc="String";
+      _isClass=false;
         return buf;
       }
    }
@@ -156,10 +156,10 @@ char *NodeProcedure::printNode(char *buf)
    const char *fixedBif[]={"date", "days", "hours", "minutes", "months", "mseconds", "replace", "subst", "time", "years" };
    for (int i=0; i<sizeof(fixedBif)/sizeof(fixedBif[0]); i++)
    {
-   	if (strcmp(fixedBif[i], _value)==0)
+      if (strcmp(fixedBif[i], _value)==0)
       {
-		_numFunc="String";
-		_isClass=true;
+      _numFunc="String";
+      _isClass=true;
          break;
       }
    }
@@ -173,8 +173,8 @@ NodeArray::NodeArray(char *value, NodeOpr *arg)
 }
 char *NodeArray::printNode(char *buf)
 {
-	char *b=buf;  // for debugging
-	buf=NodeId::printNode(buf);
+   char *b=buf;  // for debugging
+   buf=NodeId::printNode(buf);
    *buf++='[';
    buf=_arg->printNode(buf);
    *buf++=']';
@@ -211,8 +211,8 @@ char *NodeOpr::printValue(char *buf)
 {
    char oprBuffer[256];
    *_arg1->printValue(oprBuffer)='\0'; // Add null string to returned buffer
-	// Write out left leaf
-	buf += sprintf(buf, "%s", oprBuffer);
+   // Write out left leaf
+   buf += sprintf(buf, "%s", oprBuffer);
 
    // Write out operator
    *buf++ = _type;
@@ -226,17 +226,17 @@ char *NodeOpr::printValue(char *buf)
 }
 char *NodeOpr::printNode(char *buf)
 {
-	char *b=buf; // for debugging
+   char *b=buf; // for debugging
 
    // For unary minus (UMINUS, e.g. -10), write it out here
    if (_type==UMINUS)
-   	*buf++='-';
+      *buf++='-';
    // Not operator
    else if (_type=='!')
-   	*buf++=_type;
+      *buf++=_type;
 
 
-	// Get node string
+   // Get node string
    const char cOp[]={'=','+','-','*','/',EQUALS,GE,LE,'>','<',NE,'\0'};
 #define COMPARE_TO 6
    //const char *javaop[]={"assign","add","subtract","multiply","divide","equals","compareTo"};
@@ -248,7 +248,7 @@ char *NodeOpr::printNode(char *buf)
 
    // Assume that this node type is the same as the left leaf type,
    // unless this is a comparison function, then the node type is null
-	// if (i<(COMPARE_TO-1))
+   // if (i<(COMPARE_TO-1))
    // ...or this is the dot operator e.g. customers(1).name _numFunc, _isClass are already set...
    if (_type != '.')
    {
@@ -257,7 +257,7 @@ char *NodeOpr::printNode(char *buf)
    }
 
    // !!! THIS ORDER MATTERS! THIS HAS TO MATCH COP[COMPARE_TO]
-	const char sOp[]={GE,LE,'>','<',NE,EQUALS,AND,OR,'\0'};
+   const char sOp[]={GE,LE,'>','<',NE,EQUALS,AND,OR,'\0'};
    const char *jsOp[]={">=", "<=", ">", "<", "!=", "=="," && ", " || "};
 
    bool native=(!_isClass || (!op) ||
@@ -265,7 +265,7 @@ char *NodeOpr::printNode(char *buf)
     (_type=='+' && (!*_numFunc || strcmp(_numFunc,"fixed")==0)));
    // Print out enclosing () if they existed in the original source (YACC strips them)
    if (_isBracketed && native)
-   	*buf++='(';
+      *buf++='(';
 
    // Write out left leaf
    buf += sprintf(buf, "%s", oprBuffer);
@@ -278,23 +278,23 @@ char *NodeOpr::printNode(char *buf)
       buf += sprintf(buf, ".%s(", javaop[MIN(op-cOp, COMPARE_TO)]);
    else
    {
-     	// Translate the 'special' types (>1 character)
+      // Translate the 'special' types (>1 character)
       op=(char *)strchr(sOp, _type);
       if (op)
          buf += sprintf(buf, "%s", jsOp[op-sOp]);
       // Deal with TCAT and BCAT for CL: -> var.trimr()[+" " for BCAT]+
       else if (_type==TCAT || _type==BCAT)
       {
-      	buf += sprintf(buf, "%s", ".trimr()");
+         buf += sprintf(buf, "%s", ".trimr()");
          if (_type==BCAT)
-   	   	buf += sprintf(buf, "%s", "+\" \"");
+            buf += sprintf(buf, "%s", "+\" \"");
          *buf++ = '+';
       }
       else
       {
          // If this is just a 1-character operator, dump it directly (UMINUS is dealt with, above)
          if (_type != UMINUS && _type != '!')
-	         *buf++ = _type;
+            *buf++ = _type;
       }
    }
 
@@ -302,7 +302,7 @@ char *NodeOpr::printNode(char *buf)
    if (_arg2)
    {
       *_arg2->printNode(oprBuffer)='\0'; // Add closing null
-		// If the left leaf is a character value, and this is the special
+      // If the left leaf is a character value, and this is the special
       // value ON or OFF, then change it to '1' or '0' for java
       if (FLDS_=='J' && native)
       {
@@ -355,12 +355,29 @@ char *NodeOpr::printNode(char *buf)
    }
    // Right out closing ')' if the original expression was bracketed, see above...
    if (_isBracketed | !native)
-   	*buf++=')';
-	// If this is a CompareTo, then add 'OP 0' to end of clause
+      *buf++=')';
+   // If this is a CompareTo, then add 'OP 0' to end of clause
    if (!native && (op-cOp) >= COMPARE_TO)
-   	buf += sprintf(buf, "%s0", jsOp[op-cOp-COMPARE_TO]);
+      buf += sprintf(buf, "%s0", jsOp[op-cOp-COMPARE_TO]);
    return buf;
 }
+
+// Dot operator
+NodeDotOpr::NodeDotOpr(int type, Node *arg1, Node *arg2)
+: NodeOpr(type, arg1, arg2)
+{
+   char valueBuf[512];
+   printValue(valueBuf);
+   // Get numeric function
+   char *n=GET_NFUNC(valueBuf, _isClass);
+   _numFunc = new char[strlen(n)];
+   strcpy(_numFunc, n);
+}
+NodeDotOpr::~NodeDotOpr()
+{
+   delete[] _numFunc;
+}
+
 
 
 // Global Node functions
@@ -374,6 +391,11 @@ NodeOpr *opr(int type, Node *arg1, Node *arg2)
     NodeOpr *p = new NodeOpr(type, arg1, arg2);
     return p;
 }
+NodeDotOpr *dot_opr(int type, Node *arg1, Node *arg2)
+{
+    NodeDotOpr *p = new NodeDotOpr(type, arg1, arg2);
+    return p;
+}
 NodeProcedure *procedure(char *value, Node *arg)
 {
     NodeProcedure *p = new NodeProcedure(value, (NodeOpr*)arg);
@@ -385,10 +407,11 @@ NodeArray *array(char *value, Node *arg)
     return p;
 }
 
+
 void walkResults(Node *node)
 {
-	*(node->printNode(nodeBuf))='\0';  // Add closing NULL to returned buffer
+   *(node->printNode(nodeBuf))='\0';  // Add closing NULL to returned buffer
 #ifdef _DEBUG
-	puts(nodeBuf);
+   puts(nodeBuf);
 #endif
 }
