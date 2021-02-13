@@ -1,4 +1,4 @@
-// CRTCPPMOD MODULE(CLA0105/NODE) SRCSTMF('/i2class/node.cpp') DBGVIEW(*ALL) TGTRLS(V7R1M0) INCDIR('/i2class') OUTPUT(*PRINT)
+// CRTCPPMOD MODULE(I2CLASS#/NODE) SRCSTMF('/i2class/node.cpp') DBGVIEW(*ALL) TGTRLS(V7R1M0) INCDIR('/i2class') OUTPUT(*PRINT)
 #include "Node.h"
 #include "clp_tab.cpp.h" // THE CLP/RPG_TAB.CPP IDENTS MUST MATCH!
 
@@ -47,7 +47,7 @@ NodeId::NodeId(int type, char *value)
    _value = new char[strlen(value)+1]; // Add length for null-terminator
    strcpy(_value, value);
    // _PROCEDURE could actually be an array at this point...
-   if (_type != IDENTIFIER && _type != PROCEDURE && _type != DOT_IDENTIFIER)
+   if (_type != IDENTIFIER && _type != PROCEDURE)
    {
    	_numFunc="";
       _isClass=false;
@@ -64,12 +64,16 @@ NodeId::~NodeId()
    delete[] _value;
    delete[] _numFunc;
 }
-char *NodeId::printNode(char *buf)
+char *NodeId::printValue(char *buf)
 {
 	char *b=buf; // for debugging
 	int i = sprintf(buf, "%s", _value);
 	buf += i;
    return buf;
+}
+char *NodeId::printNode(char *buf)
+{
+	return printValue(buf);
 }
 
 // NodeProcedure
@@ -179,16 +183,46 @@ char *NodeArray::printNode(char *buf)
 
 // NodeOpr
 NodeOpr::NodeOpr(int type, Node *arg1, Node *arg2)
-   {
-      _type = type;
-      _arg1 = arg1;
-      _arg2 = arg2;
+{
+   _type = type;
+   _arg1 = arg1;
+   _arg2 = arg2;
+
+   //If this is the dot operator e.g. customers(1).name then get qualified name
+   if (_type == '.') {
+      char valueBuf[512];
+      printValue(valueBuf);
+      // Get numeric function
+      char *n=GET_NFUNC(valueBuf, _isClass);
+      _numFunc = new char[strlen(n)];
+      strcpy(_numFunc, n);
    }
+}
 NodeOpr::~NodeOpr()
 {
    delete _arg1;
    if (_arg2)
       delete _arg2;
+   //If this is the dot operator e.g. customers(1).name, then delete _numFunc
+   if (_type == '.')
+      delete[] _numFunc;
+}
+char *NodeOpr::printValue(char *buf)
+{
+   char oprBuffer[256];
+   *_arg1->printValue(oprBuffer)='\0'; // Add null string to returned buffer
+	// Write out left leaf
+	buf += sprintf(buf, "%s", oprBuffer);
+
+   // Write out operator
+   *buf++ = _type;
+
+   // Write out right leaf, if it exists
+   if (_arg2)
+   {
+      *_arg2->printNode(oprBuffer)='\0'; // Add closing null
+      buf += sprintf(buf, "%s", oprBuffer);
+   }
 }
 char *NodeOpr::printNode(char *buf)
 {
@@ -211,9 +245,12 @@ char *NodeOpr::printNode(char *buf)
 
    char oprBuffer[256];
    *_arg1->printNode(oprBuffer)='\0'; // Add null string to returned buffer
+
    // Assume that this node type is the same as the left leaf type,
    // unless this is a comparison function, then the node type is null
 	// if (i<(COMPARE_TO-1))
+   // ...or this is the dot operator e.g. customers(1).name _numFunc, _isClass are already set...
+   if (_type != '.')
    {
       _numFunc = _arg1->_numFunc;
       _isClass = _arg1->_isClass;
@@ -355,6 +392,3 @@ void walkResults(Node *node)
 	puts(nodeBuf);
 #endif
 }
-
-
-

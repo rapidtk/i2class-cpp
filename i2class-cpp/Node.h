@@ -11,6 +11,7 @@ public:
    int _type;
    bool _isBracketed;
    virtual char *printNode(char *buf)=0;
+   virtual char *printValue(char *buf)=0;
    char *_numFunc;
    bool _isClass;
 };
@@ -22,6 +23,7 @@ public:
    NodeId(int type, char *value);
    ~NodeId();
    char *printNode(char *buf);
+   char *printValue(char *buf);
 };
 // A generic operator class
 class NodeOpr : public Node
@@ -30,6 +32,7 @@ public:
    NodeOpr(int type, Node *arg1, Node *arg2);
    ~NodeOpr();
    char *printNode(char *buf);
+   char *printValue(char *buf);
 private:
    Node *_arg1, *_arg2;
 };
@@ -56,5 +59,3 @@ NodeOpr *opr(int type, Node *arg1, Node *arg2);
 NodeProcedure *procedure(char *value, Node *arg);
 NodeArray *array(char *value, Node *arg);
 void walkResults(Node *node);
-
-
