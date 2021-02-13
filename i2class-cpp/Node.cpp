@@ -29,6 +29,21 @@ NodeId::NodeId(int type, char *value)
    	value="UMONTH";
    else if (strcmp(value, "DAY")==0)
    	value="UDAY";
+	// Translate Date/Time constants Y/M/D/H/MN/S/MS to YEARS/MONTHS/DAYS/HOURS/MINUTES/SECONDS/MSECONDS
+   else if (strcmp(value, "Y")==0)
+   	value="YEARS";
+   else if (strcmp(value, "M")==0)
+   	value="MONTHS";
+   else if (strcmp(value, "D")==0)
+   	value="DAYS";
+   else if (strcmp(value, "H")==0)
+   	value="HOURS";
+   else if (strcmp(value, "MN")==0)
+   	value="MINUTES";
+   else if (strcmp(value, "S")==0)
+   	value="SECONDS";
+   else if (strcmp(value, "MS")==0)
+   	value="MSECONDS";
    _value = new char[strlen(value)+1]; // Add length for null-terminator
    strcpy(_value, value);
    // _PROCEDURE could actually be an array at this point...
