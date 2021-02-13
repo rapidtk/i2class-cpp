@@ -205,7 +205,8 @@ char *NodeOpr::printNode(char *buf)
 	// Get node string
    const char cOp[]={'=','+','-','*','/',EQUALS,GE,LE,'>','<',NE,'\0'};
 #define COMPARE_TO 6
-   const char *javaop[]={"assign","add","subtract","multiply","divide","equals","compareTo"};
+   //const char *javaop[]={"assign","add","subtract","multiply","divide","equals","compareTo"};
+   const char *javaop[]={"assign","plus","minus","times","dividedBy","equals","compareTo"};
    char *op=(char *)strchr(cOp, _type);
 
    char oprBuffer[256];
