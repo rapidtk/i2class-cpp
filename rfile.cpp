@@ -307,7 +307,7 @@ void RrecordPrint::print(const _ConvertDecimal &n, int col, char edtCde, char fi
 					e++;
 				}
 				// Figure out if commas are needed
-				char *comma;
+			const char *comma;
 				comma=strchr("12ABJKNO", edtCde);
 				int scale=nlen-precision;
 				int scale3=scale%3;

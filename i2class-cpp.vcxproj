@@ -191,6 +191,8 @@
     <ClCompile Include="RPGTypes.cpp" />
     <ClCompile Include="xxcvt.cpp" />
     <ClCompile Include="i2class-cpp.cpp" />
+    <ClCompile Include="as400.cpp" />
+    <ClCompile Include="rfile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="alloca.h" />
