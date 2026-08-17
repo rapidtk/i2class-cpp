@@ -41,7 +41,7 @@
     <ClInclude Include="..\rfileodbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rglobal.h">
+    <ClInclude Include="..\src\core\rglobal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\RPGTypes.h">

@@ -208,7 +208,7 @@
     <ClInclude Include="src/file/rfile.h" />
     <ClInclude Include="src/file/rfilelpt.h" />
     <ClInclude Include="src/file/rfileodbc.h" />
-    <ClInclude Include="util/rglobal.h" />
+    <ClInclude Include="src/core/rglobal.h" />
     <ClInclude Include="src/core/RPGTypes.h" />
     <ClInclude Include="src/core/xxcvt.h" />
   </ItemGroup>
