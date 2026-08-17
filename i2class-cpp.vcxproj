@@ -203,41 +203,14 @@
     <ClCompile Include="src\file\rfileodbc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="util/alloca.h" />
     <ClInclude Include="src/core/as400.h" />
-    <ClInclude Include="src/file/as400dbfile.h" />
-    <ClInclude Include="util/bcd2.h" />
-    <ClInclude Include="util/bcd3.h" />
-    <ClInclude Include="benchmarks/legacy/benchmark1f.h" />
-    <ClInclude Include="parsers/clp/clp_tab.cpp.h" />
     <ClInclude Include="util/i2400.h" />
-    <ClInclude Include="util/i2class.h" />
-    <ClInclude Include="util/malloc.h" />
-    <ClInclude Include="parsers/Node.h" />
-    <ClInclude Include="src/file/ODBCfile.h" />
-    <ClInclude Include="util/ooport.h" />
-    <ClInclude Include="src/file/PrintFile.h" />
     <ClInclude Include="src/file/rfile.h" />
-    <ClInclude Include="src/file/rfile400.h" />
-    <ClInclude Include="src/file/rfileado.h" />
     <ClInclude Include="src/file/rfilelpt.h" />
     <ClInclude Include="src/file/rfileodbc.h" />
-    <ClInclude Include="src/file/rfileprint.h" />
     <ClInclude Include="util/rglobal.h" />
     <ClInclude Include="src/core/RPGTypes.h" />
-    <ClInclude Include="parsers/rpg/rpg_tab.cpp.h" />
-    <ClInclude Include="parsers/rpg/rpg_tab.h" />
-    <ClInclude Include="src/ibmi/rport400.h" />
-    <ClInclude Include="util/stlcomp.h" />
-    <ClInclude Include="util/WizCharString.h" />
-    <ClInclude Include="xfile-abandoned/xFile.h" />
-    <ClInclude Include="xfile-abandoned/XFile400.h" />
-    <ClInclude Include="xfile-abandoned/XfileODBC.h" />
-    <ClInclude Include="xfile-abandoned/XFilePrint.h" />
-    <ClInclude Include="xfile-abandoned/xGlobal.h" />
-    <ClInclude Include="xfile-abandoned/xport.h" />
     <ClInclude Include="src/core/xxcvt.h" />
-    <ClInclude Include="src/ibmi/xxdtaa.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

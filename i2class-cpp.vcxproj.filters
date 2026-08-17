@@ -26,55 +26,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\alloca.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\as400.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\as400dbfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bcd2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bcd3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\benchmarks\legacy\benchmark1f.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bison\clp_tab.cpp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\i2class.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\i2400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\malloc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Node.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ODBCfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ooport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\PrintFile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rfile400.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rfileado.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rfilelpt.h">
@@ -83,52 +41,13 @@
     <ClInclude Include="..\rfileodbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rfileprint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rglobal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bison\rpg_tab.cpp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bison\rpg_tab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\RPGTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rport400.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\stlcomp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WizCharString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\xFile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\XFile400.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\XfileODBC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\XFilePrint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\xGlobal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\xport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\xxcvt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\xxdtaa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
