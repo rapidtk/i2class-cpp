@@ -32,13 +32,13 @@
 # define RRECORD_DATABASE RdbRecord400
 # define RRECORD Rrecord400
 # define RRECORD_PRINT RrecordOspec
-# include "rfile400.h"
+# include "ibmi/rfile400.h"
 #else
 # include "rfileLPT.h"
 # define RFILE_PRINT RfileLPT
 # define RRECORD_PRINT RrecordLPT
 # if (RFILETYPE==RFILEADO)
-#  include "rfileADO.h"
+#  include "bcc/rfileADO.h"
 #  define RFILE RfileADO
 #  define RRECORD_DATABASE RrecordADO
 #  define RRECORD RrecordADO
@@ -51,7 +51,7 @@
 # endif
 #endif
 
-#include <xxdtaa.h>
+#include "xxdtaa.h"
 #include "rglobal.h"
 #endif
 

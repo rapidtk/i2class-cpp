@@ -211,6 +211,7 @@
     <ClInclude Include="src/core/rglobal.h" />
     <ClInclude Include="src/core/RPGTypes.h" />
     <ClInclude Include="src/core/xxcvt.h" />
+    <ClInclude Include="src/core/i2class.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

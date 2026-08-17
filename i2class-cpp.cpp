@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "RPGTypes.h"
+#include "i2class.h"
 
 int main()
 {
