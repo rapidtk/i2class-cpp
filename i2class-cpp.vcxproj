@@ -97,7 +97,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\aclark2\git\i2class-cpp\i2class-cpp;$(IncludePath)</IncludePath>
+    <IncludePath>src/core;src/file;util;src/ibmi;parsers;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -105,6 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_DEBUGGABILITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src/core;src/file;util;src/ibmi;parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,6 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_COMPATIBILITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src/core;src/file;util;src/ibmi;parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,6 +137,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_PERFORMANCE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src/core;src/file;util;src/ibmi;parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,6 +152,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_DEBUGGABILITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src/core;src/file;util;src/ibmi;parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,6 +167,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_COMPATIBILITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src/core;src/file;util;src/ibmi;parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -179,6 +184,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_PERFORMANCE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src/core;src/file;util;src/ibmi;parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -188,48 +194,48 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="RPGTypes.cpp" />
-    <ClCompile Include="xxcvt.cpp" />
+    <ClCompile Include="src/core/RPGTypes.cpp" />
+    <ClCompile Include="src/core/xxcvt.cpp" />
     <ClCompile Include="i2class-cpp.cpp" />
-    <ClCompile Include="as400.cpp" />
-    <ClCompile Include="rfile.cpp" />
+    <ClCompile Include="src/core/as400.cpp" />
+    <ClCompile Include="src/file/rfile.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="alloca.h" />
-    <ClInclude Include="as400.h" />
-    <ClInclude Include="as400dbfile.h" />
-    <ClInclude Include="bcd2.h" />
-    <ClInclude Include="bcd3.h" />
-    <ClInclude Include="benchmarks\legacy\benchmark1f.h" />
-    <ClInclude Include="bison\clp_tab.cpp.h" />
-    <ClInclude Include="i2400.h" />
-    <ClInclude Include="i2class.h" />
-    <ClInclude Include="malloc.h" />
-    <ClInclude Include="Node.h" />
-    <ClInclude Include="ODBCfile.h" />
-    <ClInclude Include="ooport.h" />
-    <ClInclude Include="PrintFile.h" />
-    <ClInclude Include="rfile.h" />
-    <ClInclude Include="rfile400.h" />
-    <ClInclude Include="rfileado.h" />
-    <ClInclude Include="rfilelpt.h" />
-    <ClInclude Include="rfileodbc.h" />
-    <ClInclude Include="rfileprint.h" />
-    <ClInclude Include="rglobal.h" />
-    <ClInclude Include="RPGTypes.h" />
-    <ClInclude Include="bison\rpg_tab.cpp.h" />
-    <ClInclude Include="bison\rpg_tab.h" />
-    <ClInclude Include="rport400.h" />
-    <ClInclude Include="stlcomp.h" />
-    <ClInclude Include="WizCharString.h" />
-    <ClInclude Include="xFile.h" />
-    <ClInclude Include="XFile400.h" />
-    <ClInclude Include="XfileODBC.h" />
-    <ClInclude Include="XFilePrint.h" />
-    <ClInclude Include="xGlobal.h" />
-    <ClInclude Include="xport.h" />
-    <ClInclude Include="xxcvt.h" />
-    <ClInclude Include="xxdtaa.h" />
+    <ClInclude Include="util/alloca.h" />
+    <ClInclude Include="src/core/as400.h" />
+    <ClInclude Include="src/file/as400dbfile.h" />
+    <ClInclude Include="util/bcd2.h" />
+    <ClInclude Include="util/bcd3.h" />
+    <ClInclude Include="benchmarks/legacy/benchmark1f.h" />
+    <ClInclude Include="parsers/clp/clp_tab.cpp.h" />
+    <ClInclude Include="util/i2400.h" />
+    <ClInclude Include="util/i2class.h" />
+    <ClInclude Include="util/malloc.h" />
+    <ClInclude Include="parsers/Node.h" />
+    <ClInclude Include="src/file/ODBCfile.h" />
+    <ClInclude Include="util/ooport.h" />
+    <ClInclude Include="src/file/PrintFile.h" />
+    <ClInclude Include="src/file/rfile.h" />
+    <ClInclude Include="src/file/rfile400.h" />
+    <ClInclude Include="src/file/rfileado.h" />
+    <ClInclude Include="src/file/rfilelpt.h" />
+    <ClInclude Include="src/file/rfileodbc.h" />
+    <ClInclude Include="src/file/rfileprint.h" />
+    <ClInclude Include="util/rglobal.h" />
+    <ClInclude Include="src/core/RPGTypes.h" />
+    <ClInclude Include="parsers/rpg/rpg_tab.cpp.h" />
+    <ClInclude Include="parsers/rpg/rpg_tab.h" />
+    <ClInclude Include="src/ibmi/rport400.h" />
+    <ClInclude Include="util/stlcomp.h" />
+    <ClInclude Include="util/WizCharString.h" />
+    <ClInclude Include="xfile-abandoned/xFile.h" />
+    <ClInclude Include="xfile-abandoned/XFile400.h" />
+    <ClInclude Include="xfile-abandoned/XfileODBC.h" />
+    <ClInclude Include="xfile-abandoned/XFilePrint.h" />
+    <ClInclude Include="xfile-abandoned/xGlobal.h" />
+    <ClInclude Include="xfile-abandoned/xport.h" />
+    <ClInclude Include="src/core/xxcvt.h" />
+    <ClInclude Include="src/ibmi/xxdtaa.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

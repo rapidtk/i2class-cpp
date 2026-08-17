@@ -67,3 +67,14 @@
 Thumbs.db
 .DS_Store
 Desktop.ini
+
+# Generated parser files (regenerate with Bison/Flex if needed)
+parsers/rpg/rpg_tab.cpp
+parsers/rpg/rpg_tab.cpp.h
+parsers/rpg/rpg_tab.h
+parsers/rpg/rpg_tab.hpp
+parsers/rpg/rpg_tab.cpp.output
+parsers/rpg/yylex.cpp
+parsers/clp/clp_tab.cpp
+parsers/clp/clp_tab.cpp.h
+parsers/clp/clp_tab.h
