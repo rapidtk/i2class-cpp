@@ -8,7 +8,7 @@
 #include <time.h>
 //#include <values.h> // UNIX for MIN/MAXDOUBLE
 
-#include <xxcvt.h> // For zoned conversion
+#include "xxcvt.h" // For zoned conversion
 
 #include "i2400.h"
 #if !defined(NO_PACKED)
@@ -17,10 +17,10 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-// Errors thrown by RIO
+// Errors thrown by i2class
 class CI2Err { };
-#ifdef _DEBUG
-class CI2ErrSubscript : public CI2Err { } RIOErrSubscript;
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+class CI2ErrSubscript : public CI2Err { };
 #endif
 
 
@@ -320,9 +320,9 @@ public:
 	// Subscript operator
 	char &operator [] (const int i)
    {
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (i<0 || i>=sz)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
 		return overlay[i];
     }
@@ -336,9 +336,9 @@ public:
 		{ return checkStr(cStr, start-1, sz-1, 1); }
 	int check(char c, int start=1) const
 	{
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>sz || start<=0)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
       for (int i=start-1; i<sz; i++)
       {
@@ -353,9 +353,9 @@ public:
 		{ return checkStr(cStr, start-1, -1, -1); }
 	int checkr(char c, int start=sz) const
 	{
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>sz || start<=0)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
       for (int i=start-1; i>=0; i--)
       {
@@ -384,9 +384,9 @@ public:
 		{ return subst(start, sz-start+1); }
 	FixedTemp subst(int start, int length) const
    {
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>sz || start<=0)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
 		return FixedTemp((char *)overlay+start-1, length);
    }
@@ -467,9 +467,9 @@ public:
 	// Replace a portion of the string
 	Fixed<sz>& movea(FixedTemp tStr, int index=0)
 	{
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
 		memcpy(overlay+index, tStr.overlay, MIN(sz-index, tStr.len()));
 		return *this;
@@ -477,18 +477,18 @@ public:
 	// Replace a portion of the string with a figurative constant
 	Fixed<sz>& movea(const FigConst &fc, int index=0)
 	{
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
 		memset(overlay+index, fc.fillChar, sz-index);
 		return *this;
 	}
 	Fixed<sz>& moveall(char c, int index=0)
 	{
-#ifdef _DEBUG
+#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
 		memset(overlay+index, c, sz-index);
 		return *this;
@@ -569,9 +569,9 @@ private:
 	// Return position of character that is not in cStr
 	int checkStr(const char *cStr, int start, int end, int increment) const
 	{
-#ifdef _DEBUG
+	#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>=sz || start<0 || end >= sz || end<0)
-      	throw RIOErrSubscript;
+      	throw CI2ErrSubscript();
 #endif
 		for (int i=start; i!=end; i=i+increment)
 		{
@@ -694,7 +694,7 @@ public:
 	// Do assignment from one DS to another
 	DS<sz, elem>& operator = (const DS<sz, elem>& ds)
 	{
-		memcpy(overlay, ds.overlay, sz);
+		memcpy(Fixed<sz>::overlay, ds.overlay, sz);
 		memcpy(buffer, ds.buffer, sz*(elem-1));
 		return *this;
 	}
@@ -731,7 +731,7 @@ public:
 	// Do assignment from a FigConst
 	DS<sz, elem>& operator = (const FigConst &fc)
 	{
-		memset(overlay, fc.fillChar, sz);
+		memset(Fixed<sz>::overlay, fc.fillChar, sz);
 		return *this;
 	}
 
@@ -749,10 +749,14 @@ public:
    // buffer[-1] is valid and actually points to overlay
 	void occur(short lOccur)
 	{
+	#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+		if (lOccur < 1 || lOccur > elem)
+			throw CI2ErrSubscript();
+	#endif
 		if (Occur!=lOccur)
 		{
 			static char	buffer0[sz];
-			memcpy(buffer0, overlay, sz);
+			memcpy(buffer0, Fixed<sz>::overlay, sz);
 			static short i;
 			if (lOccur==1)
 			{
@@ -763,12 +767,12 @@ public:
 			{
 				i=lOccur-2;
 			swap:
-				memcpy(overlay, buffer[i].overlay, sz);
+				memcpy(Fixed<sz>::overlay, buffer[i].overlay, sz);
 				memcpy(buffer[i].overlay, buffer0, sz);
 			}
 			else
 			{
-				memcpy(overlay, buffer[lOccur-2].overlay, sz);
+				memcpy(Fixed<sz>::overlay, buffer[lOccur-2].overlay, sz);
 				memcpy(buffer[lOccur-2].overlay, buffer[Occur-2].overlay, sz);
 				memcpy(buffer[Occur-2].overlay, buffer0, sz);
 			}
@@ -1083,11 +1087,11 @@ public:
 		if (*fmt=='*')
 		{
 			if (strcmp(fmt, "*YMD")==0)
-				jfmt="%y%m%d";
+				jfmt=(char*)"%y%m%d";
 			else if (strcmp(fmt, "*DMY")==0)
-				jfmt="%d%m%y";
+				jfmt=(char*)"%d%m%y";
 			else
-				jfmt="%m%d%y";
+				jfmt=(char*)"%m%d%y";
 			static int i=0;
 			if (sz+i>=8)
 			{
@@ -1104,7 +1108,7 @@ public:
 		timet=time(NULL);
 		char overlay0[sz+1];
 		strftime(overlay0, sz+1, jfmt, localtime(&timet));
-		memcpy(overlay, overlay0, sz);
+		memcpy(Zoned<sz,0>::overlay, overlay0, sz);
 	}
 };
 extern Zoned<4,0>	&YEAR;
@@ -1118,7 +1122,7 @@ struct DtaaName {
 	Fixed<10>	dtaa_name;
 	Fixed<10>	dtaa_lib;
 };
-#include <xxdtaa.h>
+#include "xxdtaa.h"
 template <class T> class Dtaara : public T
 {
 public:
@@ -1347,6 +1351,7 @@ template <int sz, int precision>
 
 #endif // NO_PACKED
 #endif // RPORT_H
+
 
 
 

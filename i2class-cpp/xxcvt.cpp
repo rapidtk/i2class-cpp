@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <mem.h>
+//#include <mem.h>
 #include <ctype.h>
 #include <string.h>
 #include "rpgtypes.h"
@@ -10,7 +10,7 @@ int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 	int i=digits-fraction;
 	if (i<=0)
    	return 0;
-	static unsigned char buf[32];
+	static char buf[32];
 	memcpy(buf, zptr, i);
 	buf[i]='\0';
 	// A negative zoned value is 0xD0-D9 (}, J-R)
@@ -25,7 +25,7 @@ int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 // Convert zoned to double
 double QXXZTOD(unsigned char *zptr, int digits, int fraction)
 {
-	return atof(zonedToChar(zptr, digits, fraction));
+	return atof(zonedToChar((const char*)zptr, digits, fraction));
 }
 
 // Convert double to zoned
@@ -34,7 +34,7 @@ void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 	// Copy in everything to the left of the decimal point
 	char	*buf;
 	int dec, sign;
-	buf=ecvt(value, digits, &dec, &sign);
+	buf=_ecvt(value, digits, &dec, &sign);
 	int i=digits-fraction; // number of digits to left of decimal point
 	int j=i-dec;
 	// Set leading bytes (if any) to 0
@@ -43,15 +43,15 @@ void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 	memcpy(zptr+j, buf, digits-j);
 	// Negative values set the last digit high-order nibble to 0xD
 	if (value<0)
-		encodeSign(zptr+digits-1);
+		encodeSign((char *)zptr+digits-1);
 }
 
 // Convert integer to zoned
 void QXXITOZ(unsigned char *zptr, int digits, int fraction, int value)
 {
 	// Copy in everything to the left of the decimal point
-	static unsigned char	buf[32];
-	itoa(value, buf, 10);
+	static char	buf[32];
+	_itoa(value, (char*)buf, 10);
 	int i=digits-fraction; // number of digits to left of decimal point
 	int j=i-strlen(buf);
 	// Set leading bytes (if any) to 0
@@ -63,6 +63,6 @@ void QXXITOZ(unsigned char *zptr, int digits, int fraction, int value)
 		memset(zptr+i, '0', fraction);
 	// Negative values set the last digit high-order nibble to 0xD
 	if (value<0)
-		encodeSign(zptr+digits-1);
+		encodeSign((char *)zptr+digits-1);
 }
 
