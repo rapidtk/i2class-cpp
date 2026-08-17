@@ -12,7 +12,7 @@ const char *WRITE_ONLY="ar";
 const char COMMIT_LOCK_LEVEL_NONE='N';
 const char COMMIT_LOCK_LEVEL_DEFAULT='Y';
 
-class CRIOFileNotOpened : public CI2Err { } I2FileNotOpened;
+class CI2FileNotOpened : public CI2Err { } I2FileNotOpened;
 
 void setIndara(_RFILE *fp);
 
@@ -528,4 +528,5 @@ void RrecordOspec::skip(int rows)
 	else
 		space(rows-iofbPrt->cur_page_line_num);
 }
+
 
