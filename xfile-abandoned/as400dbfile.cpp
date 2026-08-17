@@ -1,4 +1,4 @@
-#include "ooport.h"
+#include "../legacy/ooport.h"
 //#include <string>
 
 #include "as400file.h"
