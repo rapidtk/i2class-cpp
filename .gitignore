@@ -36,6 +36,7 @@
 
 # Build outputs and generated artifacts
 **/x64/
+**/build/
 **/bin/
 **/obj/
 **/Debug/
