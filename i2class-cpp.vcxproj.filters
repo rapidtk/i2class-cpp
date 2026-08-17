@@ -29,7 +29,7 @@
     <ClInclude Include="..\as400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\i2400.h">
+    <ClInclude Include="..\src\core\i2400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rfile.h">

@@ -204,7 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/core/as400.h" />
-    <ClInclude Include="util/i2400.h" />
+    <ClInclude Include="src/core/i2400.h" />
     <ClInclude Include="src/file/rfile.h" />
     <ClInclude Include="src/file/rfilelpt.h" />
     <ClInclude Include="src/file/rfileodbc.h" />
