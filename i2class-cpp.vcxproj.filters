@@ -32,7 +32,7 @@
     <ClInclude Include="..\src\core\i2400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\i2class.h">
+    <ClInclude Include="..\src\i2class.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rfile.h">
