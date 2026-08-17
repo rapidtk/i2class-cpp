@@ -4,7 +4,7 @@
 #ifdef __OS400__
 # include <sqlcli.h>
 #else
-# ifdef __WIN32__
+# ifdef _WIN32
 #  include <windows.h>
 # endif
 # include <sql.h>
@@ -45,7 +45,7 @@ public:
 protected:
 	int	keyLength;
 private:
-	SQLINTEGER		rLength;
+	SQLLEN		rLength;
 };
 
 class RfileODBC : public Rfile

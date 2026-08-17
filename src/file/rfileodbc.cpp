@@ -45,7 +45,7 @@ char RfileODBC::open(const char *OpenType, int blockingFactor, char commitLockLe
          if (rc==SQL_SUCCESS)
          {
             //rc=SQLConnect (hdbc, server, SQL_NTS, "ANDREWC", SQL_NTS, "SP8DS",
-            rc=SQLConnect (hdbc, server, SQL_NTS, usrid, SQL_NTS, password,
+            rc=SQLConnect (hdbc, (SQLCHAR*)server, SQL_NTS, (SQLCHAR*)usrid, SQL_NTS, (SQLCHAR*)password,
              SQL_NTS);
             if (rc==SQL_SUCCESS)
             {
@@ -55,7 +55,7 @@ char RfileODBC::open(const char *OpenType, int blockingFactor, char commitLockLe
                   char SQL[256]="SELECT * FROM ";
                   strcat(SQL, fileName);
                   //strcat(SQL, record->keyList);
-                  rc=SQLExecDirect(hstmt, SQL, SQL_NTS);
+                  rc=SQLExecDirect(hstmt, (SQLCHAR*)SQL, SQL_NTS);
 	               if (rc==SQL_SUCCESS)
                   	error='0';
                }
