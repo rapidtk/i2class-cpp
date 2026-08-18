@@ -240,14 +240,14 @@ void move(const FixedTemp &f1, const FixedTemp &f2)
 
 char move(const FixedTemp &source, char &c)
 {
-	Fixed<1> fxd;
+   Fixed<1> fxd;
    fxd.move(source);
    c=fxd[0];
    return c;
 }
 char move(const _ConvertDecimal &source, char &c)
 {
-	Fixed<1> fxd;
+   Fixed<1> fxd;
    fxd.move(source);
    c=fxd[0];
    return c;
@@ -270,33 +270,33 @@ char movel(const _ConvertDecimal &source, char &c)
 
 short move(const FixedTemp &source, short &dest)
 {
-	Zoned<4, 0> znd(dest);
+   Zoned<4, 0> znd(dest);
    znd.move(source);
-   dest=znd;
+   dest=(short)znd;
    return dest;
 }
 
 short move(const _ConvertDecimal &source, short &dest)
 {
-	Zoned<9, 0> znd(dest);
+   Zoned<9, 0> znd(dest);
    znd.move(source);
-   dest=znd;
+   dest=(short)znd;
    return dest;
 }
 
 int move(const FixedTemp &source, int &dest)
 {
-	Zoned<9, 0> znd(dest);
+   Zoned<9, 0> znd(dest);
    znd.move(source);
-   dest=znd;
+   dest=(int)znd;
    return dest;
 }
 
 int move(const _ConvertDecimal &source, int &dest)
 {
-	Zoned<9, 0> znd(dest);
+   Zoned<9, 0> znd(dest);
    znd.move(source);
-   dest=znd;
+   dest=(int)znd;
    return dest;
 }
 

@@ -39,8 +39,8 @@ public:
 	inline char &operator [] (const int i)
 		{ return overlay[i]; }
 //private:
-	char	*overlay;
-	int	sz;
+	char *overlay{};
+	int	sz{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -394,7 +394,7 @@ public:
 	// Return scan (first location of a charcter in the string)
 	int scan(char c) const
 	{
-		void *s=memchr(overlay, c, sz);
+		const void *s=memchr(overlay, c, sz);
 		if (s)
 			return (int)s-(int)overlay+1;
 		return 0;

@@ -69,9 +69,9 @@ public:
 
 private:
 	static SQLHENV        henv;
-	SQLHDBC        hdbc;
-	SQLHSTMT       hstmt;
-	SQLRETURN		rc;
+	SQLHDBC        hdbc{};
+	SQLHSTMT       hstmt{};
+	SQLRETURN		rc{};
 };
 
 /*

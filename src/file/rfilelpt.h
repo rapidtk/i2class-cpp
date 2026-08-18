@@ -33,7 +33,7 @@ public:
 	char open(const char *openType);
 
 private:
-	FILE *fp;
+	FILE *fp{};
 };
 #endif
  

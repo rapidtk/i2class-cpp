@@ -22,7 +22,7 @@ public:
 	virtual void	output(){};
 
 //protected:
-	char	*recordName;
+	char *recordName{};
 };
 class RdbRcd
 {
@@ -42,7 +42,7 @@ public:
 	 char commitLockLevel=COMMIT_LOCK_LEVEL_NONE) {return '0';};
 
 public:
-	char	error, found, eof;
+	char	error{0}, found{0}, eof{0};
 
 //protected:
 	void setRecord(Rrecord &format);
@@ -51,7 +51,7 @@ protected:
 	//char		fileName[255];
 	char		*server, *password, *usrid;
 	//char		server[255];
-	Rrecord	*record;
+	Rrecord	*record{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,10 +89,10 @@ protected:
 
 protected:
 	//char	*outputBuffer;
-	char	outputBuffer[379]; // Record buffer with room for first character form control character
+	char	outputBuffer[379]{}; // Record buffer with room for first character form control character
 	int	outputSize;
 	int	maxColumn;
-	int	column, row;
+	int	column, row{};
 
 private:
 	void	printChar(const char *str, int edtLen, int col);

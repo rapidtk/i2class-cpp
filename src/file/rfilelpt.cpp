@@ -56,7 +56,7 @@ void RrecordLPT::flush()
 {
 	if (maxColumn>0)
 	{
-		fprintf(fp, "%s*", outputBuffer+1, maxColumn);
+		fprintf(fp, "%.*s", maxColumn, outputBuffer+1);
 		memset(outputBuffer, ' ', maxColumn+1);
 		maxColumn=0;
 		column=1;
