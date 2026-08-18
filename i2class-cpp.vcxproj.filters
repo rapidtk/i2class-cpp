@@ -18,45 +18,55 @@
     <ClCompile Include="i2class-cpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\RPGTypes.cpp">
+    <ClCompile Include="src/core/RPGTypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\xxcvt.cpp">
+    <ClCompile Include="src/core/xxcvt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src/core/as400.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src/file/rfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file\rfilelpt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file\rfileodbc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\as400.h">
+    <ClInclude Include="src/core/as400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\i2400.h">
+    <ClInclude Include="src/core/i2400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\i2class.h">
+    <ClInclude Include="src/file/rfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rfile.h">
+    <ClInclude Include="src/file/rfilelpt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rfilelpt.h">
+    <ClInclude Include="src/file/rfileodbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rfileodbc.h">
+    <ClInclude Include="src/core/rglobal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\core\rglobal.h">
+    <ClInclude Include="src/core/RPGTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\RPGTypes.h">
+    <ClInclude Include="src/core/xxcvt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\xxcvt.h">
+    <ClInclude Include="src/i2class.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\README.md">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
