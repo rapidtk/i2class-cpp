@@ -8,16 +8,17 @@
 #  define __OS400_TGTVRM__ 440
 # endif
 # if (__OS400_TGTVRM__<510)
-//	typedef int bool;
-#  define bool int
-#  define true -1
-#  define false 0
 #  define NO_FUNCTION_TEMPLATE
+#  define NO_BOOLEAN
 # endif
 #else
 # define NO_PACKED
 #endif
 
-#endif
+#ifdef NO_BOOLEAN
+#  define bool int
+#  define true -1
+#  define false 0
+# endif
 
- 
+#endif
