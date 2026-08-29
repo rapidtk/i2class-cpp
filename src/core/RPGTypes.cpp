@@ -150,12 +150,14 @@ Time14 TIMESTAMP;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Zoned support functions
+
+// Zoned negative values are encoded as xD0-D9 EBCDIC '}', 'J'-'R'
 void decodeSign(char *c)
 {
 	if (*c=='}')
 		*c='0';
 	else
-		*c='0' + (*c-'J');
+		*c='1' + (*c-'J');
 }
 
 void encodeSign(char *c)
@@ -163,28 +165,38 @@ void encodeSign(char *c)
 	if (*c=='0')
 		*c='}';
 	else
-		*c='J' + (*c-'0');
+		*c='J' + (*c-'1');
 }
 char *zonedToChar(const char *zptr, int digits, int fraction)
 {
 	static char	buf[33];
+	char *bufPtr = buf;
 	// A negative zoned value is 0xD0-D9 (}, J-R)
 	bool positive=isdigit(zptr[digits-1]);
 	if (!positive)
 	{
 		decodeSign(buf+digits);
 		*buf='-';
+		bufPtr++;
 	}
-	else
-		*buf=' ';
 
 	// Copy in everything to the left of the decimal point
-	int i=digits-fraction;
-	memcpy(buf+1, zptr, i);
-	buf[i+1]='.';
+	int precision = digits - fraction;
+	memcpy(bufPtr, zptr, precision);
+	bufPtr += precision;
+	// Add '.' to buffer
+	*bufPtr='.';
+	bufPtr++;
 	// Copy in everything to the right of the decimal point
-	memcpy(buf+i+2, zptr+i, fraction);
-	buf[digits+2]='\0';
+	memcpy(bufPtr, zptr + precision, fraction);
+	// Decode the sign of the last digit if negative  
+	if (!positive)
+	{
+	   bufPtr += fraction - 1;
+	   decodeSign(bufPtr);
+	   bufPtr++;
+	}
+	*bufPtr='\0';
 	return buf;
 }
 
