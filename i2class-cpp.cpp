@@ -7,13 +7,37 @@
 
 int main()
 {
-    Fixed<10> str = "abcdef";
-    Fixed<3> str2 = "ghi";
-    Zoned<3, 1> znd1 = 12.1;
-    if (str2 == "ghi")
-        std::cout << "equal to ghi";
+    Fixed<10> fxd10;
+    fxd10 = "abcdef";
+	std::cout << "char(10): " << fxd10.c_str() << '\n' ;
+	Fixed<3> fxd3 = "abc";
+	if (fxd10 != fxd3)
+	   std::cout << "char(10) 'abcdef' not equal to char(3) 'abc' \n";
+	if (fxd3 == "abc")
+	   std::cout << "char(3) 'abc' equal to 'abc'\n";
+	fxd3 = ZEROS;
+	if (fxd3 == "000")
+	   std::cout << "char(3) '000' equal to *ZEROS\n";
 
-    std::cout << str.c_str() << str2.c_str() << znd1;
+	Zoned<3, 1> znd31 = 12.1;
+	std::cout << "zoned(3,1): " << (double)znd31 << '\n';
+	znd31.movel('3');
+	if (znd31 == 32.1)
+	   std::cout << "zoned(3,1) 32.1 equal to 32.1\n";
+
+	packed(4, 2) pkd42;
+	pkd42.assign(znd31);
+	if (pkd42 == znd31)
+	   std::cout << "packed(4,2) 32.10 equal to zoned(3,1) 32.1\n";
+
+
+	znd31 = LOVAL;
+	if (znd31 == -99.9)
+	   std::cout << "zoned(3,1) -99.9 equal to *LOVAL\n";
+	pkd42 = 99.99;
+	if (pkd42 == HIVAL)
+	   std::cout << "packed(4,2) 99.99 equal to *HIVAL\n";
+
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
