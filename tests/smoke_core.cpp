@@ -1,7 +1,7 @@
 // Minimal smoke tests for src/ (Fixed, Zoned, Indicator, DS, FigConst, AS400).
 // No test framework dependency - build and run directly, e.g.:
-//   cl.exe /EHsc /nologo /Isrc /Isrc/file /Iutil /Isrc/ibmi /Iparsers ^
-//     tests/smoke_core.cpp src/RPGTypes.cpp src/xxcvt.cpp src/as400.cpp
+//   cl.exe /EHsc /nologo /Isrc /Isrc/file /Iutil /Iparsers ^
+//     tests/smoke_core.cpp src/RPGTypes.cpp src/xxcvt.cpp src/xxdtaa.cpp src/as400.cpp
 #include <cstdio>
 #include <cstring>
 #include <cmath>

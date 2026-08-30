@@ -3,6 +3,7 @@
 #ifndef XXDTAA_H
 #define XXDTAA_H
 
+
 struct _DTAA_NAME_T {
 	char	dtaa_name[10];
 	char	dtaa_lib[10];
@@ -11,6 +12,7 @@ void QXXRTVDA(_DTAA_NAME_T dtaname, short offset, short len, char *dtaptr);
 //void QXXRTVDA(DtaaName dtaname, short offset, short len, char *dtaptr);
 void QXXCHGDA(_DTAA_NAME_T dtaname, short offset, short len, char *dtaptr);
 //void QXXCHGDA(DtaaName dtaname, short offset, short len, char *dtaptr);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Data area

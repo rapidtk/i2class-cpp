@@ -24,6 +24,9 @@
     <ClCompile Include="src/xxcvt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src/xxdtaa.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src/as400.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,6 +63,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src/xxcvt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/xxdtaa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src/i2class.h">
