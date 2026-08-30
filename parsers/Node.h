@@ -1,8 +1,4 @@
-//#include "rport400.h"
-#  define bool int
-#  define true -1
-#  define false 0
-#  define NO_FUNCTION_TEMPLATE
+#include "i2400.h"
 
 class Node
 {
