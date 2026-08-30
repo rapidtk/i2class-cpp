@@ -24,6 +24,10 @@ int main()
 	znd31.movel('3');
 	if (znd31 == 32.1)
 	   std::cout << "zoned(3,1) 32.1 equal to 32.1\n";
+	Zoned<5, 2> znd52 = 123.45;
+	double diff = (double)znd52 - 123.45;
+	if (diff == 0.0)
+	   std::cout <<	"zoned(5,2) 123.45 - 123.45 equal to 0.0\n";
 
 	packed(4, 2) pkd42;
 	pkd42.assign(znd31);

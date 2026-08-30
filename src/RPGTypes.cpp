@@ -190,13 +190,12 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 	// Copy in everything to the right of the decimal point
 	memcpy(bufPtr, zptr + precision, fraction);
 	// Decode the sign of the last digit if negative  
+	bufPtr += fraction - 1;
 	if (!positive)
-	{
-	   bufPtr += fraction - 1;
 	   decodeSign(bufPtr);
-	   bufPtr++;
-	}
-	*bufPtr='\0';
+	// Null terminate the string
+    bufPtr++;
+    *bufPtr='\0';
 	return buf;
 }
 
