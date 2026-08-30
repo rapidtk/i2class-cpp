@@ -7,6 +7,8 @@
 #include "xxfdbk.h"
 #endif
 
+#define MAX_DECIMAL_DIGITS 31 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Figurative constant declaration
 #define FIGCONSTNUM_COMPARE(OP) \
@@ -169,7 +171,7 @@ void encodeSign(char *c)
 }
 char *zonedToChar(const char *zptr, int digits, int fraction)
 {
-	static char	buf[33];
+    static char	buf[MAX_DECIMAL_DIGITS + 3]; // +3 for sign, decimal point, and null terminator
 	char *bufPtr = buf;
 	// A negative zoned value is 0xD0-D9 (}, J-R)
 	bool positive=isdigit(zptr[digits-1]);
@@ -190,13 +192,12 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 	// Copy in everything to the right of the decimal point
 	memcpy(bufPtr, zptr + precision, fraction);
 	// Decode the sign of the last digit if negative  
+	bufPtr += fraction - 1;
 	if (!positive)
-	{
-	   bufPtr += fraction - 1;
 	   decodeSign(bufPtr);
-	   bufPtr++;
-	}
-	*bufPtr='\0';
+	// Null terminate the string
+    bufPtr++;
+    *bufPtr='\0';
 	return buf;
 }
 
