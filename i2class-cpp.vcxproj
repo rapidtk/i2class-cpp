@@ -101,7 +101,7 @@
     <IntDir>build\obj\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>src;src/core;src/file;util;src/ibmi;parsers;$(IncludePath)</IncludePath>
+    <IncludePath>src;src/file;util;src/ibmi;parsers;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -198,23 +198,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src/core/RPGTypes.cpp" />
-    <ClCompile Include="src/core/xxcvt.cpp" />
+    <ClCompile Include="src/RPGTypes.cpp" />
+    <ClCompile Include="src/xxcvt.cpp" />
     <ClCompile Include="i2class-cpp.cpp" />
-    <ClCompile Include="src/core/as400.cpp" />
+    <ClCompile Include="src/as400.cpp" />
     <ClCompile Include="src/file/rfile.cpp" />
     <ClCompile Include="src\file\rfilelpt.cpp" />
     <ClCompile Include="src\file\rfileodbc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src/core/as400.h" />
-    <ClInclude Include="src/core/i2400.h" />
+    <ClInclude Include="src/as400.h" />
+    <ClInclude Include="src/i2400.h" />
     <ClInclude Include="src/file/rfile.h" />
     <ClInclude Include="src/file/rfilelpt.h" />
     <ClInclude Include="src/file/rfileodbc.h" />
-    <ClInclude Include="src/core/rglobal.h" />
-    <ClInclude Include="src/core/RPGTypes.h" />
-    <ClInclude Include="src/core/xxcvt.h" />
+    <ClInclude Include="src/rglobal.h" />
+    <ClInclude Include="src/RPGTypes.h" />
+    <ClInclude Include="src/xxcvt.h" />
     <ClInclude Include="src/i2class.h" />
   </ItemGroup>
   <ItemGroup>

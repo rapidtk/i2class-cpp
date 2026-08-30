@@ -18,13 +18,13 @@
     <ClCompile Include="i2class-cpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src/core/RPGTypes.cpp">
+    <ClCompile Include="src/RPGTypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src/core/xxcvt.cpp">
+    <ClCompile Include="src/xxcvt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src/core/as400.cpp">
+    <ClCompile Include="src/as400.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src/file/rfile.cpp">
@@ -38,10 +38,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src/core/as400.h">
+    <ClInclude Include="src/as400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src/core/i2400.h">
+    <ClInclude Include="src/i2400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src/file/rfile.h">
@@ -53,13 +53,13 @@
     <ClInclude Include="src/file/rfileodbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src/core/rglobal.h">
+    <ClInclude Include="src/rglobal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src/core/RPGTypes.h">
+    <ClInclude Include="src/RPGTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src/core/xxcvt.h">
+    <ClInclude Include="src/xxcvt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src/i2class.h">
