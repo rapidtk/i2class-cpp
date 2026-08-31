@@ -56,9 +56,11 @@ void Rfile::setRecord(Rrecord &format)
 void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
 {
 	// Make a pass forwards through the edit word to accumulate information...
-	int wrdI=strlen(edtWrd);
+	int wrdI=static_cast<int>(strlen(edtWrd));
 	char	fillChar=' ';
-	int currency=0, decimal=0, precision=0, lastBlank;
+	int currency=0, decimal=0, precision=0;
+	int lastBlank=-1000; // no blank/zero-suppress position seen yet; keeps wrdI-lastBlank from
+	                      // ever accidentally matching 1 or 2 below if edtWrd has none
 	int zeroSuppress=wrdI;
 	for (int i=0; i<wrdI; i++)
 	{
@@ -192,7 +194,7 @@ void RrecordPrint::printChar(const char *str, int edtLen, int col)
 void RrecordPrint::print(const FixedTemp &f, int col)
 	{ printChar(f.overlay, f.len(), col); }
 void RrecordPrint::print(const char *str, int col)
-	{ printChar(str, strlen(str), col); }
+	{ printChar(str, static_cast<int>(strlen(str)), col); }
 
 void RrecordPrint::printl(const FixedTemp &f, int col)
 {
@@ -202,7 +204,7 @@ void RrecordPrint::printl(const FixedTemp &f, int col)
 }
 void RrecordPrint::printl(const char *str, int col)
 {
-	FixedTemp cStr((char *)str, strlen(str));
+	FixedTemp cStr((char *)str, static_cast<int>(strlen(str)));
 	printl(cStr, col);
 }
 
@@ -222,7 +224,7 @@ void RrecordPrint::print(const _ConvertDecimal &n, int col, const char *edtWrd)
 
 	int edtLen;
 	if (edtWrd != NULL)
-		edtLen=strlen(edtWrd);
+		edtLen=static_cast<int>(strlen(edtWrd));
 	else
 		//edtLen = n.len();
 		edtLen = n.DigitsOf();
@@ -264,7 +266,7 @@ void RrecordPrint::printl(const _ConvertDecimal &n, int col, const char *edtWrd)
 	//print(n, col+n.len()-1, edtWrd);
 	int edtLen;
 	if (edtWrd != NULL)
-		edtLen=strlen(edtWrd);
+		edtLen=static_cast<int>(strlen(edtWrd));
 	else
 		edtLen = n.DigitsOf();
 	print(n, col+edtLen-1, edtWrd);

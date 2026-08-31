@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <time.h>
 #include <math.h>
+#include <cstddef>
 
 #include "xxcvt.h" // For zoned conversion
 #include "i2400.h"
@@ -60,7 +61,7 @@ public:
 	FixedTemp(const char *tBuf, int tsz) : sz(tsz), overlay((char *)tBuf) {}
 	FixedTemp(const char &c) : sz(1), overlay((char *)&c) {}
 	FixedTemp(const char *str) : overlay((char *)str)
-		{ sz=strlen(str); }
+		{ sz=static_cast<int>(strlen(str)); }
 	inline int len() const
 		{ return sz; }
 	inline char &operator [] (const int i)
@@ -121,7 +122,7 @@ const char ON='1';
 class FigConst
 {
 public:
-	FigConst(char c, int value) {fillChar=c;}
+	FigConst(char c, int /*value*/) {fillChar=c;}
 	operator char ()
 		{ return fillChar; }
 //private:
@@ -135,6 +136,7 @@ class FigConstNum : public FigConst
 {
 public:
 	FigConstNum(char c, int value) : FigConst(c, value) {}
+	virtual ~FigConstNum() = default;
 	// Cast to an int
 	virtual operator short() const=0;
 	virtual operator int() const=0;
@@ -150,14 +152,14 @@ class Zeros : public FigConstNum
 {
 public:
 	Zeros() : FigConstNum('0', 0) {}
-	inline operator short() const
+	inline operator short() const override
 		{ return 0; }
-	inline operator int() const
+	inline operator int() const override
 		{ return 0; }
-	inline operator long double() const
+	inline operator long double() const override
 		{ return 0; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const
+	inline operator _ConvertDecimal() const override
 		{ return (_ConvertDecimal)"0"; }
 #endif
 };
@@ -169,14 +171,14 @@ class Loval : public FigConstNum
 {
 public:
 	Loval() : FigConstNum('\0', -1) {}
-	inline operator short() const
+	inline operator short() const override
    	{ return SHRT_MIN; }
-	inline operator int() const
+	inline operator int() const override
    	{ return INT_MIN; }
-	inline operator long double() const
+	inline operator long double() const override
    	{ return MIN_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const
+	inline operator _ConvertDecimal() const override
 		{ return MIN_DECIMAL_STR; }
 #endif
 };
@@ -188,14 +190,14 @@ class Hival : public FigConstNum
 {
 public:
 	Hival() : FigConstNum('\xFF', 1) {}
-	inline operator short() const
+	inline operator short() const override
    	{ return SHRT_MAX; }
-	inline operator int() const
+	inline operator int() const override
    	{ return INT_MAX; }
-	inline operator long double() const
+	inline operator long double() const override
    	{ return MAX_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const
+	inline operator _ConvertDecimal() const override
 		{ return MAX_DECIMAL_STR; }
 #endif
 };
@@ -209,7 +211,7 @@ public:
 	Fixed()
 		{ memset(overlay, ' ', sz); } // Always initialize to blanks
 	Fixed(const char *str)
-   	{ assign(str, strlen(str)); }
+   	{ assign(str, static_cast<int>(strlen(str))); }
 	Fixed(char c)
    	{ assign(c); }
 	Fixed(const FigConst &fc)
@@ -312,17 +314,17 @@ public:
 
 	// Do comparisons between Fixeds and (null-terminated) literals
 	bool operator == (const char *str) const
-		{ return (Compare(str, strlen(str)) == 0); }
+		{ return (Compare(str, static_cast<int>(strlen(str))) == 0); }
 	bool operator != (const char *str) const
-		{ return (Compare(str, strlen(str)) != 0); }
+		{ return (Compare(str, static_cast<int>(strlen(str))) != 0); }
 	bool operator <= (const char *str) const
-		{ return (Compare(str, strlen(str)) <= 0); }
+		{ return (Compare(str, static_cast<int>(strlen(str))) <= 0); }
 	bool operator <  (const char *str) const
-		{ return (Compare(str, strlen(str)) <  0); }
+		{ return (Compare(str, static_cast<int>(strlen(str))) <  0); }
 	bool operator >= (const char *str) const
-		{ return (Compare(str, strlen(str)) >= 0); }
+		{ return (Compare(str, static_cast<int>(strlen(str))) >= 0); }
 	bool operator >  (const char *str) const
-		{ return (Compare(str, strlen(str)) >  0); }
+		{ return (Compare(str, static_cast<int>(strlen(str))) >  0); }
 
 	// Do comparisons between Fixeds and char
 	bool operator == (char c) const
@@ -547,6 +549,8 @@ public:
 
 public:
 	char overlay[sz];
+	static_assert(sizeof(overlay) == static_cast<std::size_t>(sz),
+		"Fixed<sz> must be exactly sz bytes for IBM i binary compatibility");
 
 protected:
 	// Set this Fixed to the contents of another Fixed/String
@@ -719,6 +723,7 @@ public:
 			return false;
 	}
 };
+static_assert(sizeof(Indicator) == 1, "Indicator must be exactly 1 byte for IBM i binary compatibility");
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief A [Multi-occurrence](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-occur-setget-occurrence-data-structure) data structure
@@ -744,7 +749,7 @@ public:
 	// Do assignment from a character string literal
 	DS<sz, elem>& operator = (const char *str)
 	{
-		Fixed<sz>::assign(str, strlen(str));
+		Fixed<sz>::assign(str, static_cast<int>(strlen(str)));
 		return *this;
 	}
 
@@ -790,9 +795,12 @@ public:
 	#endif
 		if (Occur!=lOccur)
 		{
-			static char	buffer0[sz];
+			// Not static: these are per-call scratch, not per-instance state -- a
+			// static local here was shared (and clobbered) by every DS<sz,elem>
+			// object of the same size calling occur() concurrently or reentrantly.
+			char	buffer0[sz];
 			memcpy(buffer0, Fixed<sz>::overlay, sz);
-			static short i;
+			short i;
 			if (lOccur==1)
 			{
 				i=Occur-2;
@@ -1004,10 +1012,12 @@ public:
 		{ memcpy(overlay, znd.overlay, sz); }
 	// Do assignment from a long double
 	void assign(long double d)
-		{ QXXDTOZ((unsigned char *)overlay, sz, precision, d); }
+		{ QXXDTOZ((unsigned char *)overlay, sz, precision, static_cast<double>(d)); }
 
 //protected:
 	char overlay[sz];
+	static_assert(sizeof(overlay) == static_cast<std::size_t>(sz),
+		"Zoned<sz,precision> must be exactly sz bytes for IBM i binary compatibility");
 
 private:
 

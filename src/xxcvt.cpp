@@ -28,7 +28,7 @@ int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 	int i=digits-fraction;
 	if (i<=0)
    	return 0;
-	static char buf[32];
+	char buf[MAX_DECIMAL_DIGITS+1];
 	memcpy(buf, zptr, i);
 	buf[i]='\0';
 	// A negative zoned value is 0xD0-D9 (}, J-R)
@@ -83,10 +83,10 @@ void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 void QXXITOZ(unsigned char *zptr, int digits, int fraction, int value)
 {
 	// Copy in everything to the left of the decimal point
-	static char	buf[32];
+	char	buf[MAX_DECIMAL_DIGITS+1];
 	_itoa(value, (char*)buf, 10);
 	int i=digits-fraction; // number of digits to left of decimal point
-	int j=i-strlen(buf);
+	int j=i-static_cast<int>(strlen(buf));
 	// Set leading bytes (if any) to 0
 	if (j>0)
 		memset(zptr, '0', j);

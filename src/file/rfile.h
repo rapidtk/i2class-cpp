@@ -27,6 +27,7 @@ public:
 	Rrecord() {}
 	Rrecord(char *rcdName)
 		{ recordName=rcdName; }
+	virtual ~Rrecord() = default;
 	virtual void	input(){};
 	virtual void	output(){};
 
@@ -47,11 +48,11 @@ class Rfile
 {
 public:
 	Rfile(const AS400 &as400, char *sFileName);
-   ~Rfile();
+   virtual ~Rfile();
 	//Rfile(const AS400 &as400, char *sFileName, Rrecord &format);
 	virtual char close() {return '0';};
-	virtual char open(const char *openType, int blockingFactor=0,
-	 char commitLockLevel=COMMIT_LOCK_LEVEL_NONE) {return '0';};
+	virtual char open(const char */*openType*/, int /*blockingFactor*/=0,
+	 char /*commitLockLevel*/=COMMIT_LOCK_LEVEL_NONE) {return '0';};
 
 public:
 	char	error{0}, found{0}, eof{0};
@@ -71,7 +72,7 @@ protected:
 class RrecordPrint : public Rrecord
 {
 public:
-	RrecordPrint() : maxColumn(0), column(1), outputSize(sizeof(outputBuffer-1)) {}
+	RrecordPrint() : maxColumn(0), column(1), outputSize(sizeof(outputBuffer) - 1) {}
 	//static void edit(char *buf, const ZonedTemp &n, const char *edtWrd);
 	static void edit(char *buf, const _ConvertDecimal &n, const char *edtWrd);
 	void print(const FixedTemp &f, int col=0);
