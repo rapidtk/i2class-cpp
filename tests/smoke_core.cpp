@@ -71,6 +71,14 @@ static void test_zoned()
 	CHECK(std::fabs((double)total - 100.00) < 0.001);
 	total -= other;
 	CHECK(std::fabs((double)total - 98.50) < 0.001);
+	total *= 2.0;
+	CHECK(std::fabs((double)total - 197.00) < 0.001);
+	total *= other;
+	CHECK(std::fabs((double)total - 295.50) < 0.001);
+	total /= 2.0;
+	CHECK(std::fabs((double)total - 147.75) < 0.001);
+	total /= other;
+	CHECK(std::fabs((double)total - 98.50) < 0.001);
 }
 
 static void test_ds()

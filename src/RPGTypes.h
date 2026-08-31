@@ -963,6 +963,32 @@ public:
 		assign((long double)*this - val);
 		return *this;
 	}
+	// Multiply by another Zoned (any size/precision) in place, matching RPG's MULT/*=
+	// semantics -- see operator+=() above.
+	template <int l2, int p2>
+	Zoned<sz,precision> &operator *= (const Zoned<l2,p2> &val)
+	{
+		*this = toPacked() * val.toPacked();
+		return *this;
+	}
+	Zoned<sz,precision> &operator *= (long double val)
+	{
+		assign((long double)*this * val);
+		return *this;
+	}
+	// Divide by another Zoned (any size/precision) in place, matching RPG's DIV//= semantics --
+	// see operator+=() above.
+	template <int l2, int p2>
+	Zoned<sz,precision> &operator /= (const Zoned<l2,p2> &val)
+	{
+		*this = toPacked() / val.toPacked();
+		return *this;
+	}
+	Zoned<sz,precision> &operator /= (long double val)
+	{
+		assign((long double)*this / val);
+		return *this;
+	}
 	// Cast to a packed
 #if !defined(NO_PACKED)
 	_DecimalT<sz, precision> toPacked() const
