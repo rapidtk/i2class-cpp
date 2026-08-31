@@ -27,6 +27,9 @@
     <ClCompile Include="src/xxdtaa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src/compat/stdlib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src/as400.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,7 +47,7 @@
     <ClInclude Include="src/as400.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src/i2400.h">
+    <ClInclude Include="src/i2compat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src/file/rfile.h">

@@ -34,7 +34,7 @@ int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 	// A negative zoned value is 0xD0-D9 (}, J-R)
 	bool positive=isdigit(zptr[digits-1]);
 	if (!positive && fraction==0)
-		decodeSign(buf+digits);
+		decodeSign(buf+digits-1); // last digit byte, not the null terminator at buf[digits]
 	i=atoi(buf);
 	if (!positive)
 		i = i*-1;
@@ -61,11 +61,13 @@ double QXXZTOD(unsigned char *zptr, int digits, int fraction)
 void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 {
 	// Copy in everything to the left of the decimal point
-	char	*buf;
+	char buf[MAX_DECIMAL_DIGITS+1];
 	int dec, sign;
-	buf=_ecvt(value, digits, &dec, &sign);
+	_ecvt_s(buf, sizeof(buf), value, digits, &dec, &sign);
 	int i=digits-fraction; // number of digits to left of decimal point
 	int j=i-dec;
+	if (j<0)
+		j=0; // integer part wider than the field -- truncate rather than write before zptr[0]
 	// Set leading bytes (if any) to 0
 	if (j>0)
 		memset(zptr, '0', j);
@@ -84,13 +86,16 @@ void QXXITOZ(unsigned char *zptr, int digits, int fraction, int value)
 {
 	// Copy in everything to the left of the decimal point
 	char	buf[MAX_DECIMAL_DIGITS+1];
-	_itoa(value, (char*)buf, 10);
+	_itoa_s(value, buf, sizeof(buf), 10);
+	// Skip the leading '-' (if any) -- it's not a digit, and encodeSign() below
+	// records the sign separately.
+	const char *digitsStr = (value < 0) ? buf+1 : buf;
 	int i=digits-fraction; // number of digits to left of decimal point
-	int j=i-static_cast<int>(strlen(buf));
+	int j=i-static_cast<int>(strlen(digitsStr));
 	// Set leading bytes (if any) to 0
 	if (j>0)
 		memset(zptr, '0', j);
-	memcpy(zptr+j, buf, i-j);
+	memcpy(zptr+j, digitsStr, i-j);
 	// Set trailing decimal (if any) to 0
 	if (fraction>0)
 		memset(zptr+i, '0', fraction);

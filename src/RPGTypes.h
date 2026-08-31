@@ -10,7 +10,7 @@
 #include <cstddef>
 
 #include "xxcvt.h" // For zoned conversion
-#include "i2400.h"
+#include "i2compat.h"
 #if !defined(NO_PACKED)
 # include <MIH/CPYNV.h>
 # include <bcd.h> // For packed decimal

@@ -1,7 +1,7 @@
 #ifndef I2CLASS_H
 #define I2CLASS_H
 
-#include "i2400.h"
+#include "i2compat.h"
 #include "as400.h"
 #include "rpgtypes.h"
 

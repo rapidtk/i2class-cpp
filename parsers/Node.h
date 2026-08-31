@@ -1,4 +1,4 @@
-#include "i2400.h"
+#include "i2compat.h"
 
 class Node
 {

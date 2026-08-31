@@ -201,6 +201,7 @@
     <ClCompile Include="src/RPGTypes.cpp" />
     <ClCompile Include="src/xxcvt.cpp" />
     <ClCompile Include="src/xxdtaa.cpp" />
+    <ClCompile Include="src/compat/stdlib.cpp" />
     <ClCompile Include="i2class-cpp.cpp" />
     <ClCompile Include="src/as400.cpp" />
     <ClCompile Include="src/file/rfile.cpp" />
@@ -209,7 +210,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/as400.h" />
-    <ClInclude Include="src/i2400.h" />
+    <ClInclude Include="src/i2compat.h" />
     <ClInclude Include="src/file/rfile.h" />
     <ClInclude Include="src/file/rfilelpt.h" />
     <ClInclude Include="src/file/rfileodbc.h" />

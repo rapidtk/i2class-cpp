@@ -1,7 +1,7 @@
 #ifndef RFILE_H
 #define RFILE_H
 
-#include "i2400.h"
+#include "i2compat.h"
 #include "as400.h"
 #include "rpgtypes.h"
 extern const char *READ_ONLY;
