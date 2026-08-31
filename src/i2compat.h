@@ -2,10 +2,10 @@
 #define I2COMPAT_H
 
 #if __cplusplus >= 202002L
-# define __OVERRIDE override
+# define I2_OVERRIDE override
 #else
   // No override support
-# define __OVERRIDE
+# define I2_OVERRIDE
 #endif
 
 // Built-in packed decimal support

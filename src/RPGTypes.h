@@ -152,14 +152,14 @@ class Zeros : public FigConstNum
 {
 public:
 	Zeros() : FigConstNum('0', 0) {}
-	inline operator short() const __OVERRIDE
+	inline operator short() const I2_OVERRIDE
 		{ return 0; }
-	inline operator int() const __OVERRIDE
+	inline operator int() const I2_OVERRIDE
 		{ return 0; }
-	inline operator long double() const __OVERRIDE
+	inline operator long double() const I2_OVERRIDE
 		{ return 0; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const __OVERRIDE
+	inline operator _ConvertDecimal() const I2_OVERRIDE
 		{ return (_ConvertDecimal)"0"; }
 #endif
 };
@@ -171,14 +171,14 @@ class Loval : public FigConstNum
 {
 public:
 	Loval() : FigConstNum('\0', -1) {}
-	inline operator short() const __OVERRIDE
+	inline operator short() const I2_OVERRIDE
    	{ return SHRT_MIN; }
-	inline operator int() const __OVERRIDE
+	inline operator int() const I2_OVERRIDE
    	{ return INT_MIN; }
-	inline operator long double() const __OVERRIDE
+	inline operator long double() const I2_OVERRIDE
    	{ return MIN_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const __OVERRIDE
+	inline operator _ConvertDecimal() const I2_OVERRIDE
 		{ return (_ConvertDecimal)MIN_DECIMAL_STR; }
 #endif
 };
@@ -190,14 +190,14 @@ class Hival : public FigConstNum
 {
 public:
 	Hival() : FigConstNum('\xFF', 1) {}
-	inline operator short() const __OVERRIDE
+	inline operator short() const I2_OVERRIDE
    	{ return SHRT_MAX; }
-	inline operator int() const __OVERRIDE
+	inline operator int() const I2_OVERRIDE
    	{ return INT_MAX; }
-	inline operator long double() const __OVERRIDE
+	inline operator long double() const I2_OVERRIDE
    	{ return MAX_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const __OVERRIDE
+	inline operator _ConvertDecimal() const I2_OVERRIDE
 		{ return (_ConvertDecimal)MAX_DECIMAL_STR; }
 #endif
 };
