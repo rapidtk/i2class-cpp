@@ -14,6 +14,7 @@
 /// 'CR' for negative values).
 
 Rfile::Rfile(const AS400 &as400, const char *sFileName)
+ : error(false), found(false), eof(false), record(nullptr)
 {
 	fileName = sFileName;
 	//strncpy(fileName, sFileName, sizeof(fileName));

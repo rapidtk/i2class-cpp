@@ -74,7 +74,9 @@ public:
 	// server (AS400::url) is a full ODBC connection string passed directly to
 	// SQLDriverConnect -- e.g. "Driver={Microsoft Access Text Driver (*.txt, *.csv)};
 	// Dbq=C:\\path\\to\\folder;Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;"
-	RfileODBC(const AS400 &as400, const char *sFileName): Rfile(as400, sFileName){};
+	RfileODBC(const AS400 &as400, const char *sFileName)
+	 : Rfile(as400, sFileName), henv(0), hdbc(0), hstmt(0), rc(0), lastErrorText()
+	{};
 	/*
 	RfileODBC(AS400 &as400, char *sFileName, Rrecord &format, const char *openType)
 	 :Rfile(as400, sFileName, format)
@@ -99,11 +101,11 @@ public:
 private:
 	// Not static: a static SQLHENV was shared (and freed out from under) every RfileODBC
 	// instance, not just repeated per file the way the old single-file design assumed.
-	SQLHENV        henv{};
-	SQLHDBC        hdbc{};
-	SQLHSTMT       hstmt{};
-	SQLRETURN		rc{};
-	char           lastErrorText[256]{};
+	SQLHENV        henv;
+	SQLHDBC        hdbc;
+	SQLHSTMT       hstmt;
+	SQLRETURN		rc;
+	char           lastErrorText[256];
 };
 
 /*

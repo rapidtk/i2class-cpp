@@ -57,7 +57,7 @@ public:
 	 char /*commitLockLevel*/=COMMIT_LOCK_LEVEL_NONE) {}
 
 public:
-	bool	error{false}, found{false}, eof{false};
+	bool	error, found, eof;
 
 //protected:
 	void setRecord(Rrecord &format);
@@ -66,7 +66,7 @@ protected:
 	//char		fileName[255];
 	const char		*server, *password, *usrid;
 	//char		server[255];
-	Rrecord	*record{};
+	Rrecord	*record;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ protected:
 class RrecordPrint : public Rrecord
 {
 public:
-	RrecordPrint() : outputSize(sizeof(outputBuffer) - 1), maxColumn(0), column(1), row(0) {}
+	RrecordPrint() : outputBuffer(), outputSize(sizeof(outputBuffer) - 1), maxColumn(0), column(1), row(0) {}
 	//static void edit(char *buf, const ZonedTemp &n, const char *edtWrd);
 	static void edit(char *buf, const _ConvertDecimal &n, const char *edtWrd);
 	void print(const FixedTemp &f, int col=0);
@@ -104,7 +104,7 @@ protected:
 
 protected:
 	//char	*outputBuffer;
-	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]{}; // Record buffer with room for first character form control character
+	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]; // Record buffer with room for first character form control character
 	int	outputSize;
 	int	maxColumn;
 	int	column, row;

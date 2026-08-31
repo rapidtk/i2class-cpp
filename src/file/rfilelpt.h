@@ -34,7 +34,7 @@ private:
 class RfileLPT : public Rfile
 {
 public:
-	RfileLPT(AS400 &as400, char *sFileName, int rcdLength) : Rfile(as400, sFileName) {}
+	RfileLPT(AS400 &as400, char *sFileName, int rcdLength) : Rfile(as400, sFileName), fp(nullptr) {}
 	void setRecordFormat(RrecordLPT &format);
 	bool write();
 	bool write(RrecordLPT &format);
@@ -42,7 +42,7 @@ public:
 	void open(const char *openType);
 
 private:
-	FILE *fp{};
+	FILE *fp;
 };
 #endif
  
