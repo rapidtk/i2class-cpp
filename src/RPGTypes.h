@@ -46,7 +46,7 @@ static_assert(MAX_DECIMAL_DIGITS == 31, "MAX_DECIMAL_STR/MIN_DECIMAL_STR must be
 /// @brief Errors thrown by i2class
 class CI2Err { };
 /// @brief Range of subscript error
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 class CI2ErrSubscript : public CI2Err { };
 #endif
 
@@ -357,7 +357,7 @@ public:
 	// Subscript operator
 	char &operator [] (const int i)
    {
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (i<0 || i>=sz)
       	throw CI2ErrSubscript();
 #endif
@@ -373,7 +373,7 @@ public:
 		{ return checkStr(cStr, start-1, sz-1, 1); }
 	int check(char c, int start=1) const
 	{
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>sz || start<=0)
       	throw CI2ErrSubscript();
 #endif
@@ -390,7 +390,7 @@ public:
 		{ return checkStr(cStr, start-1, -1, -1); }
 	int checkr(char c, int start=sz) const
 	{
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>sz || start<=0)
       	throw CI2ErrSubscript();
 #endif
@@ -421,7 +421,7 @@ public:
 		{ return subst(start, sz-start+1); }
 	FixedTemp subst(int start, int length) const
    {
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>sz || start<=0)
       	throw CI2ErrSubscript();
 #endif
@@ -504,7 +504,7 @@ public:
 	// Replace a portion of the string
 	Fixed<sz>& movea(FixedTemp tStr, int index=0)
 	{
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
       	throw CI2ErrSubscript();
 #endif
@@ -514,7 +514,7 @@ public:
 	// Replace a portion of the string with a figurative constant
 	Fixed<sz>& movea(const FigConst &fc, int index=0)
 	{
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
       	throw CI2ErrSubscript();
 #endif
@@ -523,7 +523,7 @@ public:
 	}
 	Fixed<sz>& moveall(char c, int index=0)
 	{
-#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
       	throw CI2ErrSubscript();
 #endif
@@ -608,7 +608,7 @@ private:
 	// Return position of character that is not in cStr
 	int checkStr(const char *cStr, int start, int end, int increment) const
 	{
-	#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+	#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>=sz || start<0 || end >= sz || end<0)
       	throw CI2ErrSubscript();
 #endif
@@ -789,7 +789,7 @@ public:
    // buffer[-1] is valid and actually points to overlay
 	void occur(short lOccur)
 	{
-	#if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
+	#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (lOccur < 1 || lOccur > elem)
 			throw CI2ErrSubscript();
 	#endif

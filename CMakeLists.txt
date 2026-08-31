@@ -21,16 +21,23 @@ target_include_directories(i2class PUBLIC
 )
 
 # Mirrors the .vcxproj's Debug/Compatibility/Release configurations for anything that
-# still checks IZ_RUNTIME_MODE. Uses CMake's own standard config names (Debug/Release)
+# still checks I2_RUNTIME_MODE. Uses CMake's own standard config names (Debug/Release)
 # rather than a custom "Compatibility" config, so this works unmodified on both
 # single-config generators (Makefiles/Ninja) and multi-config ones (Visual Studio);
 # anything that isn't Debug or Release (including no config at all) falls back to
-# IZ_RUNTIME_MODE_COMPATIBILITY, matching the old default.
+# I2_RUNTIME_MODE_COMPATIBILITY, matching the old default.
 target_compile_definitions(i2class PRIVATE
-	IZ_RUNTIME_MODE_DEBUGGABILITY=0
-	IZ_RUNTIME_MODE_COMPATIBILITY=1
-	IZ_RUNTIME_MODE_PERFORMANCE=2
-	$<IF:$<CONFIG:Debug>,IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_DEBUGGABILITY,$<IF:$<CONFIG:Release>,IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_PERFORMANCE,IZ_RUNTIME_MODE=IZ_RUNTIME_MODE_COMPATIBILITY>>>
+	I2_RUNTIME_MODE_DEBUGGABILITY=0
+	I2_RUNTIME_MODE_COMPATIBILITY=1
+	I2_RUNTIME_MODE_PERFORMANCE=2
+	$<IF:$<CONFIG:Debug>,I2_RUNTIME_MODE=I2_RUNTIME_MODE_DEBUGGABILITY,$<IF:$<CONFIG:Release>,I2_RUNTIME_MODE=I2_RUNTIME_MODE_PERFORMANCE,I2_RUNTIME_MODE=I2_RUNTIME_MODE_COMPATIBILITY>>>
+)
+
+# Fixed<>/DS<>/etc. are header-only templates, so each consumer .cpp compiles its own
+# instantiation -- PUBLIC (not PRIVATE) so this reaches anything that links against
+# i2class too, not just the library's own .cpp files.
+target_compile_definitions(i2class PUBLIC
+	$<$<CONFIG:Debug>:I2_RUNTIME_ENABLE_BOUNDS_CHECK=1>
 )
 
 if(MSVC)
@@ -63,6 +70,10 @@ enable_testing()
 add_executable(smoke_core tests/smoke_core.cpp)
 target_link_libraries(smoke_core PRIVATE i2class)
 add_test(NAME smoke_core COMMAND smoke_core)
+
+add_executable(bounds_check tests/bounds_check.cpp)
+target_link_libraries(bounds_check PRIVATE i2class)
+add_test(NAME bounds_check COMMAND bounds_check)
 
 add_executable(negative_zoned_check tests/negative_zoned_check.cpp)
 target_link_libraries(negative_zoned_check PRIVATE i2class)
