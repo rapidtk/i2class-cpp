@@ -1,5 +1,18 @@
 #include "rfile.h"
 
+/// @file rfile.cpp
+/// @brief Base record-level file I/O and RPG-style printer output formatting.
+///
+/// Rfile is the common base for IBM i "record level access" files (physical/
+/// logical database files and device files like printer/display), analogous
+/// to RPG's F-spec file declarations. RrecordPrint additionally implements
+/// RPG's O-spec (output spec) printer formatting rules: "edit words" (a
+/// template string of digit positions, zero-suppression, commas, currency
+/// symbols, etc., as typed literally on an O-spec) and "edit codes" (single
+/// letters/digits like '1','J','Y' that RPG expands into an equivalent edit
+/// word automatically - e.g. inserting commas, a floating '$', or a trailing
+/// 'CR' for negative values).
+
 Rfile::Rfile(const AS400 &as400, char *sFileName)
 {
 	fileName = (char *)sFileName;
@@ -27,7 +40,19 @@ void Rfile::setRecord(Rrecord &format)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Print file stuff
+// Print file
+
+/// @brief Apply an RPG-style [edit word](https://www.ibm.com/docs/en/i/7.4.0?topic=name-edit-words#opfedit) 
+/// to a numeric value, producing the formatted digits/punctuation RPG would print for an O-spec field.
+///
+/// An edit word is a template string with special characters: '0'/'*' mark
+/// zero-suppressed/fill positions, ' ' marks digit positions, '$' marks a
+/// (possibly floating) currency symbol, '.' the decimal point, ',' a comma
+/// insertion point, '-'/"CR" trailing sign indicators. This walks the edit
+/// word right-to-left, consuming digits from the source value as it goes.
+/// @param buf destination buffer (same length as edtWrd) to receive formatted output
+/// @param n the numeric (zoned/packed) value being formatted
+/// @param edtWrd the edit word template, as it would appear on an RPG O-spec
 void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
 {
 	// Make a pass forwards through the edit word to accumulate information...
@@ -189,6 +214,8 @@ void RrecordPrint::print(int i, int col, const char *edtWrd)
    print ((_ConvertDecimal)dec, col, edtWrd);
 }
 */
+/// @brief Print a numeric field at a given column, optionally applying an
+/// explicit RPG edit word (see edit()); with no edit word the raw digits are used.
 void RrecordPrint::print(const _ConvertDecimal &n, int col, const char *edtWrd)
 {
 	setMaxColumn(col);
@@ -251,6 +278,19 @@ void RrecordPrint::print(int i, int col, char edtCde, char fillChar)
    print ((_ConvertDecimal)dec, col, edtCde, fillChar);
 }
 */
+/// @brief Print a numeric field using an RPG [edit code](https://www.ibm.com/docs/en/i/7.4.0?topic=fields-edit-codes) 
+/// (O-spec shorthand for a common edit word) instead of a literal edit word.
+///
+/// Mirrors the standard RPG edit codes: '1'/'2'/'A'/'B' insert commas,
+/// 'J'-'Q' add sign handling, 'A'-'D' append trailing "CR" for negative
+/// values, 'Y'/'W' format the value as a slash-separated date, and 'X' means
+/// "no editing" (print raw digits). Values that are zero and use a
+/// zero-suppressing code (per RPG rules) are skipped/left blank, matching
+/// native RPG O-spec behavior.
+/// @param n the numeric value to print
+/// @param col rightmost print column
+/// @param edtCde the single-character RPG edit code
+/// @param fillChar zero-suppression fill character override ('*' for check-protection, etc.)
 void RrecordPrint::print(const _ConvertDecimal &n, int col, char edtCde, char fillChar)
 {
 	// Edtcde(X) means no editing

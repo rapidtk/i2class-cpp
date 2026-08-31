@@ -1,6 +1,19 @@
 // i2class-cpp.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+/// @file i2class-cpp.cpp
+/// @brief Demo/manual smoke test exercising the core RPG-compatible data types.
+///
+/// Illustrates the IBM i/RPG data type wrappers this library provides:
+///  - Fixed<N>: a fixed-length character field (like RPG CHAR(N)); comparisons
+///    are blank-padded, matching RPG semantics rather than C-string semantics.
+///  - Zoned<P,F>: a zoned-decimal numeric field with P total digits and F
+///    digits after the decimal point (see xxcvt.cpp for the on-disk format).
+///  - packed(P,F): a packed (BCD) decimal field - same numeric semantics as
+///    Zoned but stored two digits per byte, as IBM i COBOL/RPG PACKED fields are.
+///  - Figurative constants ZEROS/BLANKS/LOVAL/HIVAL mirror RPG's *ZEROS,
+///    *BLANKS, *LOVAL, and *HIVAL special values.
+
 #include <iostream>
 
 #include "i2class.h"
@@ -43,14 +56,3 @@ int main()
 	   std::cout << "packed(4,2) 99.99 equal to *HIVAL\n";
 
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

@@ -6,26 +6,53 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <time.h>
-//#include <values.h> // UNIX for MIN/MAXDOUBLE
+#include <math.h>
 
 #include "xxcvt.h" // For zoned conversion
-
 #include "i2400.h"
 #if !defined(NO_PACKED)
 # include <MIH/CPYNV.h>
 # include <bcd.h> // For packed decimal
 #endif
 
+/// @file RPGTypes.h
+/// @brief Global RPG-compatible state and helper functions: figurative constants,
+/// the U/DATE family of special date fields, the 99-element indicator array
+/// (RPG's IN01-IN99/*INxx), zoned-decimal sign encoding, and the TESTN/TESTZ/
+/// MOVE/MOVEL opcodes RPG programs use for validating and transferring data
+/// between fields of possibly different type/length.
+///
+/// See: [RPG data-type keywords](https://www.ibm.com/docs/en/i/7.4.0?topic=statement-data-type-keywords#datatypekw)
+/// (this file implements the runtime behavior behind ZONED, PACKED, IND, etc.)
+
+
+constexpr int MAX_DECIMAL_DIGITS = 31;
+constexpr double compile_pow(int base, int exp) {
+    return exp == 0 ? 1 : base * compile_pow(base, exp - 1);
+}
+/// @brief The maximum value that a decimal(MAX_DECIMAL_DIGITS, 0) number can hold
+constexpr double MAX_DECIMAL_VALUE = compile_pow(10, MAX_DECIMAL_DIGITS) - 1;
+constexpr double MIN_DECIMAL_VALUE = -MAX_DECIMAL_VALUE;
+// Note: the preprocessor cannot stringify a computed constexpr value (it only
+// stringifies literal source text), so these must be hardcoded to match
+// MAX_DECIMAL_DIGITS above; the static_asserts catch a mismatch at compile time.
+static constexpr const char* MAX_DECIMAL_STR = "9999999999999999999999999999999";
+static constexpr const char* MIN_DECIMAL_STR = "-9999999999999999999999999999999";
+static_assert(MAX_DECIMAL_DIGITS == 31, "MAX_DECIMAL_STR/MIN_DECIMAL_STR must be updated to match MAX_DECIMAL_DIGITS");
+
+
 ////////////////////////////////////////////////////////////////////////////////
-// Errors thrown by i2class
+/// @brief Errors thrown by i2class
 class CI2Err { };
+/// @brief Range of subscript error
 #if IZ_RUNTIME_ENABLE_BOUNDS_CHECK
 class CI2ErrSubscript : public CI2Err { };
 #endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Temporary Fixed-length string used instead of Fixed<> for certain parameters
+/// @brief Temporary Fixed-length string used instead of Fixed<> 
+// for certain parameters and temporary results (e.g. substring and concatenation)
 class FixedTemp
 {
 public:
@@ -44,7 +71,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// StringTemp is a dynamically allocated 'String' used by the + operators
+/// @brief A dynamically allocated 'String' used by the + operators
 class StringTemp : public FixedTemp
 {
 public:
@@ -64,9 +91,9 @@ StringTemp operator + (const FixedTemp &fStr1, const FixedTemp &fStr2);
 StringTemp operator + (const FixedTemp &fStr1, const char *str);
 StringTemp operator + (const char *str, const FixedTemp &fStr2);
 
-////////////////////////////////////////////////////////////////////////////////
-// Temporary zoned-decimal value used instead of Zoned<> for certain parameters
 #if defined(NO_PACKED)
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Temporary zoned-decimal value used instead of Zoned<> for certain parameters
 class ZonedTemp : public FixedTemp
 {
 public:
@@ -89,7 +116,8 @@ const char ON='1';
 #define MIN(a,b) a<b ? a : b
 
 ////////////////////////////////////////////////////////////////////////////////
-// Special Figurative constants *BLANKS, *ZEROS, *HIVAL, *LOVAL
+/// @brief Special [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig)
+/// *BLANKS, *ZEROS, *HIVAL, *LOVAL
 class FigConst
 {
 public:
@@ -101,7 +129,8 @@ public:
 };
 extern FigConst BLANKS;
 
-// Numeric Figurative Constant (all but BLANKS)
+/// @brief Numeric [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig)
+/// (all but BLANKS)
 class FigConstNum : public FigConst
 {
 public:
@@ -115,6 +144,8 @@ public:
 #endif
 };
 
+/// @brief Numeric [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig)
+/// representing zeros (*ZEROS)
 class Zeros : public FigConstNum
 {
 public:
@@ -132,6 +163,8 @@ public:
 };
 extern Zeros ZEROS;
 
+/// @brief [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig)
+/// representing the lowest possible value (*LOVAL)
 class Loval : public FigConstNum
 {
 public:
@@ -141,14 +174,16 @@ public:
 	inline operator int() const
    	{ return INT_MIN; }
 	inline operator long double() const
-   	{ return /*MINDOUBLE*/ -9999999999999999999999999999999.; }
+   	{ return MIN_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
 	inline operator _ConvertDecimal() const
-		{ return "-9999999999999999999999999999999"; }
+		{ return MIN_DECIMAL_STR; }
 #endif
 };
 extern Loval LOVAL;
 
+/// @brief [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig) 
+/// representing the highest possible value (*HIVAL)
 class Hival : public FigConstNum
 {
 public:
@@ -158,16 +193,16 @@ public:
 	inline operator int() const
    	{ return INT_MAX; }
 	inline operator long double() const
-   	{ return /*MAXDOUBLE*/ 9999999999999999999999999999999.; }
+   	{ return MAX_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
 	inline operator _ConvertDecimal() const
-		{ return "9999999999999999999999999999999"; }
+		{ return MAX_DECIMAL_STR; }
 #endif
 };
 extern Hival HIVAL;
 
-////////////////////////////////////////////////////////////////////////////////
-// Fixed-length character string
+
+/// @brief A [Fixed-length character](https://www.ibm.com/docs/en/i/7.4.0?topic=type-character-format) string data type
 template <int sz> class Fixed
 {
 public:
@@ -686,7 +721,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Multi-occurrence data structure
+/// @brief A [Multi-occurrence](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-occur-setget-occurrence-data-structure) data structure
 template <int sz, int elem> class DS : public Fixed<sz>
 {
 public:
@@ -785,11 +820,15 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Zoned decimal class
+// Zoned decimal
 void decodeSign(char *c);
 void encodeSign(char *c);
 char *zonedToChar(const char *zptr, int digits, int fraction);
 
+/// @brief A numeric [zoned-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-zoned-decimal-format) value 
+/// backed by an unformatted (no sign or decimal point) fixed-length string of characters. 
+/// @tparam sz The total number of digits
+/// @tparam precision The number of digits to the right of the decimal point
 template <int sz, int precision> class Zoned
 {
 public:
@@ -1039,21 +1078,27 @@ FIGCONSTNUM_COMP(>=)
 FIGCONSTNUM_COMP(>)
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Packed decimal class
+////////////////////////////////////////////////////////////////////////////////
+/// Packed decimal
 #if !defined(NO_PACKED)
+/// @brief A numeric [packed-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-packed-decimal-format) value 
+/// where each 4-bit nibble stores a BCD digit (0-9) and the final trailing nibble holds the hexadecimal sign indicator (C/D/F).
+/// @tparam sz The total number of digits
+/// @tparam precision The number of digits to the right of the decimal point
 # define packed(sz, precision) _DecimalT<sz, precision>
 template <int l1, int p1>
  inline int operator % (const _DecimalT<l1,p1> &val1, int val2)
 	{ return val1-((long)(val1/val2))*val2;
 }
 #else
+/// @brief If [packed-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-packed-decimal-format) values
+/// are not supported, Zoned<> is unsed instead
 # define packed(sz, precision) Zoned<sz, precision>
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-// Generic numeric class
 #ifndef NO_PACKED
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Generic numeric class
 template <int sz, int precision> class Numeric
 {
 public:
@@ -1077,7 +1122,8 @@ public:
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-// The special UDATE, UYEAR, DATE values, etc.
+/// @brief The [User Date Special Words](https://www.ibm.com/docs/en/i/7.4.0?topic=words-user-date-special)
+// U/*DATE, U/*YEAR, and U/*MONTH
 template <int sz> class FmtDate : public Zoned<sz, 0>
 {
 public:
@@ -1117,7 +1163,7 @@ extern Zoned<2,0>	&MONTH;
 extern Zoned<2,0>	&DAY;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Data area class
+/// @brief A [Data area](https://www.ibm.com/docs/en/i/7.4.0?topic=procedures-using-data-areas) helper class
 struct DtaaName {
 	Fixed<10>	dtaa_name;
 	Fixed<10>	dtaa_lib;
@@ -1147,8 +1193,11 @@ private:
 	char	*dtaaraName;
 };
 
-// Do a (shell) sort for sorta
+/// @brief Get Number of Elements [%ELEM](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-elem-get-number-elements)
+/// built-in function
 #define ELEM(a) (int)(sizeof(a)/sizeof(a[0]))
+
+// Do a (shell) sort for sorta
 template<class T> void sorta(T *ary, int aryCnt)
 {
 	for (int gap=aryCnt/2; 0<gap; gap/=2)
@@ -1161,6 +1210,7 @@ template<class T> void sorta(T *ary, int aryCnt)
 					ary[j+gap]=temp;
 				}
 }
+/// @brief Sort array [SORTA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-sorta-sort-array) support
 #define SORTA(a) sorta(a, ELEM(a))
 
 // Sum all of the element in the array
@@ -1171,8 +1221,11 @@ template<class T> long double xfoot(T *ary, int aryCnt)
 		sum = sum + ary[i];
 	return sum;
 }
+/// @brief Sum array elements [%XFOOT](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-xfoot-sum-array-expression-elements#bbxfoot)
+/// built-in function
 #define XFOOT(a) xfoot(a, ELEM(a))
 
+////////////////////////////////////////////////////////////////////////////////
 // Look up a value in an array
 enum lookupCompare {EQ, GE, GT, LE, LT};
 // Look up a value in an array
@@ -1233,6 +1286,7 @@ template<int sz>
  int lookuple(char arg, const Fixed<sz> &ary, int startIndex, int numElems)
 	{ return lookupxx(arg, ary.overlay, startIndex, numElems, LE); }
 
+/// @brief Lookup values in an array [%LOOKUP](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-lookupxx-look-up-array-element) built-in function
 #define LOOKUP(arg, ary, s) lookup(arg, ary, (int)s, (int)(ELEM(ary)-s+1))
 #define LOOKUPGT(arg, ary, s) lookupgt(arg, ary, (int)s, (int)(ELEM(ary)-s+1))
 #define LOOKUPGE(arg, ary, s) lookupge(arg, ary, (int)s, (int)(ELEM(ary)-s+1))
@@ -1240,7 +1294,7 @@ template<int sz>
 #define LOOKUPLE(arg, ary, s) lookuple(arg, ary, (int)s, (int)(ELEM(ary)-s+1))
 
 ////////////////////////////////////////////////////////////////////////////////
-// Generic array class
+/// @brief Generic array class for RPG-style handling of arrays
 template <class C, int sz> class Array
 {
 public:
@@ -1260,6 +1314,11 @@ private:
 	C elem[sz];
 };
 
+/// @brief Move (copy) values to an array [MOVEA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movea-move-array) support
+/// @param a1 the array to move values from
+/// @param i1 the index of the from-array to begin moving values from
+/// @param a2 the array to move values to
+/// @param i2 the index of the to-array to move values to
 #define MOVEA(a1, i1, a2, i2) \
 	{	int j=i2-1; \
 		for (int i=i1-1; i<ELEM(a1) && j<ELEM(a2); i++) { \
@@ -1267,6 +1326,10 @@ private:
 			j++; \
 		} \
 	}
+/// @brief Move all values to an array [MOVEA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movea-move-array) support
+/// @param the value to copy
+/// @param a1 the array to move values to
+/// @param i1 the index of the to-array to move values to
 #define MOVEALL(c, a1, i1) \
 	{	for (int i=i1-1; i<ELEM(a1); i++) \
 			a1[i]=c; \
@@ -1277,6 +1340,7 @@ private:
 int time6();
 long double time12();
 long double time14();
+
 class Time6
 {
 public:

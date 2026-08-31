@@ -4,7 +4,25 @@
 #include <string.h>
 #include "rpgtypes.h"
 
-// Convert zoned to integer
+/// @file xxcvt.cpp
+/// @brief Conversions between IBM i "zoned decimal" storage and native C++ numeric types.
+///
+/// Zoned decimal is the storage format RPG uses for numeric fields declared with
+/// `S` (zoned) in the DDS/DSPEC: one byte per digit, each byte holding the digit
+/// value in its low nibble (0x30-0x39 in ASCII / 0xF0-0xF9 in EBCDIC) and, for the
+/// *last* digit only, the sign encoded in the high nibble instead of the usual
+/// digit-family nibble (see decodeSign()/encodeSign() in RPGTypes.cpp). These
+/// QXX* functions mirror the IBM i system APIs of the same name so that ported
+/// RPG numeric assignments/conversions behave identically on Windows.
+///
+/// See: [Zoned-decimal format](https://www.ibm.com/docs/en/i/7.4.0?topic=type-zoned-decimal-format#zodecfo),
+
+/// @brief Convert a zoned-decimal field to an integer (truncates any fractional digits).
+/// @param zptr pointer to the first byte of the zoned field
+/// @param digits total number of digits (precision) in the field
+/// @param fraction number of digits to the right of the implied decimal point
+///
+/// See: @see [QXXITOZ()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-integer-zoned-decimal-qxxitoz)
 int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 {
 	int i=digits-fraction;
@@ -22,13 +40,24 @@ int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 		i = i*-1;
 	return i;
 }
-// Convert zoned to double
+/// @brief Convert a zoned-decimal field to a double, preserving the implied decimal point/sign.
+/// @param zptr pointer to the first byte of the zoned field
+/// @param digits total number of digits (precision) in the field
+/// @param fraction number of digits to the right of the implied decimal point
+///
+/// See: @see [QXXZTOD()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-zoned-decimal-double-qxxztod)
 double QXXZTOD(unsigned char *zptr, int digits, int fraction)
 {
 	return atof(zonedToChar((const char*)zptr, digits, fraction));
 }
 
-// Convert double to zoned
+/// @brief Convert a double into an in-place zoned-decimal field (rounds/truncates to fit).
+/// @param zptr pointer to the first byte of the destination zoned field
+/// @param digits total number of digits (precision) in the field
+/// @param fraction number of digits to the right of the implied decimal point
+/// @param value the value to encode; negative values set the sign nibble via encodeSign()
+///
+/// See: @see [QXXDTOZ()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-double-zoned-decimal-qxxdtoz)
 void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 {
 	// Copy in everything to the left of the decimal point
@@ -46,7 +75,11 @@ void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 		encodeSign((char *)zptr+digits-1);
 }
 
-// Convert integer to zoned
+/// @brief Convert an integer into an in-place zoned-decimal field.
+/// @param zptr pointer to the first byte of the destination zoned field
+/// @param digits total number of digits (precision) in the field
+/// @param fraction number of digits to the right of the implied decimal point (padded with zeros)
+/// @param value the integer value to encode; negative values set the sign nibble via encodeSign()
 void QXXITOZ(unsigned char *zptr, int digits, int fraction, int value)
 {
 	// Copy in everything to the left of the decimal point

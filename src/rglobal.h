@@ -25,6 +25,9 @@ extern IND INOA, INOB, INOC, INOD, INOE, INOF, INOG, INOV;
 #define RETURN(as400) if (INLR!=ON) return 0; exit(0)
 
 #ifndef _DATFMT
+	/// @brief The default date format of this program (*DMY, *MDY, or *YMD)
+	///
+	/// See: DATEDIT @link https://www.ibm.com/docs/en/i/7.4.0?topic=keywords-dateditfmtseparator#hdedit @endlink
 	#define _DATFMT "*MDY"
 #endif
 #define UDATE XUDATE

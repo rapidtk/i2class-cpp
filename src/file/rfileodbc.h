@@ -31,7 +31,8 @@ bool getMem(void *str, e fn, int len) { return copyMem(str, fn, len); }
 
 //#define fixedCpy(a, b) memCpy(a.overlay, b, a.len())
 
-class RrecordODBC : public Rrecord
+/// @brief An ODBC-specific version of the base [Rrecord]() format class
+class RrecordODBC : public Rrecord 
 {
 friend class RfileODBC;
 public:
@@ -48,6 +49,7 @@ private:
 	SQLLEN		rLength;
 };
 
+/// @brief An ODBC-specific version of the base [Rfile]() class
 class RfileODBC : public Rfile
 {
 public:

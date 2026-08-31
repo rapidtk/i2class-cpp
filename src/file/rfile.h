@@ -11,6 +11,15 @@ extern const char *WRITE_ONLY;
 extern const char COMMIT_LOCK_LEVEL_NONE;
 extern const char COMMIT_LOCK_LEVEL_DEFAULT;
 
+constexpr int MAX_PRINT_FILE_WIDTH = 378;
+
+/// @file rfile.h
+/// @brief Classes for record-oriented (as opposed to stream-oriented) file access 
+/// designed around the [ILE C Record I⁄O functions](https://www.ibm.com/docs/en/i/7.5.0?topic=files-ile-c-record-io-functions#recfiles).
+/// The `Rxxx` classes here provide a C++ interface to the ILE C `_Rxxx()` functions and `_RFILE` data type.
+
+
+/// @brief A base record format class for record-level file access
 class Rrecord
 {
 friend class Rfile;
@@ -24,6 +33,8 @@ public:
 //protected:
 	char *recordName{};
 };
+/// @brief A record format class for [keyed](https://www.ibm.com/docs/en/i/7.5.0?topic=rdr-reading-database-records-using-keyed-sequence-access-path)
+/// record-level access.
 class RdbRcd
 {
 public:
@@ -31,6 +42,7 @@ public:
 	int	keyLength, keyCount;
 };
 
+/// @brief A base record-oriented file access class
 class Rfile
 {
 public:
@@ -55,7 +67,7 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Print file stuff
+/// @brief A base record format class for printed output
 class RrecordPrint : public Rrecord
 {
 public:
@@ -89,7 +101,7 @@ protected:
 
 protected:
 	//char	*outputBuffer;
-	char	outputBuffer[379]{}; // Record buffer with room for first character form control character
+	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]{}; // Record buffer with room for first character form control character
 	int	outputSize;
 	int	maxColumn;
 	int	column, row{};

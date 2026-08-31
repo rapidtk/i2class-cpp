@@ -3,6 +3,10 @@
 
 #include "rfileodbc.h"
 
+/// @file rfileodbc.cpp
+/// @brief concrete ODBC, sequential-only implementation of base Rfile class
+/// implemented as `SELECT * FROM <fileName>`
+
 const char *READ_ONLY="rr";
 const char *READ_WRITE="rr+";
 const char *WRITE_ONLY="ar";
@@ -18,7 +22,6 @@ RfileODBC::~RfileODBC()
 	close();
 }
 
-// Initialize the class to point to the (already allocated) structure
 char RfileODBC::close()
 {
    SQLFreeStmt (hstmt, SQL_DROP);         /* free the statement handle    */

@@ -7,7 +7,6 @@
 #include "xxfdbk.h"
 #endif
 
-#define MAX_DECIMAL_DIGITS 31 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Figurative constant declaration
@@ -61,14 +60,19 @@ StringTemp operator + (const FixedTemp &fStr1, const char *str)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Figurative constant declarations
+/// [Figurative constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig) declarations
+
 FigConst	BLANKS(' ', 0);
 Zeros ZEROS;
 Loval LOVAL;
 Hival HIVAL;
 
 ////////////////////////////////////////////////////////////////////////////////
-// 'Special' date (U/DATE, U/YEAR, U/MONTH, U/DAY declarations
+// 'Special' date (U/*DATE, U/*YEAR, U/*MONTH, U/*DAY declarations
+/// RPG's U/DATE (job/system date) is exposed as several overlapping numeric
+/// "views" of the same 8-byte YYYYMMDD storage: YEAR/MONTH/DAY (4/2/2 digits)
+/// and their 2-digit UYEAR/UMONTH/UDAY counterparts. These are references
+/// into YYMD.overlay so all views always stay in sync with each other.
 FmtDate<8>	YYMD("%Y%m%d");
 	Zoned<4,0>	&YEAR=(Zoned<4,0> &)YYMD.overlay[0];
 		Zoned<2,0>	&UYEAR=(Zoned<2,0> &)YEAR.overlay[2];
@@ -82,6 +86,12 @@ FmtDate<8>	XDATE(_DATFMT);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Indicator space
+/// RPG's 99 numbered indicators (*IN01-*IN99), a global array of boolean flags
+/// traditionally used to signal conditions (end-of-file, record found, etc.)
+/// between a program's calculation and output specs. IN01..IN99 are named
+/// references into the xIN[] array; IN is a Fixed<99> view of the whole array
+/// (so it can be read/written as a single 99-character '0'/'1' string, as RPG
+/// programs sometimes do via *INxx or the LR/KA-KY/L1-L9/OA-OV aliases below).
 IND	xIN[99];
 	IND &IN01=xIN[0],&IN02=xIN[1],&IN03=xIN[2],&IN04=xIN[3],&IN05=xIN[4];
 	IND &IN06=xIN[5],&IN07=xIN[6],&IN08=xIN[7],&IN09=xIN[8],&IN10=xIN[9];
@@ -111,7 +121,11 @@ IND INKP,INKQ,INKR,INKS,INKT,INKU,INKV,INKW,INKX,INKY;
 IND INLR, INL1, INL2, INL3, INL4, INL5, INL6, INL7, INL8, INL9;
 IND INOA, INOB, INOC, INOD, INOE, INOF, INOG, INOV;
 
-// If this is OS/400, we need some way to deal INDARA.  Do it here
+/// @brief On native IBM i, bind a display/printer file's INDARA (separate
+/// indicator area) to the global indicator array so RPG-style *INxx settings
+/// made by the program are reflected on the next I/O operation for this file.
+/// Only meaningful for files opened with a separate indicator area; a no-op
+/// (and not compiled) elsewhere since indicator areas are an IBM i I/O concept.
 #ifdef __OS400__
 void setIndara(_RFILE *fp)
 {
@@ -153,7 +167,13 @@ Time14 TIMESTAMP;
 ////////////////////////////////////////////////////////////////////////////////
 // Zoned support functions
 
-// Zoned negative values are encoded as xD0-D9 EBCDIC '}', 'J'-'R'
+/// @brief Decode the sign nibble of a zoned decimal's last digit into a plain ASCII digit.
+///
+/// A zoned-decimal field stores one digit per byte, but the *last* digit's
+/// byte doubles up as the sign: for negative values the digit is instead one
+/// of EBCDIC '}' (zero) or 'J'-'R' (digits 1-9), e.g. 'J' means "digit 1,
+/// negative". This restores the ordinary digit character ('0'-'9') in place.
+/// @param c pointer to the last-digit byte of a zoned field known to be negative
 void decodeSign(char *c)
 {
 	if (*c=='}')
@@ -162,6 +182,10 @@ void decodeSign(char *c)
 		*c='1' + (*c-'J');
 }
 
+/// @brief Inverse of decodeSign(): encode a negative zoned decimal's last digit
+/// by replacing the plain digit character with its sign-bearing equivalent
+/// ('0'->'}', '1'-'9'->'J'-'R').
+/// @param c pointer to the last-digit byte of a zoned field to mark negative
 void encodeSign(char *c)
 {
 	if (*c=='0')
@@ -169,6 +193,11 @@ void encodeSign(char *c)
 	else
 		*c='J' + (*c-'1');
 }
+/// @brief Render a zoned-decimal field as a printable/parseable C string (e.g. "-123.45").
+/// @param zptr pointer to the first byte of the zoned field
+/// @param digits total number of digits (precision)
+/// @param fraction number of digits after the implied decimal point
+/// @return pointer to a static internal buffer holding the formatted number
 char *zonedToChar(const char *zptr, int digits, int fraction)
 {
     static char	buf[MAX_DECIMAL_DIGITS + 3]; // +3 for sign, decimal point, and null terminator
@@ -203,8 +232,9 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Global TESTx functions
-// For testn, return <0 for non-number, 0 for blanks, and n for offset to
-// first digit.
+/// @brief RPG TESTN opcode: classify a character as blank, a valid numeric
+/// digit (including zoned sign-encoded 'A'-'R'), or invalid.
+/// @return 0 for blank, 1 for a valid numeric character, -1 if not numeric.
 int testn(char c)
 {
 	if (c==' ')
@@ -213,6 +243,10 @@ int testn(char c)
 		return 1;
 	return -1;
 }
+/// @brief RPG TESTN opcode applied to a whole field: verify every non-blank
+/// character is a plain digit ('0'-'9').
+/// @return -1 if any non-blank, non-digit character is found; otherwise the
+/// index of the last non-blank digit seen (0 if the field is entirely blank).
 int testn(const FixedTemp &fStr)
 {
 	int numIndex=0;
@@ -229,7 +263,10 @@ int testn(const FixedTemp &fStr)
 	return numIndex;
 }
 
-// For testz, return 0-2
+/// @brief RPG TESTZ opcode: check whether a character is a valid zoned-decimal
+/// digit, including the sign-encoded forms ('&'/'A'-'I' for positive,
+/// '-'/'J'-'R' for negative) described in decodeSign()/encodeSign().
+/// @return 1 if it's a valid zoned digit character, 0 otherwise.
 int testz(char c)
 {
 	if (c=='&' || (c>='A' && c<='I'))
@@ -243,8 +280,14 @@ int testz(const FixedTemp &fStr)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global MOVEx functions
+/// @brief RPG MOVEL opcode: copy characters left-justified (from the start of
+/// the source into the start of the destination), truncating/leaving the
+/// remainder of a longer destination untouched - unlike a normal C++ 'assign'.
 void movel(const FixedTemp &f1, const FixedTemp &f2)
 	{ memcpy(f2.overlay, f1.overlay, MIN(f1.len(), f2.len())); }
+/// @brief RPG MOVE opcode: copy characters right-justified (aligning the end
+/// of the source with the end of the destination), leaving any leading bytes
+/// of a longer destination untouched.
 void move(const FixedTemp &f1, const FixedTemp &f2)
 {
 	int minsz=MIN(f1.len(), f2.len());
