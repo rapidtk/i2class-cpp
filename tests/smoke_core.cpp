@@ -60,6 +60,17 @@ static void test_zoned()
 
 	Zoned<5, 2> zero = ZEROS;
 	CHECK(zero.toInt() == 0);
+
+	Zoned<5, 2> total = 100.25;
+	total += 23.50;
+	CHECK(std::fabs((double)total - 123.75) < 0.001);
+	Zoned<3, 1> other = 1.5;
+	total += other;
+	CHECK(std::fabs((double)total - 125.25) < 0.001);
+	total -= 25.25;
+	CHECK(std::fabs((double)total - 100.00) < 0.001);
+	total -= other;
+	CHECK(std::fabs((double)total - 98.50) < 0.001);
 }
 
 static void test_ds()
