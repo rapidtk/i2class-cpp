@@ -22,6 +22,22 @@
 # endif
 
 ////////////////////////////////////////////////////////////////////////////////
+// Export macro for the handful of extern global objects (BLANKS, ZEROS, LOVAL,
+// HIVAL, TIME, ...) that a Windows DLL doesn't export automatically -- MSVC's
+// WINDOWS_EXPORT_ALL_SYMBOLS (used by CMakeLists.txt) only auto-exports functions,
+// not data. I2CLASS_BUILDING_DLL is defined by CMakeLists.txt only for the i2class
+// target itself, so consumers of the header automatically get the dllimport side.
+// No-op everywhere else (non-Windows, or linking the sources directly like the
+// original .vcxproj does), so this changes nothing for existing non-DLL builds.
+#if defined(_WIN32) && defined(I2CLASS_BUILDING_DLL)
+# define I2CLASS_API __declspec(dllexport)
+#elif defined(_WIN32) && defined(I2CLASS_USING_DLL)
+# define I2CLASS_API __declspec(dllimport)
+#else
+# define I2CLASS_API
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
 // Portable fallbacks for the Microsoft Secure CRT functions this codebase calls
 // (_itoa_s, _ecvt_s). MSVC already provides real, native implementations of both
 // via <stdlib.h>; every other standard C++11+ compiler gets these instead (see

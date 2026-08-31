@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-#include "i2class.h"
+#include "RPGTypes.h"
 
 int main()
 {

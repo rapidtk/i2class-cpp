@@ -128,7 +128,7 @@ public:
 //private:
 	char fillChar;
 };
-extern FigConst BLANKS;
+extern I2CLASS_API FigConst BLANKS;
 
 /// @brief Numeric [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig)
 /// (all but BLANKS)
@@ -163,7 +163,7 @@ public:
 		{ return (_ConvertDecimal)"0"; }
 #endif
 };
-extern Zeros ZEROS;
+extern I2CLASS_API Zeros ZEROS;
 
 /// @brief [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig)
 /// representing the lowest possible value (*LOVAL)
@@ -182,7 +182,7 @@ public:
 		{ return MIN_DECIMAL_STR; }
 #endif
 };
-extern Loval LOVAL;
+extern I2CLASS_API Loval LOVAL;
 
 /// @brief [Figurative Constant](https://www.ibm.com/docs/en/i/7.4.0?topic=constants-figurative#spfig) 
 /// representing the highest possible value (*HIVAL)
@@ -201,7 +201,7 @@ public:
 		{ return MAX_DECIMAL_STR; }
 #endif
 };
-extern Hival HIVAL;
+extern I2CLASS_API Hival HIVAL;
 
 
 /// @brief A [Fixed-length character](https://www.ibm.com/docs/en/i/7.4.0?topic=type-character-format) string data type
@@ -1167,10 +1167,10 @@ public:
 		memcpy(Zoned<sz,0>::overlay, overlay0, sz);
 	}
 };
-extern Zoned<4,0>	&YEAR;
-extern Zoned<2,0>	&UYEAR;
-extern Zoned<2,0>	&MONTH;
-extern Zoned<2,0>	&DAY;
+extern I2CLASS_API Zoned<4,0>	&YEAR;
+extern I2CLASS_API Zoned<2,0>	&UYEAR;
+extern I2CLASS_API Zoned<2,0>	&MONTH;
+extern I2CLASS_API Zoned<2,0>	&DAY;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief A [Data area](https://www.ibm.com/docs/en/i/7.4.0?topic=procedures-using-data-areas) helper class
@@ -1385,9 +1385,9 @@ public:
 		{ return (_DecimalT<14,0>)time14(); }
 #endif
 };
-extern Time6 TIME;
-extern Time12 UTIMESTAMP;
-extern Time14 TIMESTAMP;
+extern I2CLASS_API Time6 TIME;
+extern I2CLASS_API Time12 UTIMESTAMP;
+extern I2CLASS_API Time14 TIMESTAMP;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global functions
