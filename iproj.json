@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "objlib": "&objlib",
   "curlib": "&objlib",
-  "includePath": ["src"],
+  "includePath": ["src", "src/compat", "src/file", "src/file/ibmi"],
   "buildCommand": "makei build",
   "compileCommand": "makei compile -f {filename}"
 }
