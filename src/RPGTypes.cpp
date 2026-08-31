@@ -230,6 +230,51 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 	return buf;
 }
 
+/// @brief Inverse of zonedToChar(): parse a decimal string (e.g. "-123.45", as returned
+/// by ODBC's exact-text retrieval of a NUMERIC/DECIMAL column) directly into a zoned-decimal
+/// field, without going through a double -- this is what preserves the full-precision
+/// exactness Java's ResultSet.getBigDecimal()/RecordJDBC.getDecimal() give you (see
+/// RrecordODBC::readDecimal()).
+/// @param zptr pointer to the first byte of the destination zoned field
+/// @param digits total number of digits (precision) in the field
+/// @param fraction number of digits to the right of the implied decimal point
+/// @param str a decimal string, optionally signed ('-'/'+'), optionally containing a
+/// single '.'; integer/fraction digits that don't fit are zero-padded or truncated from
+/// the high/low order end respectively, matching RPG's MOVE/assignment truncation rules.
+void zonedFromChar(char *zptr, int digits, int fraction, const char *str)
+{
+	while (*str==' ')
+		str++;
+	bool negative = (*str=='-');
+	if (negative || *str=='+')
+		str++;
+
+	const char *dot=strchr(str, '.');
+	int intLen = dot ? static_cast<int>(dot-str) : static_cast<int>(strlen(str));
+	const char *fracStr = dot ? dot+1 : "";
+	int fracLen = static_cast<int>(strlen(fracStr));
+
+	int intDigits=digits-fraction;
+	// Right-justify the integer part, padding/truncating high-order digits
+	if (intLen>=intDigits)
+		memcpy(zptr, str+(intLen-intDigits), intDigits);
+	else
+	{
+		memset(zptr, '0', intDigits-intLen);
+		memcpy(zptr+(intDigits-intLen), str, intLen);
+	}
+	// Left-justify the fraction part, padding/truncating low-order digits
+	if (fraction>0)
+	{
+		int fracCopy = fracLen<fraction ? fracLen : fraction;
+		memcpy(zptr+intDigits, fracStr, fracCopy);
+		if (fracCopy<fraction)
+			memset(zptr+intDigits+fracCopy, '0', fraction-fracCopy);
+	}
+	if (negative)
+		encodeSign(zptr+digits-1);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //Global TESTx functions
 /// @brief RPG TESTN opcode: classify a character as blank, a valid numeric

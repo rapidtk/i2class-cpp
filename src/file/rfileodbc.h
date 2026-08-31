@@ -44,6 +44,23 @@ public:
 	double	readDouble(SQLSMALLINT columnNumber);
 	bool copyMem(void *str, SQLSMALLINT columnNumber, int strLen);
 	char readChar(SQLSMALLINT columnNumber);
+
+	/// @brief Fetch a column as exact decimal text (e.g. "1234.56"), avoiding the binary
+	/// floating-point round-trip readDouble() goes through -- the ODBC/C++ analog of
+	/// Java's RecordJDBC.getBigDecimal()/getDecimal()/getNumeric(). Returns false if the
+	/// driver reported no data (NULL) for this column.
+	bool readDecimal(SQLSMALLINT columnNumber, char *buf, int bufLen);
+	/// @brief Fetch a column directly into a Zoned<sz,precision> field, exactly -- see
+	/// readDecimal(SQLSMALLINT, char*, int).
+	template <int sz, int precision>
+	bool readDecimal(SQLSMALLINT columnNumber, Zoned<sz, precision> &dest)
+	{
+		char buf[MAX_DECIMAL_DIGITS + 3];
+		if (!readDecimal(columnNumber, buf, sizeof(buf)))
+			return false;
+		zonedFromChar(dest.overlay, sz, precision, buf);
+		return true;
+	}
 protected:
 	int	keyLength;
 private:

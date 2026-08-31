@@ -184,6 +184,12 @@ bool RrecordODBC::copyMem(void *str, SQLSMALLINT columnNumber, int strLen)
 	return true;
 }
 
+bool RrecordODBC::readDecimal(SQLSMALLINT columnNumber, char *buf, int bufLen)
+{
+	SQLGetData(hstmt, columnNumber, SQL_C_CHAR, (SQLPOINTER) buf, bufLen, &rLength);
+	return rLength != SQL_NULL_DATA;
+}
+
 /*
 void RrecordODBC::fixedCpy(template <int sz> Fixed<sz> &fStr, SQLSMALLINT columnNumber)
 {

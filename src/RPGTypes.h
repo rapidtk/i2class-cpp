@@ -844,6 +844,7 @@ private:
 void decodeSign(char *c);
 void encodeSign(char *c);
 char *zonedToChar(const char *zptr, int digits, int fraction);
+void zonedFromChar(char *zptr, int digits, int fraction, const char *str);
 
 /// @brief A numeric [zoned-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-zoned-decimal-format) value 
 /// backed by an unformatted (no sign or decimal point) fixed-length string of characters. 

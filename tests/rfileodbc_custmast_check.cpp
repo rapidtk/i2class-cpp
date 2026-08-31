@@ -26,6 +26,15 @@ class CustmastRecord : public RRECORD
 public:
 	enum FieldList { CUSNO = 1, CNAME = 2, ORDVAL = 3 };
 	double getOrdersValue() { return readDouble(ORDVAL); }
+	// Exact-decimal path (see RrecordODBC::readDecimal()) -- no binary floating-point
+	// round-trip, unlike getOrdersValue() above.
+	double getOrdersValueExact()
+	{
+		Zoned<9,2> z;
+		if (!readDecimal(ORDVAL, z))
+			return 0.0;
+		return (double)(long double)z;
+	}
 };
 
 int main()
@@ -60,6 +69,35 @@ int main()
 
 	CHECK(rowCount == 3);
 	CHECK(total > 60145.75 && total < 60145.77); // 5299.99 + 50328 + 4517.77
+
+	// Re-run using the exact-decimal path (readDecimal()/Zoned<>), in a separate open/read
+	// pass -- ODBC drivers generally don't support calling SQLGetData twice for the same
+	// (fixed-length) column within a single row, so this can't share the loop above.
+	RFILE custmastExact(as400, "CUSTMAST.csv");
+	CustmastRecord recExact;
+	custmastExact.setRecordFormat(recExact);
+	bool openedExact = true;
+	try
+	{
+		custmastExact.open(READ_ONLY);
+	}
+	catch (const CI2ErrFile &err)
+	{
+		std::fprintf(stderr, "open() threw CI2ErrFile: %s\n", err.message);
+		openedExact = false;
+	}
+	CHECK(openedExact);
+	double totalExact = 0.0;
+	int rowCountExact = 0;
+	while (custmastExact.read())
+	{
+		totalExact += recExact.getOrdersValueExact();
+		++rowCountExact;
+	}
+	custmastExact.close();
+
+	CHECK(rowCountExact == 3);
+	CHECK(totalExact > 60145.75 && totalExact < 60145.77);
 
 	if (failures == 0)
 	{
