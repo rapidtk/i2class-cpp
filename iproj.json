@@ -1,0 +1,9 @@
+{
+  "description": "i2class-cpp project",
+  "version": "0.0.1",
+  "objlib": "&objlib",
+  "curlib": "&objlib",
+  "includePath": ["src"],
+  "buildCommand": "makei build",
+  "compileCommand": "makei compile -f {filename}"
+}

@@ -80,3 +80,8 @@ parsers/rpg/yylex.cpp
 parsers/clp/clp_tab.cpp
 parsers/clp/clp_tab.cpp.h
 parsers/clp/clp_tab.h
+
+.logs
+.evfevent
+.itest
+.env
