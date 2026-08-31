@@ -8,7 +8,7 @@ public:
 
 public:
    char	*url;
-   char	*usrid{};
-   char	*password{};
+   char	*usrid;
+   char	*password;
 };
 #endif

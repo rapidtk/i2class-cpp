@@ -1,25 +1,17 @@
 #ifndef I2COMPAT_H
 #define I2COMPAT_H
 
-// define bool, true, and false if the compiler doesn't recognize them
-// Any compiler that does not have function templates should define NO_FUNCTION_TEMPLATE
-#ifdef __OS400__
-# ifndef __OS400_TGTVRM__
-#  define __OS400_TGTVRM__ 440
-# endif
-# if (__OS400_TGTVRM__<510)
-#  define NO_FUNCTION_TEMPLATE
-#  define NO_BOOLEAN
-# endif
+#if __cplusplus >= 202002L
+# define __OVERRIDE override
 #else
-# define NO_PACKED
+  // No override support
+# define __OVERRIDE
 #endif
 
-#ifdef NO_BOOLEAN
-#  define bool int
-#  define true -1
-#  define false 0
-# endif
+// Built-in packed decimal support
+#ifndef __OS400__
+# define NO_PACKED
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Export macro for the handful of extern global objects (BLANKS, ZEROS, LOVAL,

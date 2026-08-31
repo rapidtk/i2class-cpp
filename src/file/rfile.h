@@ -24,7 +24,7 @@ class Rrecord
 {
 friend class Rfile;
 public:
-	Rrecord() {}
+	Rrecord() : recordName(nullptr) {}
 	Rrecord(char *rcdName)
 		{ recordName=rcdName; }
 	virtual ~Rrecord() = default;
@@ -32,7 +32,7 @@ public:
 	virtual void	output(){};
 
 //protected:
-	char *recordName{};
+	char *recordName;
 };
 /// @brief A record format class for [keyed](https://www.ibm.com/docs/en/i/7.5.0?topic=rdr-reading-database-records-using-keyed-sequence-access-path)
 /// record-level access.
@@ -55,7 +55,7 @@ public:
 	 char /*commitLockLevel*/=COMMIT_LOCK_LEVEL_NONE) {return '0';};
 
 public:
-	char	error{0}, found{0}, eof{0};
+	char	error, found, eof;
 
 //protected:
 	void setRecord(Rrecord &format);
@@ -64,7 +64,7 @@ protected:
 	//char		fileName[255];
 	char		*server, *password, *usrid;
 	//char		server[255];
-	Rrecord	*record{};
+	Rrecord	*record;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ protected:
 class RrecordPrint : public Rrecord
 {
 public:
-	RrecordPrint() : maxColumn(0), column(1), outputSize(sizeof(outputBuffer) - 1) {}
+	RrecordPrint() : maxColumn(0), row(0), column(1), outputSize(sizeof(outputBuffer) - 1) {}
 	//static void edit(char *buf, const ZonedTemp &n, const char *edtWrd);
 	static void edit(char *buf, const _ConvertDecimal &n, const char *edtWrd);
 	void print(const FixedTemp &f, int col=0);
@@ -102,10 +102,10 @@ protected:
 
 protected:
 	//char	*outputBuffer;
-	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]{}; // Record buffer with room for first character form control character
+	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]; // Record buffer with room for first character form control character
 	int	outputSize;
 	int	maxColumn;
-	int	column, row{};
+	int	column, row;
 
 private:
 	void	printChar(const char *str, int edtLen, int col);

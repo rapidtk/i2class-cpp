@@ -8,6 +8,11 @@
 #if !defined(_MSC_VER)
 
 #include <cstdio>
+#ifdef __OS400__
+#include <stdio.h>
+#else
+using std::snprintf;
+#endif
 #include <cstdlib>
 #include <cstring>
 
@@ -15,7 +20,7 @@ int _itoa_s(int value, char *buffer, std::size_t sizeInCharacters, int radix)
 {
 	if (buffer == nullptr || radix != 10) // only base 10 is used anywhere in this codebase
 		return 22; // EINVAL
-	int n = std::snprintf(buffer, sizeInCharacters, "%d", value);
+	int n = snprintf(buffer, sizeInCharacters, "%d", value);
 	if (n < 0 || static_cast<std::size_t>(n) >= sizeInCharacters)
 		return 34; // ERANGE
 	return 0;
@@ -41,7 +46,7 @@ int _ecvt_s(char *buffer, std::size_t sizeInBytes, double value, int count, int 
 	// Scientific notation gives exactly `count` significant digits directly:
 	// "d.ddd...e+NN" has 1 + (count-1) = count digits before the 'e'.
 	char sci[64];
-	std::snprintf(sci, sizeof(sci), "%.*e", (count > 0 ? count - 1 : 0), magnitude);
+	snprintf(sci, sizeof(sci), "%.*e", (count > 0 ? count - 1 : 0), magnitude);
 
 	std::size_t n = 0;
 	for (const char *p = sci; *p != '\0' && *p != 'e' && *p != 'E' && n < static_cast<std::size_t>(count); ++p)

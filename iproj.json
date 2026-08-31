@@ -1,8 +1,8 @@
 {
   "description": "i2class-cpp project",
   "version": "0.0.1",
-  "objlib": "&objlib",
-  "curlib": "&objlib",
+  "objlib": "I2CLASS",
+  "curlib": "I2CLASS",
   "includePath": ["src", "src/compat", "src/file", "src/file/ibmi"],
   "buildCommand": "makei build",
   "compileCommand": "makei compile -f {filename}"

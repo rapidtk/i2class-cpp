@@ -57,7 +57,7 @@ class CI2ErrSubscript : public CI2Err { };
 class FixedTemp
 {
 public:
-	FixedTemp() {}
+	FixedTemp() : overlay(nullptr), sz(0) {}
 	FixedTemp(const char *tBuf, int tsz) : sz(tsz), overlay((char *)tBuf) {}
 	FixedTemp(const char &c) : sz(1), overlay((char *)&c) {}
 	FixedTemp(const char *str) : overlay((char *)str)
@@ -67,8 +67,8 @@ public:
 	inline char &operator [] (const int i)
 		{ return overlay[i]; }
 //private:
-	char *overlay{};
-	int	sz{};
+	char *overlay;
+	int	sz;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,14 +152,14 @@ class Zeros : public FigConstNum
 {
 public:
 	Zeros() : FigConstNum('0', 0) {}
-	inline operator short() const override
+	inline operator short() const __OVERRIDE
 		{ return 0; }
-	inline operator int() const override
+	inline operator int() const __OVERRIDE
 		{ return 0; }
-	inline operator long double() const override
+	inline operator long double() const __OVERRIDE
 		{ return 0; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const override
+	inline operator _ConvertDecimal() const __OVERRIDE
 		{ return (_ConvertDecimal)"0"; }
 #endif
 };
@@ -171,15 +171,15 @@ class Loval : public FigConstNum
 {
 public:
 	Loval() : FigConstNum('\0', -1) {}
-	inline operator short() const override
+	inline operator short() const __OVERRIDE
    	{ return SHRT_MIN; }
-	inline operator int() const override
+	inline operator int() const __OVERRIDE
    	{ return INT_MIN; }
-	inline operator long double() const override
+	inline operator long double() const __OVERRIDE
    	{ return MIN_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const override
-		{ return MIN_DECIMAL_STR; }
+	inline operator _ConvertDecimal() const __OVERRIDE
+		{ return (_ConvertDecimal)MIN_DECIMAL_STR; }
 #endif
 };
 extern I2CLASS_API Loval LOVAL;
@@ -190,15 +190,15 @@ class Hival : public FigConstNum
 {
 public:
 	Hival() : FigConstNum('\xFF', 1) {}
-	inline operator short() const override
+	inline operator short() const __OVERRIDE
    	{ return SHRT_MAX; }
-	inline operator int() const override
+	inline operator int() const __OVERRIDE
    	{ return INT_MAX; }
-	inline operator long double() const override
+	inline operator long double() const __OVERRIDE
    	{ return MAX_DECIMAL_VALUE; }
 #if !defined(NO_PACKED)
-	inline operator _ConvertDecimal() const override
-		{ return MAX_DECIMAL_STR; }
+	inline operator _ConvertDecimal() const __OVERRIDE
+		{ return (_ConvertDecimal)MAX_DECIMAL_STR; }
 #endif
 };
 extern I2CLASS_API Hival HIVAL;
