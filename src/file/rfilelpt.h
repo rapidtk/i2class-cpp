@@ -36,10 +36,10 @@ class RfileLPT : public Rfile
 public:
 	RfileLPT(AS400 &as400, char *sFileName, int rcdLength) : Rfile(as400, sFileName) {}
 	void setRecordFormat(RrecordLPT &format);
-	char write();
-	char write(RrecordLPT &format);
-	char close();
-	char open(const char *openType);
+	bool write();
+	bool write(RrecordLPT &format);
+	void close();
+	void open(const char *openType);
 
 private:
 	FILE *fp{};

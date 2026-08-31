@@ -31,18 +31,16 @@ RfileADO::~RfileADO()
 }
 
 // Initialize the class to point to the (already allocated) structure
-char RfileADO::close()
+void RfileADO::close()
 {
    fp->Active = false;
-   return '0';
 }
 
-char RfileADO::open(const char *OpenType, int blockingFactor, char commitLockLevel)
+void RfileADO::open(const char *OpenType, int blockingFactor, char commitLockLevel)
 {
 
    fp->ReadOnly = (*OpenType=='I'); //I=Input=Read only
 	fp->Active = true;
-   return '0';
 }
 
 void RfileADO::setRecordFormat(RrecordADO &format)
@@ -51,21 +49,21 @@ void RfileADO::setRecordFormat(RrecordADO &format)
 	format.fp = fp;
 }
 
-char RfileADO::readx()
+bool RfileADO::readx()
 {
    if ((direction=='F' && fp->Eof) || (direction=='B' && fp->Bof))
-   	return '1';
+   	return false;
 	record->input();
-   return '0';
+   return true;
 }
-char RfileADO::read()
+bool RfileADO::read()
 {
    if (direction=='F' || direction=='C')
       fp->Next();
    direction='F';
    return readx();
 }
-char RfileADO::read(RrecordADO &format)
+bool RfileADO::read(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return read();
@@ -82,7 +80,7 @@ void RfileADO::update(RrecordADO &format)
 	update();
 }
 
-char RfileADO::write()
+bool RfileADO::write()
 {
    // Read the current record values
    int fldCount=fp->Fields->Count;
@@ -97,9 +95,9 @@ char RfileADO::write()
    delete[] v;
 
 	record->output();
-	return '0';
+	return true;
 }
-char RfileADO::write(RrecordADO &format)
+bool RfileADO::write(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return write();
@@ -123,16 +121,16 @@ char RfileADO::chain()
    Variant vSeek=VarArrayOf(vKey, dbRcd->keyCount-1);
    bool seeked=fp->Seek(vSeek, soFirstEQ);
 	if (!seeked)
-   	return '1';
+   	return false;
 	return readx();
 }
-char RfileADO::chain(RrecordADO &format)
+bool RfileADO::chain(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return chain();
 }
 // Chain to a relative record number
-char RfileADO::chain(RrecordADO &format, long rrn)
+bool RfileADO::chain(RrecordADO &format, long rrn)
 {
 	setRecordFormat(format);
    fp->RecNo = rrn;
@@ -140,38 +138,37 @@ char RfileADO::chain(RrecordADO &format, long rrn)
 }
 
 /* Implemented like RdbFile400 */
-char RfileADO::readp()
+bool RfileADO::readp()
 {
    if (direction!='F')
       fp->Prior();
    direction='B';
    return readx();
 }
-char RfileADO::readp(RrecordADO &format)
+bool RfileADO::readp(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return readp();
 }
 
 // We can't do the READxE at the data management level, so do the record comparison here
-char RfileADO::readxe()
+bool RfileADO::readxe()
 {
 	RrecordADO *dbRcd = (RrecordADO *)record;
    Variant *variantKey=dbRcd->getVariantKey();
    for (int i=0; i<dbRcd->keyCount; i++)
    	if (fp->IndexFields[i]->Value != variantKey[i])
-      	return '1';
+      	return false;
    return readx();
 }
 
-char RfileADO::reade()
+bool RfileADO::reade()
 {
-   char eof=read();
-   if (eof=='1')
-   	return '1';
+   if (!read())
+   	return false;
    return readxe();
 }
-char RfileADO::reade(RrecordADO &format)
+bool RfileADO::reade(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return reade();
@@ -186,14 +183,13 @@ char RfileADO::readEqual()
 }
 */
 
-char RfileADO::readpe()
+bool RfileADO::readpe()
 {
-   char eof=readp();
-   if (eof=='1')
-   	return '1';
+   if (!readp())
+   	return false;
    return readxe();
 }
-char RfileADO::readpe(RrecordADO &format)
+bool RfileADO::readpe(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return readpe();
@@ -207,7 +203,7 @@ char RfileADO::readpEqual()
 }
 */
 
-char RfileADO::setgt()
+bool RfileADO::setgt()
 {
 	direction=' ';
 	RrecordADO *dbRcd = (RrecordADO *)record;
@@ -219,51 +215,51 @@ char RfileADO::setgt()
    //bool seeked=fp->Seek(vSeek, soAfter);
    bool seeked=fp->Seek(vSeek, soAfter);
 	if (seeked)
-   	return '0';
+   	return true;
 
    // SHOULDN'T HAVE TO DO THIS!!!  BUG IN ADO
    fp->Close();
    fp->Open();
 
    fp->Last();
-   return '1';
+   return false;
 }
-char RfileADO::setgt(RrecordADO &format)
+bool RfileADO::setgt(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return setgt();
 }
 // Position past a relative record number
-char RfileADO::setgt(RrecordADO &format, long rrn)
+bool RfileADO::setgt(RrecordADO &format, long rrn)
 {
 	fp->RecNo = rrn+1;
    return readx();
 }
 
-char RfileADO::setll()
+bool RfileADO::setll()
 {
 	direction=' ';
 	RrecordADO *dbRcd = (RrecordADO *)record;
    Variant *variantKey=dbRcd->getVariantKey();
    bool seeked=fp->Seek(VarArrayOf(variantKey, dbRcd->keyCount-1), soFirstEQ);
 	if (seeked)
-   	return '1';
+   	return true;
    seeked=fp->Seek(VarArrayOf(variantKey, dbRcd->keyCount-1), soAfterEQ);
    if (!seeked)
    	direction='F';
-   return '0';
+   return false;
 }
-char RfileADO::setll(RrecordADO &format)
+bool RfileADO::setll(RrecordADO &format)
 {
 	setRecordFormat(format);
 	return setll();
 }
 // Position to a relative record number
-char RfileADO::setll(RrecordADO &format, long rrn)
+bool RfileADO::setll(RrecordADO &format, long rrn)
 {
 	direction=' ';
    fp->RecNo=rrn;
-	return '0';
+	return true;
 }
 
 int RrecordADO::getInt(int columnNumber)

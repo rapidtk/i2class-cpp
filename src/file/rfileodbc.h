@@ -8,6 +8,7 @@
 #  include <windows.h>
 # endif
 # include <sql.h>
+# include <sqlext.h> // SQLDriverConnect, SQL_ATTR_ODBC_VERSION, SQL_OV_ODBC3, ...
 # define SQL_TXN_NO_COMMIT 1
 # define SQL_ATTR_COMMIT 0
 #endif
@@ -53,7 +54,10 @@ private:
 class RfileODBC : public Rfile
 {
 public:
-	RfileODBC(AS400 &as400, char *sFileName): Rfile(as400, sFileName){};
+	// server (AS400::url) is a full ODBC connection string passed directly to
+	// SQLDriverConnect -- e.g. "Driver={Microsoft Access Text Driver (*.txt, *.csv)};
+	// Dbq=C:\\path\\to\\folder;Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;"
+	RfileODBC(const AS400 &as400, const char *sFileName): Rfile(as400, sFileName){};
 	/*
 	RfileODBC(AS400 &as400, char *sFileName, Rrecord &format, const char *openType)
 	 :Rfile(as400, sFileName, format)
@@ -62,18 +66,27 @@ public:
 	}
 	*/
 	~RfileODBC();
-	char close();
-	char open(const char *openType, int blockingFactor=0,
+	/// @brief Close the file. Never throws (freeing ODBC handles cannot meaningfully fail here).
+	void close();
+	/// @brief Open the file. Throws CI2ErrFile (see lastError()) if the ODBC connection or query fails.
+	void open(const char *openType, int blockingFactor=0,
     char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
    void setRecordFormat(RrecordODBC &format);
-	char read();
+	/// @brief Fetch the next row. Returns true if a row was read, false at end-of-file (sets eof).
+	bool read();
 //	void template <int sz> fixedCpy(Fixed<sz> &fStr, SQLSMALLINT columnNumber);
 
+	// Text of the most recent ODBC diagnostic record, or empty if nothing failed.
+	const char *lastError() const { return lastErrorText; }
+
 private:
-	static SQLHENV        henv;
+	// Not static: a static SQLHENV was shared (and freed out from under) every RfileODBC
+	// instance, not just repeated per file the way the old single-file design assumed.
+	SQLHENV        henv{};
 	SQLHDBC        hdbc{};
 	SQLHSTMT       hstmt{};
 	SQLRETURN		rc{};
+	char           lastErrorText[256]{};
 };
 
 /*

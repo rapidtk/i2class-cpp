@@ -3,12 +3,14 @@
 class AS400
 {
 public:
-   AS400(char *sURL);
-   AS400(char *sURL, char *lusrid, char *lpassword);
+   /// @brief Default, no-arg constructor which assumes connection to localhost using current credentials
+   AS400() : url("localhost"), usrid("*CURRENT"), password("*CURRENT") {};
+   AS400(const char *sURL);
+   AS400(const char *sURL, const char *lusrid, const char *lpassword);
 
 public:
-   char	*url;
-   char	*usrid;
-   char	*password;
+   const char	*url;
+   const char	*usrid;
+   const char	*password;
 };
 #endif

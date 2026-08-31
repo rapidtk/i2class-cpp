@@ -1,11 +1,16 @@
 //#pragma hdrstop
 //#include <string>
 
+#include <cstdio>
+#include <cstring>
+
 #include "rfileodbc.h"
 
 /// @file rfileodbc.cpp
-/// @brief concrete ODBC, sequential-only implementation of base Rfile class
-/// implemented as `SELECT * FROM <fileName>`
+/// @brief Concrete ODBC file access via SQLDriverConnect + "SELECT * FROM <fileName>".
+/// AS400::url is used directly as the full ODBC connection string (e.g. targeting the
+/// Windows-builtin Microsoft Text Driver for CSV files), matching the pattern already
+/// proven out in izlib-cpp's OdbcFileHandle.
 
 const char *READ_ONLY="rr";
 const char *READ_WRITE="rr+";
@@ -14,80 +19,133 @@ const char *WRITE_ONLY="ar";
 const char COMMIT_LOCK_LEVEL_NONE='n';
 const char COMMIT_LOCK_LEVEL_DEFAULT='y';
 
-
-SQLHENV RfileODBC::henv;
+namespace
+{
+bool odbcSucceeded(SQLRETURN ret)
+{
+	return ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO;
+}
+} // namespace
 
 RfileODBC::~RfileODBC()
 {
 	close();
 }
 
-char RfileODBC::close()
+void RfileODBC::close()
 {
-   SQLFreeStmt (hstmt, SQL_DROP);         /* free the statement handle    */
-
-   /* EXEC SQL DISCONNECT;                                                */
-   SQLDisconnect (hdbc);                  /* disconnect from the database */
-
-   SQLFreeConnect (hdbc);                 /* free the connection handle   */
-   SQLFreeEnv (henv);                     /* free the environment handle  */
-   return '0';
+	if (hstmt)
+	{
+		SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+		hstmt = nullptr;
+	}
+	if (hdbc)
+	{
+		SQLDisconnect(hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		hdbc = nullptr;
+	}
+	if (henv)
+	{
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		henv = nullptr;
+	}
 }
 
-char RfileODBC::open(const char *OpenType, int blockingFactor, char commitLockLevel)
+void RfileODBC::open(const char */*OpenType*/, int /*blockingFactor*/, char /*commitLockLevel*/)
 {
-	error='1';
-   rc=SQLAllocEnv (&henv);                 /* allocate an environment handle */
-	if (rc==SQL_SUCCESS)
-   {
-      rc=SQLAllocConnect (henv, &hdbc);       /* allocate a connection handle   */
-      if (rc==SQL_SUCCESS)
-      {
-         SQLINTEGER	vParam=SQL_TXN_NO_COMMIT;
-         rc=SQLSetConnectAttr(hdbc, SQL_ATTR_COMMIT, &vParam, 0);
-         if (rc==SQL_SUCCESS)
-         {
-            //rc=SQLConnect (hdbc, server, SQL_NTS, "ANDREWC", SQL_NTS, "SP8DS",
-            rc=SQLConnect (hdbc, (SQLCHAR*)server, SQL_NTS, (SQLCHAR*)usrid, SQL_NTS, (SQLCHAR*)password,
-             SQL_NTS);
-            if (rc==SQL_SUCCESS)
-            {
-               rc=SQLAllocStmt (hdbc, &hstmt);         /* allocate a statement handle    */
-               if (rc==SQL_SUCCESS)
-               {
-                  char SQL[256]="SELECT * FROM ";
-                  strcat(SQL, fileName);
-                  //strcat(SQL, record->keyList);
-                  rc=SQLExecDirect(hstmt, (SQLCHAR*)SQL, SQL_NTS);
-	               if (rc==SQL_SUCCESS)
-                  	error='0';
-               }
-            }
-         }
-      }
-   }
-   return error;
+	error=false;
+	lastErrorText[0]='\0';
+
+	if (!odbcSucceeded(SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv)))
+	{
+		error=true;
+		throw CI2ErrFile("Failed to allocate ODBC environment handle");
+	}
+	SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
+
+	if (!odbcSucceeded(SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc)))
+	{
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		henv = nullptr;
+		error=true;
+		throw CI2ErrFile("Failed to allocate ODBC connection handle");
+	}
+
+	// server (== AS400::url) is the full ODBC connection string, passed as-is.
+	SQLCHAR outConnStr[1024];
+	SQLSMALLINT outLen=0;
+	rc=SQLDriverConnect(hdbc, nullptr, (SQLCHAR *)server, SQL_NTS, outConnStr,
+	 sizeof(outConnStr), &outLen, SQL_DRIVER_NOPROMPT);
+	if (!odbcSucceeded(rc))
+	{
+		SQLGetDiagRec(SQL_HANDLE_DBC, hdbc, 1, nullptr, nullptr, (SQLCHAR *)lastErrorText,
+		 sizeof(lastErrorText), nullptr);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		hdbc = nullptr;
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		henv = nullptr;
+		error=true;
+		throw CI2ErrFile(lastErrorText);
+	}
+
+	if (!odbcSucceeded(SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt)))
+	{
+		SQLDisconnect(hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		hdbc = nullptr;
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		henv = nullptr;
+		error=true;
+		throw CI2ErrFile("Failed to allocate ODBC statement handle");
+	}
+
+	char sql[512];
+	std::snprintf(sql, sizeof(sql), "SELECT * FROM %s", fileName);
+	rc=SQLExecDirect(hstmt, (SQLCHAR *)sql, SQL_NTS);
+	if (odbcSucceeded(rc))
+	{
+		error=false;
+		// setRecordFormat() may have been called before open() (before hstmt existed) --
+		// (re-)sync the bound record's copy now that the real statement handle exists.
+		if (record)
+			static_cast<RrecordODBC *>(record)->hstmt = hstmt;
+	}
+	else
+	{
+		SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, nullptr, nullptr, (SQLCHAR *)lastErrorText,
+		 sizeof(lastErrorText), nullptr);
+		SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+		hstmt = nullptr;
+		SQLDisconnect(hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		hdbc = nullptr;
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		henv = nullptr;
+		error=true;
+		throw CI2ErrFile(lastErrorText);
+	}
 }
 
-char RfileODBC::read()
+bool RfileODBC::read()
 {
-	char noData='0';
 	rc=SQLFetch (hstmt);                      /* now execute the fetch        */
 	switch (rc)
 	{
 		case SQL_SUCCESS:
 		case SQL_SUCCESS_WITH_INFO:
 			record->input();
-			break;
+			eof=false;
+			return true;
 		case SQL_ERROR:
 		case SQL_INVALID_HANDLE:
-			error='1'; // fall through intentionally to set EOF
+			error=true; // fall through intentionally to set eof
 		default:
-			noData='1';
+			eof=true;
+			return false;
 	}
-
-	return noData;
 }
+
 
 void RfileODBC::setRecordFormat(RrecordODBC &format)
 {

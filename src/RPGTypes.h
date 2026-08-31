@@ -49,6 +49,18 @@ class CI2Err { };
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 class CI2ErrSubscript : public CI2Err { };
 #endif
+/// @brief Thrown by Rfile::open()/close() (and derived-class overrides) when the
+/// underlying file/database operation fails; message holds driver-specific detail.
+class CI2ErrFile : public CI2Err
+{
+public:
+	explicit CI2ErrFile(const char *msg = "")
+	{
+		strncpy(message, msg, sizeof(message) - 1);
+		message[sizeof(message) - 1] = '\0';
+	}
+	char message[256];
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////

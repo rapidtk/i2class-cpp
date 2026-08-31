@@ -12,8 +12,6 @@ const char *WRITE_ONLY="ar";
 const char COMMIT_LOCK_LEVEL_NONE='N';
 const char COMMIT_LOCK_LEVEL_DEFAULT='Y';
 
-class CI2FileNotOpened : public CI2Err { } I2FileNotOpened;
-
 void setIndara(_RFILE *fp);
 
 /*
@@ -31,13 +29,12 @@ Rfile400::~Rfile400()
 }
 
 // Close file
-char Rfile400::close()
+void Rfile400::close()
 {
 	_Rclose(fp);
-	return '0';
 }
 
-char Rfile400::open(const char *OpenType, int blockingFactor, char commitLockLevel)
+void Rfile400::open(const char *OpenType, int blockingFactor, char commitLockLevel)
 {
 //   string mode= (string)OpenType + ", commit=" + commitLockLevel;
 //   fp = _Ropen(fileName, mode.c_str());
@@ -52,20 +49,19 @@ char Rfile400::open(const char *OpenType, int blockingFactor, char commitLockLev
 		fp = _Ropen(fileName, OpenType);
 	//_Rformat(fp, record->recordName);
    if (!fp)
-   	throw I2FileNotOpened;
+   	throw CI2ErrFile("Failed to open file");
    // If a record format has already been set, then make call to Rformat here
    if (record)
    	_Rformat(fp, record->recordName);
-	return '0';
 }
 
-char Rfile400::readx()
+bool Rfile400::readx()
 {
 	if (feedBack->num_bytes<=0)
-		return '1';
+		return false;
 	record->input();
 	((Rrecord400 *)record)->recno = feedBack->rrn;
-	return '0';
+	return true;
 }
 
 // Force end of data
@@ -74,13 +70,13 @@ void Rfile400::feod()
 	_Rfeod(fp);
 }
 
-char Rfile400::read()
+bool Rfile400::read()
 {
 	Rrecord400 *rcd = (Rrecord400 *)record;
 	feedBack=_Rreadn(fp, rcd->inputBuffer, rcd->inputSize, __DFT);
 	return readx();
 }
-char Rfile400::read(Rrecord400 &format)
+bool Rfile400::read(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return read();
@@ -98,26 +94,26 @@ void Rfile400::update(Rrecord400 &format)
 	update();
 }
 
-char Rfile400::write()
+bool Rfile400::write()
 {
 	record->output();
 	Rrecord400 *rcd = (Rrecord400 *)record;
 	feedBack=_Rwrite(fp, rcd->outputBuffer, rcd->outputSize);
-	return '0';
+	return true;
 }
-char Rfile400::write(Rrecord400 &format)
+bool Rfile400::write(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return write();
 }
 
 // Write directly to a specific rrn
-char Rfile400::write(Rrecord400 &format, unsigned long rrn)
+bool Rfile400::write(Rrecord400 &format, unsigned long rrn)
 {
 	setRecordFormat(format);
 	format.output();
 	feedBack=_Rwrited(fp, format.outputBuffer, format.outputSize, rrn);
-	return '0';
+	return true;
 }
 
 void Rfile400::setRecordFormat(Rrecord400 &format)
@@ -127,20 +123,20 @@ void Rfile400::setRecordFormat(Rrecord400 &format)
 	setRecord(format);
 }
 
-char Rfile400::chain()
+bool Rfile400::chain()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	feedBack=_Rreadk(fp, dbRcd->inputBuffer, dbRcd->inputSize, __KEY_EQ, dbRcd->key,
 	 dbRcd->keyLength);
 	return readx();
 }
-char Rfile400::chain(Rrecord400 &format)
+bool Rfile400::chain(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return chain();
 }
 // Chain to a relative record number
-char Rfile400::chain(Rrecord400 &format, long rrn)
+bool Rfile400::chain(Rrecord400 &format, long rrn)
 {
 	setRecordFormat(format);
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
@@ -148,29 +144,29 @@ char Rfile400::chain(Rrecord400 &format, long rrn)
 	return readx();
 }
 
-char RdbFile400::readp()
+bool RdbFile400::readp()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	feedBack=_Rreadp(fp, dbRcd->inputBuffer, dbRcd->inputSize, __DFT);
 	return readx();
 }
-char RdbFile400::readp(Rrecord400 &format)
+bool RdbFile400::readp(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return readp();
 }
 
 // We can't do the READxE at the data management level, so do the record comparison here
-char RdbFile400::readxe()
+bool RdbFile400::readxe()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	if (feedBack->num_bytes<=0 || memcmp(feedBack->key, dbRcd->key, dbRcd->keyLength)!=0)
-		return '1';
+		return false;
 	record->input();
-	return '0';
+	return true;
 }
 
-char RdbFile400::reade()
+bool RdbFile400::reade()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	/*
@@ -180,19 +176,19 @@ char RdbFile400::reade()
 	feedBack=_Rreadn(fp, dbRcd->inputBuffer, dbRcd->inputSize, __DFT);
 	return readxe();
 }
-char RdbFile400::reade(Rrecord400 &format)
+bool RdbFile400::reade(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return reade();
 }
-char RdbFile400::readEqual()
+bool RdbFile400::readEqual()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	feedBack=_Rreadk(fp, dbRcd->inputBuffer, dbRcd->inputSize, __KEY_NEXTEQ, NULL, NULL);
 	return readx();
 }
 
-char RdbFile400::readpe()
+bool RdbFile400::readpe()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	/*
@@ -202,70 +198,70 @@ char RdbFile400::readpe()
 	feedBack=_Rreadp(fp, dbRcd->inputBuffer, dbRcd->inputSize, __DFT);
 	return readxe();
 }
-char RdbFile400::readpe(Rrecord400 &format)
+bool RdbFile400::readpe(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return readpe();
 }
-char RdbFile400::readpEqual()
+bool RdbFile400::readpEqual()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	feedBack=_Rreadk(fp, dbRcd->inputBuffer, dbRcd->inputSize, __KEY_PREVEQ, NULL, NULL);
 	return readx();
 }
 
-char RdbFile400::setgtEOF()
+bool RdbFile400::setgtEOF()
 {
-	// If this is true, then we have positioned past the last record in the
+	// If this returns false, then we have positioned past the last record in the
 	// access path.  For some reason, it doesn't position to the end of the file,
 	// so we have to do it here
 	if (feedBack->num_bytes<=0)
 	{
 		feedBack=_Rlocate(fp, NULL, NULL, __END);
-		return '0';
+		return false;
 	}
-	return '1';
+	return true;
 }
-char RdbFile400::setgt()
+bool RdbFile400::setgt()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	feedBack=_Rlocate(fp, dbRcd->key, dbRcd->keyLength, __KEY_GT | __PRIOR);
 	// Check for end of file
 	return setgtEOF();
 }
-char RdbFile400::setgt(Rrecord400 &format)
+bool RdbFile400::setgt(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return setgt();
 }
 // Position past a relative record number
-char RdbFile400::setgt(Rrecord400 &format, long rrn)
+bool RdbFile400::setgt(Rrecord400 &format, long rrn)
 {
 	setRecordFormat(format);
 	feedBack=_Rlocate(fp, NULL, rrn+1, __RRN_EQ);
 	return setgtEOF();
 }
 
-char RdbFile400::setll()
+bool RdbFile400::setll()
 {
 	RdbRecord400 *dbRcd = (RdbRecord400 *)record;
 	feedBack=_Rlocate(fp, dbRcd->key, dbRcd->keyLength, __KEY_GE | __PRIOR);
-	// Return ON if the positioned record is equal to the key
+	// Return true if the positioned record is equal to the key (%FOUND/%EQUAL)
 	if (feedBack->num_bytes<=0 || memcmp(feedBack->key, dbRcd->key, dbRcd->keyLength)!=0)
-		return '0';
-	return '1';
+		return false;
+	return true;
 }
-char RdbFile400::setll(Rrecord400 &format)
+bool RdbFile400::setll(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return setll();
 }
 // Position to a relative record number
-char RdbFile400::setll(Rrecord400 &format, long rrn)
+bool RdbFile400::setll(Rrecord400 &format, long rrn)
 {
 	setRecordFormat(format);
 	feedBack=_Rlocate(fp, NULL, rrn, __RRN_EQ);
-	return '1';
+	return true;
 }
 
 /*static*/ void RdbFile400::commit(AS400 system, char *cmtID)
@@ -285,17 +281,17 @@ void RdbFile400::unlock()
 }
 
 // Delete a record
-char RdbFile400::Delete()
+bool RdbFile400::Delete()
 {
 	feedBack=_Rdelete(fp);
-	return '0';
+	return true;
 }
-char RdbFile400::Delete(Rrecord400 &format)
+bool RdbFile400::Delete(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return Delete();
 }
-char RdbFile400::Delete(Rrecord400 &format, long rrn)
+bool RdbFile400::Delete(Rrecord400 &format, long rrn)
 {
 	chain(format, rrn);
 	return Delete();
@@ -303,12 +299,10 @@ char RdbFile400::Delete(Rrecord400 &format, long rrn)
 
 
 // Display file functions /////////////////////////////////////////
-char RfileDspf::open(const char *openType, int blockingFactor, char commitLockLevel)
+void RfileDspf::open(const char *openType, int blockingFactor, char commitLockLevel)
 {
-	char c=Rfile400::open(openType, blockingFactor, commitLockLevel);
-	if (c=='0')
-		setIndara(fp);
-	return c;
+	Rfile400::open(openType, blockingFactor, commitLockLevel);
+	setIndara(fp);
 }
 
 void RfileDspf::acq(char *dev)
@@ -335,19 +329,19 @@ void RfileDspf::exfmt(Rrecord400 &format)
 	exfmt();
 }
 
-char RfileDspf::readc()
+bool RfileDspf::readc()
 {
 	Rrecord400 *dspRcd = (Rrecord400 *)record;
 	feedBack=_Rreadnc(fp, dspRcd->inputBuffer, dspRcd->inputSize);
 	return readx();
 }
-char RfileDspf::readc(Rrecord400 &format)
+bool RfileDspf::readc(Rrecord400 &format)
 {
 	setRecordFormat(format);
 	return readc();
 }
 
-char RfileDspf::readx()
+bool RfileDspf::readx()
 {
 	_XXIOFB_T *iofb=_Riofbk(fp);
 	_XXIOFB_DSP_ICF_T *iofbDsp=(_XXIOFB_DSP_ICF_T *)((char *)iofb + iofb->file_dep_fb_offset);
@@ -370,35 +364,27 @@ char RfileDspf::readx()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Print file stuff
-char RfilePrtf::openPrtf(const char *openType, int blockingFactor, char commitLockLevel)
+void RfilePrtf::openPrtf(const char *openType, int blockingFactor, char commitLockLevel)
 {
-	char c=Rfile400::open(openType, blockingFactor, commitLockLevel);
-	if (c=='0')
-	{
-		_XXOPFB_T *opfb=_Ropnfbk(fp);
-		overflow=opfb->overflow_line_num;
-		outputSize=opfb->pgm_record_len;
-	}
-	return c;
+	Rfile400::open(openType, blockingFactor, commitLockLevel);
+	_XXOPFB_T *opfb=_Ropnfbk(fp);
+	overflow=opfb->overflow_line_num;
+	outputSize=opfb->pgm_record_len;
 }
-char RfilePrtf::open(const char *openType, int blockingFactor, char commitLockLevel)
+void RfilePrtf::open(const char *openType, int blockingFactor, char commitLockLevel)
 {
-	char c=openPrtf(openType, blockingFactor, commitLockLevel);
-	if (c=='0')
-		setIndara(fp);
-	return c;
+	openPrtf(openType, blockingFactor, commitLockLevel);
+	setIndara(fp);
 }
 
-char RfilePrtf::checkOverflow()
+bool RfilePrtf::checkOverflow()
 {
 	_XXIOFB_T *iofb=_Riofbk(fp);
 	_XXIOFB_PRT_T *iofbPrt=(_XXIOFB_PRT_T *)((char *)iofb + iofb->file_dep_fb_offset);
-	if (iofbPrt->cur_page_line_num > overflow)
-		return '1';
-	return '0';
+	return iofbPrt->cur_page_line_num > overflow;
 }
 
-char RfilePrtf::write()
+bool RfilePrtf::write()
 {
 	Rfile400::write();
 	return checkOverflow();
@@ -406,7 +392,7 @@ char RfilePrtf::write()
 
 //Program-described printer files
 extern "OS" QCMDEXC(char *cmd, char *len);
-char RfileOspec::open(const char *openType, int blockingFactor, char commitLockLevel)
+void RfileOspec::open(const char *openType, int blockingFactor, char commitLockLevel)
 {
 	// Override the print file so that it can use form control characters
 	char ovrCmd[55]="OVRPRTF            CTLCHAR(*FCFC   ) PAGESIZE(*N     )";
@@ -416,7 +402,7 @@ char RfileOspec::open(const char *openType, int blockingFactor, char commitLockL
 	memcpy(ovrFile, fileName, cpyLen);
 	QXXITOZ((unsigned char *)(ovrCmd+49), 4, 0, outputSize+1);
 	QCMDEXC(ovrCmd, cmdLen);
-	return openPrtf(openType, blockingFactor, commitLockLevel);
+	openPrtf(openType, blockingFactor, commitLockLevel);
 }
 
 void RfileOspec::setRecordFormat(RrecordOspec &format)
@@ -427,7 +413,7 @@ void RfileOspec::setRecordFormat(RrecordOspec &format)
 	memset(format.outputBuffer, ' ', outputSize+1);
 }
 
-char RfileOspec::write()
+bool RfileOspec::write()
 {
 	record->output();
 	RrecordOspec *rcd = (RrecordOspec *)record;
@@ -435,17 +421,17 @@ char RfileOspec::write()
 	return checkOverflow();
 }
 
-char RfileOspec::write(RrecordOspec &record)
+bool RfileOspec::write(RrecordOspec &record)
 {
 	setRecordFormat(record);
 	return write();
 }
 
-char RfileOspec::close()
+void RfileOspec::close()
 {
 	RrecordOspec *rcd = (RrecordOspec *)record;
 	rcd->flush();
-	return Rfile400::close();
+	Rfile400::close();
 }
 
 void RrecordOspec::updatePage()

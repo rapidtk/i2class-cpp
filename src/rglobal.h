@@ -34,11 +34,11 @@ extern IND INOA, INOB, INOC, INOD, INOE, INOF, INOG, INOV;
 #define DATE XDATE
 extern FmtDate<6>	XUDATE;
 extern FmtDate<8>	XDATE;
-extern Zoned<4,0>	&YEAR;
-extern Zoned<2,0>	&UYEAR;
-extern Zoned<2,0>	&MONTH;
+extern I2CLASS_API Zoned<4,0>	&YEAR;
+extern I2CLASS_API Zoned<2,0>	&UYEAR;
+extern I2CLASS_API Zoned<2,0>	&MONTH;
 extern Zoned<2,0>	&UMONTH;
-extern Zoned<2,0>	&DAY;
+extern I2CLASS_API Zoned<2,0>	&DAY;
 extern Zoned<2,0>	&UDAY;
 
 #endif

@@ -32,41 +32,41 @@ public:
 	RfileADO(AS400 &as400, char *sFileName);
 	~RfileADO();
 
-	char close();
-	char open(const char *openType, int blockingFactor=0,
+	void close();
+	void open(const char *openType, int blockingFactor=0,
     char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
    void setRecordFormat(RrecordADO &format);
-	char readx();
-	char read();
+	bool readx();
+	bool read();
 
-	char read(RrecordADO &format);
+	bool read(RrecordADO &format);
 	void update();
 	void update(RrecordADO &format);
-	char write();
-	char write(RrecordADO &format);
+	bool write();
+	bool write(RrecordADO &format);
 	//char write(RrecordADO &format, unsigned long rrn);
-	char chain();
-	char chain(RrecordADO &format);
-	char chain(RrecordADO &format, long rrn);
+	bool chain();
+	bool chain(RrecordADO &format);
+	bool chain(RrecordADO &format, long rrn);
 
-	char readxe();
-   char reade();
-	char reade(RrecordADO &format);
-	char readEqual();
-	char readp();
-	char readp(RrecordADO &format);
-	char readpe();
-	char readpe(RrecordADO &format);
-	char readpEqual();
-	char setgt();
-	char setgt(RrecordADO &format);
-	char setgt(RrecordADO &format, long rrn);
-	char setll();
-	char setll(RrecordADO &format);
-	char setll(RrecordADO &format, long rrn);
-	char Delete();
-	char Delete(RrecordADO &format);
-	char Delete(RrecordADO &format, long rrn);
+	bool readxe();
+   bool reade();
+	bool reade(RrecordADO &format);
+	bool readEqual();
+	bool readp();
+	bool readp(RrecordADO &format);
+	bool readpe();
+	bool readpe(RrecordADO &format);
+	bool readpEqual();
+	bool setgt();
+	bool setgt(RrecordADO &format);
+	bool setgt(RrecordADO &format, long rrn);
+	bool setll();
+	bool setll(RrecordADO &format);
+	bool setll(RrecordADO &format, long rrn);
+	bool Delete();
+	bool Delete(RrecordADO &format);
+	bool Delete(RrecordADO &format, long rrn);
 
 private:
 	TADOTable *fp;

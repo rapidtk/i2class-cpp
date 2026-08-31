@@ -15,10 +15,54 @@
 ///    *BLANKS, *LOVAL, and *HIVAL special values.
 
 #include <iostream>
+#include <string>
 
-#include "RPGTypes.h"
+#include "i2class.h"
 
-int main()
+// I2CLASS_TESTS_DIR is set by CMakeLists.txt to the absolute path of tests/ (where
+// CUSTMAST.csv lives); falls back to a relative path if built outside CMake.
+#ifndef I2CLASS_TESTS_DIR
+#define I2CLASS_TESTS_DIR "tests"
+#endif
+
+void test_file() {
+   // Full ODBC connection string for the Windows-builtin Microsoft Text Driver, targeting
+   // the folder CUSTMAST.csv lives in -- AS400's single-string constructor passes this
+   // straight through to SQLDriverConnect (see RfileODBC::open()).
+   std::string connStr = std::string("Driver={Microsoft Access Text Driver (*.txt, *.csv)};Dbq=")
+      + I2CLASS_TESTS_DIR + ";Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;";
+   AS400 as400(connStr.c_str());
+   class Custmast_Rcd : public RRECORD {
+	public:
+	  enum FieldList {
+		CUSNO = 1,
+		CNAME = 2,
+		ORDVAL = 3
+	  };
+	  double getOrdersValue() { return readDouble(ORDVAL); }
+   } custmast_rcd;
+   RFILE custmast(as400, "CUSTMAST.csv");
+
+   // Accumulate total of order values from all customers
+   double totalOrdersValue = 0.0;
+   custmast.setRecordFormat(custmast_rcd);
+   try
+   {
+      custmast.open(READ_ONLY);
+   }
+   catch (const CI2ErrFile &err)
+   {
+      std::cout << "Failed to open CUSTMAST.csv: " << err.message << '\n';
+      return;
+   }
+   while (custmast.read()) {
+	  totalOrdersValue += custmast_rcd.getOrdersValue();
+   }
+   custmast.close();
+   std::cout << "Total orders value: " << totalOrdersValue << '\n';
+}
+
+void test_core()
 {
     Fixed<10> fxd10;
     fxd10 = "abcdef";
@@ -55,4 +99,10 @@ int main()
 	if (pkd42 == HIVAL)
 	   std::cout << "packed(4,2) 99.99 equal to *HIVAL\n";
 
+}
+
+int main()
+{
+	test_core();
+	test_file();
 }

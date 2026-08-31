@@ -13,9 +13,9 @@
 /// word automatically - e.g. inserting commas, a floating '$', or a trailing
 /// 'CR' for negative values).
 
-Rfile::Rfile(const AS400 &as400, char *sFileName)
+Rfile::Rfile(const AS400 &as400, const char *sFileName)
 {
-	fileName = (char *)sFileName;
+	fileName = sFileName;
 	//strncpy(fileName, sFileName, sizeof(fileName));
 	server = as400.url;
    password = as400.password;

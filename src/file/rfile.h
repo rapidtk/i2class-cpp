@@ -4,12 +4,12 @@
 #include "i2compat.h"
 #include "as400.h"
 #include "rpgtypes.h"
-extern const char *READ_ONLY;
-extern const char *READ_WRITE;
-extern const char *WRITE_ONLY;
+extern I2CLASS_API const char *READ_ONLY;
+extern I2CLASS_API const char *READ_WRITE;
+extern I2CLASS_API const char *WRITE_ONLY;
 
-extern const char COMMIT_LOCK_LEVEL_NONE;
-extern const char COMMIT_LOCK_LEVEL_DEFAULT;
+extern I2CLASS_API const char COMMIT_LOCK_LEVEL_NONE;
+extern I2CLASS_API const char COMMIT_LOCK_LEVEL_DEFAULT;
 
 constexpr int MAX_PRINT_FILE_WIDTH = 378;
 
@@ -25,14 +25,14 @@ class Rrecord
 friend class Rfile;
 public:
 	Rrecord() : recordName(nullptr) {}
-	Rrecord(char *rcdName)
+	Rrecord(const char *rcdName)
 		{ recordName=rcdName; }
 	virtual ~Rrecord() = default;
 	virtual void	input(){};
 	virtual void	output(){};
 
 //protected:
-	char *recordName;
+	const char *recordName;
 };
 /// @brief A record format class for [keyed](https://www.ibm.com/docs/en/i/7.5.0?topic=rdr-reading-database-records-using-keyed-sequence-access-path)
 /// record-level access.
@@ -47,24 +47,26 @@ public:
 class Rfile
 {
 public:
-	Rfile(const AS400 &as400, char *sFileName);
+	Rfile(const AS400 &as400, const char *sFileName);
    virtual ~Rfile();
 	//Rfile(const AS400 &as400, char *sFileName, Rrecord &format);
-	virtual char close() {return '0';};
-	virtual char open(const char */*openType*/, int /*blockingFactor*/=0,
-	 char /*commitLockLevel*/=COMMIT_LOCK_LEVEL_NONE) {return '0';};
+	/// @brief Close the file. Throws CI2ErrFile on failure (base no-op never fails).
+	virtual void close() {}
+	/// @brief Open the file. Throws CI2ErrFile on failure (base no-op never fails).
+	virtual void open(const char */*openType*/, int /*blockingFactor*/=0,
+	 char /*commitLockLevel*/=COMMIT_LOCK_LEVEL_NONE) {}
 
 public:
-	char	error, found, eof;
+	bool	error{false}, found{false}, eof{false};
 
 //protected:
 	void setRecord(Rrecord &format);
 protected:
-	char		*fileName;
+	const char		*fileName;
 	//char		fileName[255];
-	char		*server, *password, *usrid;
+	const char		*server, *password, *usrid;
 	//char		server[255];
-	Rrecord	*record;
+	Rrecord	*record{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +74,7 @@ protected:
 class RrecordPrint : public Rrecord
 {
 public:
-	RrecordPrint() : maxColumn(0), row(0), column(1), outputSize(sizeof(outputBuffer) - 1) {}
+	RrecordPrint() : outputSize(sizeof(outputBuffer) - 1), maxColumn(0), column(1), row(0) {}
 	//static void edit(char *buf, const ZonedTemp &n, const char *edtWrd);
 	static void edit(char *buf, const _ConvertDecimal &n, const char *edtWrd);
 	void print(const FixedTemp &f, int col=0);
@@ -102,7 +104,7 @@ protected:
 
 protected:
 	//char	*outputBuffer;
-	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]; // Record buffer with room for first character form control character
+	char	outputBuffer[MAX_PRINT_FILE_WIDTH+1]{}; // Record buffer with room for first character form control character
 	int	outputSize;
 	int	maxColumn;
 	int	column, row;

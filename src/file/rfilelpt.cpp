@@ -1,27 +1,27 @@
 #include "rfilelpt.h"
 
 
-char RfileLPT::open(const char *openType)
+void RfileLPT::open(const char *openType)
 {
 	fp=fopen(fileName, "w");
-	return '0';
+	if (!fp)
+		throw CI2ErrFile("Failed to open print output file");
 }
 
-char RfileLPT::close()
+void RfileLPT::close()
 {
 	((RrecordLPT*)record)->flush();
 	fclose(fp);
-	return '0';
 }
 
 // Print out a numeric value
-char RfileLPT::write()
+bool RfileLPT::write()
 {
 	record->output();
-   return '0';
+   return true;
 }
 
-char RfileLPT::write(RrecordLPT &format)
+bool RfileLPT::write(RrecordLPT &format)
 {
 	setRecordFormat(format);
 	return write();

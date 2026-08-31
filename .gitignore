@@ -38,6 +38,7 @@
 **/x64/
 **/build/
 **/build-*/
+**/out/
 **/bin/
 **/obj/
 **/Debug/

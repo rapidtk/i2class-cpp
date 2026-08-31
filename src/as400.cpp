@@ -1,20 +1,24 @@
 #include "as400.h"
 
 /// @file as400.cpp
-/// @brief Connection/identity info for a remote IBM i (AS/400) system.
+/// @brief Connection/identity info for a target system/database server.
 ///
-/// This is the "target system" descriptor used by the ODBC/ADO file backends
-/// (see rfileodbc.cpp/rfileado.cpp) to know which IBM i host and user profile
-/// to connect as when a program is compiled to run remotely from Windows
-/// instead of natively on IBM i.
+/// This is the "target host" descriptor used by various
+/// access classes - defaults to:
+/// 
+/// system="localhost", userid="*CURRENT", password="*CURRENT"
+///
+/// which means connect to the local host using the current user id/password.
 
 /// @brief Construct with just a host/URL; no credentials (e.g. relies on default/cached auth).
-AS400::AS400(char *sURL)
+AS400::AS400(const char *sURL)
 {
    url=sURL;
+   usrid="*CURRENT";
+   password="*CURRENT";
 }
-/// @brief Construct with host/URL plus an IBM i user profile and password.
-AS400::AS400(char *sURL, char *lusrid, char *lpassword)
+/// @brief Construct with host/URL plus a user id and password.
+AS400::AS400(const char *sURL, const char *lusrid, const char *lpassword)
 {
    url=sURL;
    usrid=lusrid;

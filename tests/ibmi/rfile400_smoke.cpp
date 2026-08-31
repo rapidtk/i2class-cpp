@@ -62,11 +62,21 @@ int main()
 	RdbFile400 custmast(as400System, (char *)"CUSTMAST");
 	CustmastRecord rec;
 
-	CHECK(custmast.open(READ_WRITE, 0, COMMIT_LOCK_LEVEL_NONE) == '0');
+	bool opened = true;
+	try
+	{
+		custmast.open(READ_WRITE, 0, COMMIT_LOCK_LEVEL_NONE);
+	}
+	catch (const CI2ErrFile &err)
+	{
+		std::fprintf(stderr, "open() threw CI2ErrFile: %s\n", err.message);
+		opened = false;
+	}
+	CHECK(opened);
 
 	// CHAIN CUSTNO CUSTMAST
 	rec.custno = "000123";
-	bool found = (custmast.chain(rec) == '0');
+	bool found = custmast.chain(rec);
 	if (found)
 	{
 		std::printf("Found CUSTNO=000123, NAME=%s, BALANCE=%.2f\n",
@@ -81,14 +91,14 @@ int main()
 		// WRITE CUSTMAST
 		rec.name = "New Customer";
 		rec.balance.assign(0.00);
-		CHECK(custmast.write(rec) == '0');
+		CHECK(custmast.write(rec));
 	}
 
 	// SETLL CUSTNO CUSTMAST; DOU %EOF(CUSTMAST); READE CUSTNO CUSTMAST; ENDDO
 	rec.custno = "000100";
 	custmast.setll(rec);
 	int readCount = 0;
-	while (custmast.reade(rec) == '0')
+	while (custmast.reade(rec))
 		++readCount;
 	std::printf("READE loop visited %d record(s) starting at CUSTNO=000100\n", readCount);
 

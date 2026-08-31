@@ -41,27 +41,27 @@ public:
 	Rfile400(AS400 &as400, char *sFileName, Rrecord400 &format, char *openType);
 	*/
 	~Rfile400();
-	char close();
-	char open(const char *openType, int blockingFactor=0,
+	void close();
+	void open(const char *openType, int blockingFactor=0,
 	 char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
 	void setRecordFormat(Rrecord400 &format);
 	void feod();
-	char read();
-	char read(Rrecord400 &format);
+	bool read();
+	bool read(Rrecord400 &format);
 	void update();
 	void update(Rrecord400 &format);
-	char write();
-	char write(Rrecord400 &format);
-	char write(Rrecord400 &format, unsigned long rrn);
-	char chain();
-	char chain(Rrecord400 &format);
-	char chain(Rrecord400 &format, long rrn);
+	bool write();
+	bool write(Rrecord400 &format);
+	bool write(Rrecord400 &format, unsigned long rrn);
+	bool chain();
+	bool chain(Rrecord400 &format);
+	bool chain(Rrecord400 &format, long rrn);
 
 
 protected:
 	_RFILE	*fp;
 	_RIOFB_T	*feedBack;
-	char readx();
+	bool readx();
 };
 
 class RdbFile400 : public Rfile400
@@ -72,31 +72,31 @@ public:
 	RdbFile400(AS400 &as400, char *sFileName, Rrecord400 &format)
 	 : Rfile400(as400, sFileName, format) {};
    */
-	char reade();
-	char reade(Rrecord400 &format);
-	char readEqual();
-	char readp();
-	char readp(Rrecord400 &format);
-	char readpe();
-	char readpe(Rrecord400 &format);
-	char readpEqual();
-	char setgt();
-	char setgt(Rrecord400 &format);
-	char setgt(Rrecord400 &format, long rrn);
-	char setll();
-	char setll(Rrecord400 &format);
-	char setll(Rrecord400 &format, long rrn);
-	char Delete();
-	char Delete(Rrecord400 &format);
-	char Delete(Rrecord400 &format, long rrn);
+	bool reade();
+	bool reade(Rrecord400 &format);
+	bool readEqual();
+	bool readp();
+	bool readp(Rrecord400 &format);
+	bool readpe();
+	bool readpe(Rrecord400 &format);
+	bool readpEqual();
+	bool setgt();
+	bool setgt(Rrecord400 &format);
+	bool setgt(Rrecord400 &format, long rrn);
+	bool setll();
+	bool setll(Rrecord400 &format);
+	bool setll(Rrecord400 &format, long rrn);
+	bool Delete();
+	bool Delete(Rrecord400 &format);
+	bool Delete(Rrecord400 &format, long rrn);
 
 	static void commit(AS400 system, char *cmtID="RIO");
 	static void rolbk(AS400 system);
 	void unlock();
 private:
 	bool locate();
-	char readxe();
-	char setgtEOF();
+	bool readxe();
+	bool setgtEOF();
 };
 
 class RfileDspf : public Rfile400
@@ -107,16 +107,16 @@ public:
    RfileDspf(AS400 &as400, char *sFileName, Rrecord400 &format)
 	 : Rfile400(as400, sFileName, format) {};
    */
-	char open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
+	void open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
 	void exfmt();
 	void exfmt(Rrecord400 &format);
-	char readc();
-	char readc(Rrecord400 &format);
+	bool readc();
+	bool readc(Rrecord400 &format);
 
 	void acq(char *dev);
 	void rel(char *dev);
 protected:
-	char readx();
+	bool readx();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,14 +142,14 @@ class RfilePrtf : public Rfile400
 {
 public:
 	RfilePrtf(AS400 &as400, char *sFileName) : Rfile400(as400, sFileName) {}
-	char open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
-	char write();
+	void open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
+	bool write();
 protected:
 	int	overflow;
 	int	outputSize;
 protected:
-	char	checkOverflow();
-	char openPrtf(const char *openType, int blockingFactor, char commitLockLevel);
+	bool	checkOverflow();
+	void openPrtf(const char *openType, int blockingFactor, char commitLockLevel);
 private:
 	_XXOPFB_T *opfb;
 };
@@ -158,11 +158,11 @@ class RfileOspec : public RfilePrtf
 public:
 	RfileOspec(AS400 &as400, char *sFileName, int rcdSiz)
 	 : RfilePrtf(as400, sFileName), outputSize(rcdSiz) {}
-	char open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
+	void open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
 	void setRecordFormat(RrecordOspec &format);
-	char write();
-	char write(RrecordOspec &format);
-	char close();
+	bool write();
+	bool write(RrecordOspec &format);
+	void close();
 public:
 	int	page;
 	int	outputSize;

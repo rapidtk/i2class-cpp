@@ -20,6 +20,17 @@ target_include_directories(i2class PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/src/file
 )
 
+# rfileodbc.cpp needs a real ODBC SDK (always present on Windows via odbc32.lib; on Linux
+# needs unixODBC installed). Skip it -- and anything that depends on it -- if unavailable,
+# rather than failing the whole configure/build on platforms without ODBC.
+find_package(ODBC)
+if(ODBC_FOUND)
+	target_sources(i2class PRIVATE src/file/rfileodbc.cpp)
+	target_link_libraries(i2class PUBLIC ODBC::ODBC)
+else()
+	message(STATUS "ODBC not found -- rfileodbc.cpp and i2class-demo (test_file()) will not be built")
+endif()
+
 # Mirrors the .vcxproj's Debug/Compatibility/Release configurations for anything that
 # still checks I2_RUNTIME_MODE. Uses CMake's own standard config names (Debug/Release)
 # rather than a custom "Compatibility" config, so this works unmodified on both
@@ -61,9 +72,14 @@ set_target_properties(i2class PROPERTIES
 )
 
 # Demo program (see i2class-cpp.cpp) -- links against the shared library like any
-# other consumer would.
-add_executable(i2class-demo i2class-cpp.cpp)
-target_link_libraries(i2class-demo PRIVATE i2class)
+# other consumer would. test_file() needs the ODBC-backed RfileODBC, so this (and its
+# CTest entry) only exist when ODBC was found above.
+if(ODBC_FOUND)
+	add_executable(i2class-demo i2class-cpp.cpp)
+	target_link_libraries(i2class-demo PRIVATE i2class)
+	# Absolute path to tests/CUSTMAST.csv's folder, for test_file()'s ODBC connection string.
+	target_compile_definitions(i2class-demo PRIVATE I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+endif()
 
 enable_testing()
 
@@ -89,3 +105,10 @@ add_test(NAME negative_zoned_check COMMAND negative_zoned_check)
 add_executable(i2compat_fallback_check tests/i2compat_fallback_check.cpp)
 target_include_directories(i2compat_fallback_check PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_test(NAME i2compat_fallback_check COMMAND i2compat_fallback_check)
+
+if(ODBC_FOUND)
+	add_executable(rfileodbc_custmast_check tests/rfileodbc_custmast_check.cpp)
+	target_link_libraries(rfileodbc_custmast_check PRIVATE i2class)
+	target_compile_definitions(rfileodbc_custmast_check PRIVATE I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+	add_test(NAME rfileodbc_custmast_check COMMAND rfileodbc_custmast_check)
+endif()
