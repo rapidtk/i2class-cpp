@@ -1,5 +1,7 @@
 SUBDIRS = file compat
 
+%.MODULE: CPPFLAGS += LANGLVL(*EXTENDED0X)
+
 # Portable core modules (mirrors the CMakeLists.txt "i2class" library sources).
 AS400.MODULE: as400.cpp
 RPGTYPES.MODULE: RPGTypes.cpp
