@@ -17,19 +17,19 @@
 #include "rfile.h"
 //#include "RPGtypes.h"
 
-//#define getInt(col, ncol) col=readInt(ncol)
-//#define getDouble(col, ncol) col=readDouble(ncol)
-//#define getString(col, ncol) readString(col.overlay, ncol, col.len()) ? col : col
-#define copyString(a, b) getMem(a.overlay, b, a.len())
+#define getInt(ncol) readInt(ncol)
+#define getDouble(ncol) readDouble(ncol)
+//#define getString(ncol) readString(col.overlay, ncol, col.len()) ? col : col
+#define copyString(a, b) copyMem(a.overlay, b, a.len())
+// Write not implemented yet, so these are no-ops for now...
 #define setValue(a, b)
 #define setText(a, b)
 
-#define DEFINE_GET(e) \
-int getInt(e fn) { return readInt(fn); } \
-double getDouble(e fn) { return readDouble(fn); } \
-char getChar(e fn) { return readChar(fn); } \
-bool getMem(void *str, e fn, int len) { return copyMem(str, fn, len); }
-
+//#define DEFINE_GET(e) \
+//int getInt(e fn) { return readInt(fn); } \
+//double getDouble(e fn) { return readDouble(fn); } \
+//char getChar(e fn) { return readChar(fn); } \
+//bool getMem(void *str, e fn, int len) { return copyMem(str, fn, len); }
 //#define fixedCpy(a, b) memCpy(a.overlay, b, a.len())
 
 /// @brief An ODBC-specific version of the base [Rrecord]() format class

@@ -26,22 +26,46 @@
 #endif
 
 void test_file() {
+#if RFILETYPE == RFILE400
+   std::string connStr = "localhost";
+   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST";
+#else
+# if RFILETYPE == RFILEADO
+# else
    // Full ODBC connection string for the Windows-builtin Microsoft Text Driver, targeting
    // the folder CUSTMAST.csv lives in -- AS400's single-string constructor passes this
    // straight through to SQLDriverConnect (see RfileODBC::open()).
    std::string connStr = std::string("Driver={Microsoft Access Text Driver (*.txt, *.csv)};Dbq=")
       + I2CLASS_TESTS_DIR + ";Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;";
+# endif 
+   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST.csv";
+#endif
+
    AS400 as400(connStr.c_str());
-   class Custmast_Rcd : public RRECORD {
-	public:
-	  enum FieldList {
-		CUSNO = 1,
-		CNAME = 2,
-		ORDVAL = 3
-	  };
-	  double getOrdersValue() { return readDouble(ORDVAL); }
+
+   /* The custmast.h header file would be created through a tool analogous to GENSRC but I2CLASS specific.
+   *  Included inline here for demo
+#include "custmast.h"
+   */
+   class CUSTMAST_CUSFMT : public RRECORD {
+   public:
+#if RFILETYPE == RFILE400
+	  zoned(6, 0) CUSNO;
+	  fixed(20) CNAME;
+	  zoned(7, 2) ORDVAL;
+	  CUSTMAST_CUSFMT() : RRECORD("CUSTMAST_CUSFMT") {
+		 inputBuffer = &CUSNO;
+	  }
+#else
+	   enum FieldList {
+		  CUSNO = 1,
+		  CNAME = 2,
+		  ORDVAL = 3
+	   };
+#endif
+	  double getOrdersValue() { return getDouble(ORDVAL); }
    } custmast_rcd;
-   RFILE custmast(as400, "CUSTMAST.csv");
+   RFILE custmast(as400, CUSTMAST_FILE_NAME);
 
    // Accumulate total of order values from all customers
    double totalOrdersValue = 0.0;
