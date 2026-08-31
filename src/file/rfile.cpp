@@ -153,7 +153,9 @@ void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
 			strI--;
 			if (strI>=0 && (str[strI]!='0' || wrdI<=zeroSuppress))
 				buf[wrdI]=str[strI];
-			else if (wrdI>zeroSuppress)
+			// wrdI==zeroSuppress is the '0'/'*' marker itself -- it must always show a
+			// digit (typically '0' for an all-zero value), not fall through to blank.
+			else if (wrdI>=zeroSuppress)
 				buf[wrdI]='0';
 			// Insert floating currency symbol
 			else if (currency>0 && (strI==-1 || (strI<0 && wrdI==currency)))

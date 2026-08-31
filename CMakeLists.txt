@@ -71,6 +71,10 @@ add_executable(smoke_core tests/smoke_core.cpp)
 target_link_libraries(smoke_core PRIVATE i2class)
 add_test(NAME smoke_core COMMAND smoke_core)
 
+add_executable(rfile_print_check tests/rfile_print_check.cpp)
+target_link_libraries(rfile_print_check PRIVATE i2class)
+add_test(NAME rfile_print_check COMMAND rfile_print_check)
+
 add_executable(bounds_check tests/bounds_check.cpp)
 target_link_libraries(bounds_check PRIVATE i2class)
 add_test(NAME bounds_check COMMAND bounds_check)
