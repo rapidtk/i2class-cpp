@@ -43,6 +43,8 @@
 **/obj/
 **/Debug/
 **/Release/
+# Generated from tests/CUSTMAST.csv for the non-Windows ODBC fixture
+*.db
 **/*.obj
 **/*.o
 **/*.exe

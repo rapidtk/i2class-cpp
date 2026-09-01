@@ -24,30 +24,39 @@
 #ifndef I2CLASS_TESTS_DIR
 #define I2CLASS_TESTS_DIR "tests"
 #endif
+// Where the generated CUSTMAST.db lives (non-Windows only) -- the build directory, since
+// it is a build artifact rather than a source fixture.
+#ifndef I2CLASS_DB_DIR
+#define I2CLASS_DB_DIR I2CLASS_TESTS_DIR
+#endif
 
 void test_file() {
 #if RFILETYPE == RFILE400
    std::string connStr = "localhost";
-   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST";
-#else
-# if RFILETYPE == RFILEADO
-# else
-#if RFILETYPE == RFILE400
+   constexpr const char *CUSTMAST_FILE_NAME = "CUSTMAST";
+#elif RFILETYPE == RFILEADO
    std::string connStr = "localhost";
-   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST";
-#else
-# if RFILETYPE == RFILEADO
-# else
-   // Full ODBC connection string for the Windows-builtin Microsoft Text Driver, targeting
-   // the folder CUSTMAST.csv lives in -- AS400's single-string constructor passes this
-   // straight through to SQLDriverConnect (see RfileODBC::open()).
+   constexpr const char *CUSTMAST_FILE_NAME = "CUSTMAST.csv";
+#elif defined(_WIN32)
+   // Windows has a built-in CSV/text ODBC driver, so tests/CUSTMAST.csv can be queried
+   // where it sits. AS400's single-string constructor passes this straight through to
+   // SQLDriverConnect (see RfileODBC::open()); the Text driver's table name is the
+   // file name including its extension.
    std::string connStr = std::string("Driver={Microsoft Access Text Driver (*.txt, *.csv)};Dbq=")
       + I2CLASS_TESTS_DIR + ";Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;";
-# endif 
-   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST.csv";
+   constexpr const char *CUSTMAST_FILE_NAME = "CUSTMAST.csv";
+#else
+   // unixODBC ships no text/CSV driver, so on Linux the same rows are read from a SQLite
+   // database generated from CUSTMAST.csv at build time (needs the libsqliteodbc package).
+   std::string connStr = std::string("Driver=SQLite3;Database=")
+      + I2CLASS_DB_DIR + "/CUSTMAST.db;";
+   constexpr const char *CUSTMAST_FILE_NAME = "CUSTMAST";
 #endif
 
    AS400 as400(connStr.c_str());
+
+   typedef zoned(7, 2) ORDVAL_T;
+   static ORDVAL_T ordval;
 
    /* The custmast.h header file would be created through a tool analogous to GENSRC but I2CLASS specific.
    *  Included inline here for demo
@@ -56,11 +65,14 @@ void test_file() {
    class CUSTMAST_CUSFMT : public RRECORD {
    public:
 #if RFILETYPE == RFILE400
-	  zoned(6, 0) CUSNO;
-	  fixed(20) CNAME;
-	  zoned(7, 2) ORDVAL;
-	  CUSTMAST_CUSFMT() : RRECORD("CUSTMAST_CUSFMT") {
+#pragma pack(1)
+		zoned(6, 0) CUSNO;
+		fixed(20) CNAME;
+		ORDVAL_T ORDVAL;
+#pragma pack()
+	  CUSTMAST_CUSFMT() : RRECORD("CUSTMAST") {
 		 inputBuffer = &CUSNO;
+		 inputSize = 33;
 	  }
 #else
 	   enum FieldList {
@@ -69,12 +81,16 @@ void test_file() {
 		  ORDVAL = 3
 	   };
 #endif
+	  void input () {
+	     ordval = getDouble(ORDVAL);
+	  }
 	  double getOrdersValue() { return getDouble(ORDVAL); }
    } custmast_rcd;
    RFILE custmast(as400, CUSTMAST_FILE_NAME);
 
    // Accumulate total of order values from all customers
-   double totalOrdersValue = 0.0;
+   float totalOrdersValue = 0.0;
+   packed(9,2) totalOrdersValue92 = 0.0;
    custmast.setRecordFormat(custmast_rcd);
    try
    {
@@ -86,10 +102,12 @@ void test_file() {
       return;
    }
    while (custmast.read()) {
-	  totalOrdersValue += custmast_rcd.getOrdersValue();
+	  totalOrdersValue += ordval;
+	  totalOrdersValue92 = totalOrdersValue92 + ordval;
    }
    custmast.close();
-   std::cout << "Total orders value: " << totalOrdersValue << '\n';
+   printf("Total float orders value to 4 decimal points: %.4f\n", totalOrdersValue);
+   std::cout << "Total packed(9,2) orders value {exact}: " << totalOrdersValue92 << '\n';
 }
 
 void test_core()

@@ -206,7 +206,8 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 	bool positive=isdigit(zptr[digits-1]);
 	if (!positive)
 	{
-		decodeSign(buf+digits);
+		// The sign-bearing digit is decoded in place further down, once it has actually
+		// been copied into buf -- doing it here read uninitialized memory.
 		*buf='-';
 		bufPtr++;
 	}
@@ -227,6 +228,50 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 	// Null terminate the string
     bufPtr++;
     *bufPtr='\0';
+	return buf;
+}
+
+/// @brief Format a zoned field as exact decimal text into a caller-supplied buffer.
+///
+/// Same digits zonedToChar() produces, but with leading zeros suppressed and without the
+/// shared static buffer -- this is what operator<<(ostream&, Zoned) uses so that printing
+/// a Zoned shows every digit, instead of implicitly converting to long double and picking
+/// up the stream's default 6-significant-digit precision.
+/// @param buf destination, must hold at least digits+3 bytes (sign, '.', null)
+/// @param zptr pointer to the first byte of the zoned field
+/// @param digits total number of digits (precision)
+/// @param fraction number of digits after the implied decimal point
+/// @return buf
+char *zonedFormat(char *buf, const char *zptr, int digits, int fraction)
+{
+	bool negative = (isdigit(zptr[digits-1]) == 0);
+	int intLen = digits - fraction;
+
+	// Suppress leading zeros, but always leave at least one integer digit
+	int start = 0;
+	while (start < intLen-1 && zptr[start]=='0')
+		start++;
+
+	char *out = buf;
+	if (negative)
+		*out++ = '-';
+	if (intLen <= 0)
+		*out++ = '0'; // e.g. Zoned<2,2>: no integer digits are stored at all
+	else
+	{
+		memcpy(out, zptr+start, intLen-start);
+		out += intLen-start;
+	}
+	if (fraction > 0)
+	{
+		*out++ = '.';
+		memcpy(out, zptr+intLen, fraction);
+		out += fraction;
+	}
+	*out = '\0';
+	// The last digit carries the sign nibble; restore it to a plain digit
+	if (negative)
+		decodeSign(out-1);
 	return buf;
 }
 

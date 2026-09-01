@@ -1,6 +1,7 @@
 #include <stdlib.h>
 //#include <mem.h>
 #include <ctype.h>
+#include <float.h>
 #include <string.h>
 #include "rpgtypes.h"
 
@@ -63,7 +64,15 @@ void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 	// Copy in everything to the left of the decimal point
 	char buf[MAX_DECIMAL_DIGITS+1];
 	int dec, sign;
-	_ecvt_s(buf, sizeof(buf), value, digits, &dec, &sign);
+	// Only ask for as many significant digits as a double can actually carry (DBL_DIG).
+	// Asking for the field's full width re-exposes the binary representation's noise --
+	// 8.7 at 18 significant digits is 8.69999999999999929, and the truncating copy below
+	// would then store 8.6 rather than 8.7.
+	int sigDigits = digits<DBL_DIG ? digits : DBL_DIG;
+	_ecvt_s(buf, sizeof(buf), value, sigDigits, &dec, &sign);
+	// Pad so the copy below can still take up to `digits` characters
+	if (digits>sigDigits)
+		memset(buf+sigDigits, '0', digits-sigDigits);
 	int i=digits-fraction; // number of digits to left of decimal point
 	int j=i-dec;
 	if (j<0)

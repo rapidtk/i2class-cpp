@@ -8,6 +8,7 @@
 #include <time.h>
 #include <math.h>
 #include <cstddef>
+#include <iosfwd>
 
 #include "xxcvt.h" // For zoned conversion
 #include "i2compat.h"
@@ -27,19 +28,40 @@
 /// (this file implements the runtime behavior behind ZONED, PACKED, IND, etc.)
 
 
-constexpr int MAX_DECIMAL_DIGITS = 31;
+// Widest decimal this build supports. bcd.h sets DFT_DEC_DIG to 63 on IBM i 7.2 and later
+// (31 on 7.1 and earlier); everywhere else we use the current 63-digit maximum. Taking it
+// from IBM's own constant rather than hardcoding keeps the figurative constants below in
+// range on any release, and makes this the correct size for any scratch buffer receiving a
+// converted decimal.
+#if defined(DFT_DEC_DIG)
+# define I2_MAX_DECIMAL_DIGITS DFT_DEC_DIG
+#else
+# define I2_MAX_DECIMAL_DIGITS 63
+#endif
+constexpr int MAX_DECIMAL_DIGITS = I2_MAX_DECIMAL_DIGITS;
+
 constexpr double compile_pow(int base, int exp) {
     return exp == 0 ? 1 : base * compile_pow(base, exp - 1);
 }
 /// @brief The maximum value that a decimal(MAX_DECIMAL_DIGITS, 0) number can hold
 constexpr double MAX_DECIMAL_VALUE = compile_pow(10, MAX_DECIMAL_DIGITS) - 1;
 constexpr double MIN_DECIMAL_VALUE = -MAX_DECIMAL_VALUE;
-// Note: the preprocessor cannot stringify a computed constexpr value (it only
-// stringifies literal source text), so these must be hardcoded to match
-// MAX_DECIMAL_DIGITS above; the static_asserts catch a mismatch at compile time.
-static constexpr const char* MAX_DECIMAL_STR = "9999999999999999999999999999999";
-static constexpr const char* MIN_DECIMAL_STR = "-9999999999999999999999999999999";
-static_assert(MAX_DECIMAL_DIGITS == 31, "MAX_DECIMAL_STR/MIN_DECIMAL_STR must be updated to match MAX_DECIMAL_DIGITS");
+// The preprocessor cannot stringify a computed constexpr value, so these are spelled out
+// in groups of ten digits; the static_asserts verify the length really does match.
+#if I2_MAX_DECIMAL_DIGITS == 31
+static constexpr const char* MAX_DECIMAL_STR = "9999999999" "9999999999" "9999999999" "9";
+static constexpr const char* MIN_DECIMAL_STR = "-" "9999999999" "9999999999" "9999999999" "9";
+#else
+static constexpr const char* MAX_DECIMAL_STR =
+	"9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "999";
+static constexpr const char* MIN_DECIMAL_STR =
+	"-" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "999";
+#endif
+constexpr int const_strlen(const char *s) { return *s ? 1 + const_strlen(s + 1) : 0; }
+static_assert(const_strlen(MAX_DECIMAL_STR) == MAX_DECIMAL_DIGITS,
+	"MAX_DECIMAL_STR must hold exactly MAX_DECIMAL_DIGITS digits");
+static_assert(const_strlen(MIN_DECIMAL_STR) == MAX_DECIMAL_DIGITS + 1,
+	"MIN_DECIMAL_STR must be MAX_DECIMAL_STR with a leading '-'");
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,7 +503,7 @@ public:
 #if !defined(NO_PACKED)
 	Fixed<sz>& movel(const _ConvertDecimal p)
 	{
-		char buf[31];
+		char buf[MAX_DECIMAL_DIGITS];
 		cpynv(NUM_DESCR(_T_ZONED, p.DigitsOf(), p.PrecisionOf()), buf,
        NUM_DESCR(_T_PACKED, p.DigitsOf(), p.PrecisionOf()), (char *)&p);
 		memcpy(overlay, buf, MIN(sz, p.DigitsOf()));
@@ -498,7 +520,7 @@ public:
 #if !defined(NO_PACKED)
 	Fixed<sz>& move(const _ConvertDecimal p)
 	{
-		char buf[31];
+		char buf[MAX_DECIMAL_DIGITS];
 		cpynv(NUM_DESCR(_T_ZONED, p.DigitsOf(), p.PrecisionOf()), buf,
        NUM_DESCR(_T_PACKED, p.DigitsOf(), p.PrecisionOf()), (char *)&p);
 		int minsz=MIN(sz, p.DigitsOf());
@@ -845,6 +867,61 @@ void decodeSign(char *c);
 void encodeSign(char *c);
 char *zonedToChar(const char *zptr, int digits, int fraction);
 void zonedFromChar(char *zptr, int digits, int fraction, const char *str);
+/// @brief Format a zoned field as exact decimal text (e.g. "-123.45") into a
+/// caller-supplied buffer, which must hold at least digits+3 bytes (sign, decimal
+/// point, null). Leading zeros are suppressed. Unlike zonedToChar() there is no
+/// shared static buffer, so this is safe to call from anywhere.
+char *zonedFormat(char *buf, const char *zptr, int digits, int fraction);
+
+////////////////////////////////////////////////////////////////////////////////
+// Decimal literals -- __D()/__Z()
+//
+// On IBM i, bcd.h supplies __D(s) as (_ConvertDecimal)(s), so a decimal constant keeps
+// its exact digits instead of going through a double. See:
+// https://www.ibm.com/docs/en/i/7.4.0?topic=template-using-d-macro-simplify-code
+// The string may only contain 0-9 . - +
+#if defined(NO_PACKED)
+/// @brief The non-IBM-i stand-in for a bcd.h _ConvertDecimal constant.
+///
+/// Holds the literal text rather than a converted value, so assigning it into a
+/// Zoned<> reproduces the written digits exactly -- `z = __D("8.7")` can never pick up
+/// the binary floating-point expansion of 8.7 the way `z = 8.7` potentially could.
+/// The text must outlive the DecimalConst, which is automatic for the string literals
+/// __D()/__Z() are meant to be used with.
+class DecimalConst
+{
+public:
+	explicit DecimalConst(const char *s) : text(s), digits(0), fraction(0)
+	{
+		const char *p = text;
+		if (*p=='-' || *p=='+')
+			p++;
+		for (bool afterPoint=false; *p!='\0'; p++)
+		{
+			if (*p=='.')
+				afterPoint = true;
+			else
+			{
+				digits++;
+				if (afterPoint)
+					fraction++;
+			}
+		}
+	}
+	int DigitsOf() const { return digits; }
+	int PrecisionOf() const { return fraction; }
+	const char *str() const { return text; }
+	operator long double() const { return strtod(text, nullptr); }
+private:
+	const char *text;
+	int digits, fraction;
+};
+# define __D(DECIMAL_CONSTANT) DecimalConst(DECIMAL_CONSTANT)
+#endif
+/// @brief Zoned-decimal literal; the zoned counterpart of __D(). Same exact-digits
+/// guarantee, so `z = __Z("8.7")` stores 8.7 rather than a rounded double.
+#define __Z(DECIMAL_CONSTANT) __D(DECIMAL_CONSTANT)
+
 
 /// @brief A numeric [zoned-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-zoned-decimal-format) value 
 /// backed by an unformatted (no sign or decimal point) fixed-length string of characters. 
@@ -873,6 +950,10 @@ public:
    	{ assign(d); }
 	Zoned(const FigConstNum &fc)
    	{ assign(fc); }
+#if defined(NO_PACKED)
+	Zoned(const DecimalConst &d)
+   	{ assign(d); }
+#endif
 
 #if !defined(NO_PACKED)
 	// Do assignment from a packed
@@ -897,6 +978,18 @@ public:
 		assign(d);
 		return *this;
 	}
+	// Do assignment from a decimal literal -- __D("8.7") keeps the written digits
+	Zoned<sz, precision>& operator = (const DecimalConst &d)
+	{
+		assign(d);
+		return *this;
+	}
+	bool operator == (const DecimalConst &d) const { return CompareConst(d) == 0; }
+	bool operator != (const DecimalConst &d) const { return CompareConst(d) != 0; }
+	bool operator <= (const DecimalConst &d) const { return CompareConst(d) <= 0; }
+	bool operator <  (const DecimalConst &d) const { return CompareConst(d) <  0; }
+	bool operator >= (const DecimalConst &d) const { return CompareConst(d) >= 0; }
+	bool operator >  (const DecimalConst &d) const { return CompareConst(d) >  0; }
 #endif
    // Do assignment from a FigConstNum
 	Zoned<sz, precision>& operator = (const FigConstNum &fc)
@@ -989,8 +1082,25 @@ public:
 		assign((long double)*this / val);
 		return *this;
 	}
-	// Cast to a packed
 #if !defined(NO_PACKED)
+	// Explicit packed overloads. Without these a packed operand reaches operator OP=(long
+	// double) and (via Zoned's operator _ConvertDecimal) the _ConvertDecimal form equally
+	// well -- one user-defined conversion each, so the call is ambiguous. These match
+	// exactly, so they win outright and keep the arithmetic in decimal rather than binary
+	// floating point.
+# define GEN_ZONED_PACKED_ASSIGN_OP(OP) \
+	template <int d, int p> \
+	Zoned<sz,precision> &operator OP##= (const _DecimalT<d,p> &val) \
+		{ *this = toPacked() OP val; return *this; } \
+	Zoned<sz,precision> &operator OP##= (const _ConvertDecimal &val) \
+		{ *this = toPacked() OP val; return *this; }
+	GEN_ZONED_PACKED_ASSIGN_OP(+)
+	GEN_ZONED_PACKED_ASSIGN_OP(-)
+	GEN_ZONED_PACKED_ASSIGN_OP(*)
+	GEN_ZONED_PACKED_ASSIGN_OP(/)
+# undef GEN_ZONED_PACKED_ASSIGN_OP
+
+	// Cast to a packed
 	_DecimalT<sz, precision> toPacked() const
 	{
 		_DecimalT<sz, precision> p;
@@ -1038,7 +1148,7 @@ public:
 #if !defined(NO_PACKED)
 	Zoned<sz, precision>& movel(const _ConvertDecimal p)
 	{
-		char buf[31];
+		char buf[MAX_DECIMAL_DIGITS];
 		cpynv(NUM_DESCR(_T_ZONED, p.DigitsOf(), p.PrecisionOf()), buf,
        NUM_DESCR(_T_PACKED, p.DigitsOf(), p.PrecisionOf()), (char *)&p);
 		memcpy(overlay, buf, MIN(sz, p.DigitsOf()));
@@ -1054,7 +1164,7 @@ public:
 #if !defined(NO_PACKED)
 	Zoned<sz, precision>& move(const _ConvertDecimal p)
 	{
-		char buf[31];
+		char buf[MAX_DECIMAL_DIGITS];
 		cpynv(NUM_DESCR(_T_ZONED, p.DigitsOf(), p.PrecisionOf()), buf,
        NUM_DESCR(_T_PACKED, p.DigitsOf(), p.PrecisionOf()), (char *)&p);
 		int minsz=MIN(sz, p.DigitsOf());
@@ -1079,6 +1189,11 @@ public:
 	// Do assignment from a long double
 	void assign(long double d)
 		{ QXXDTOZ((unsigned char *)overlay, sz, precision, static_cast<double>(d)); }
+#if defined(NO_PACKED)
+	// Do assignment from a decimal literal, digit for digit (never via double)
+	void assign(const DecimalConst &d)
+		{ zonedFromChar(overlay, sz, precision, d.str()); }
+#endif
 
 //protected:
 	char overlay[sz];
@@ -1090,6 +1205,16 @@ private:
 	// Do assignment from an int
 	void assignInt(int i)
 		{ QXXITOZ((unsigned char *)overlay, sz, precision, i); }
+#if defined(NO_PACKED)
+	// Compare against a decimal literal by re-scaling it to this field's shape, so the
+	// comparison stays exact instead of going through a double
+	int CompareConst(const DecimalConst &d) const
+	{
+		Zoned<sz, precision> tmp;
+		tmp.assign(d);
+		return Compare(tmp);
+	}
+#endif
 	// Do comparisons between Zoned types
 	int Compare(const Zoned<sz, precision> &znd) const
 	{
@@ -1104,6 +1229,19 @@ private:
 		return cmp;
 	}
 };
+
+/// @brief Stream a Zoned as exact decimal text.
+///
+/// Without this, `std::cout << zonedValue` falls back to Zoned's implicit conversion to
+/// long double and picks up the stream's default precision of 6 *significant* digits, so
+/// e.g. 60145.76 prints as "60145.8". This mirrors what bcd.h provides for _DecimalT.
+template <class charT, class traits, int sz, int precision>
+inline std::basic_ostream<charT, traits> &
+ operator << (std::basic_ostream<charT, traits> &os, const Zoned<sz, precision> &znd)
+{
+	char buf[sz + 3]; // sign, decimal point, null terminator
+	return os << zonedFormat(buf, znd.overlay, sz, precision);
+}
 
 #if !defined(NO_PACKED)
 # define GEN_ZONED_OP(OP, RTNTYP) \
@@ -1128,6 +1266,39 @@ private:
 	GEN_ZONED_OP(-, _ConvertDecimal)
 	GEN_ZONED_OP(/, _ConvertDecimal)
 	GEN_ZONED_OP(*, _ConvertDecimal)
+
+// packed OP= Zoned. bcd.h's own OP= overloads only reach a Zoned through a user-defined
+// conversion (to _ConvertDecimal, long double, int, ...), and several are equally good, so
+// without these `packedVal += zonedVal` is ambiguous.
+# define GEN_PACKED_ZONED_ASSIGN_OP(OP) \
+	template <int l1, int p1, int l2, int p2> \
+	 inline _DecimalT<l1, p1> &operator OP##= (_DecimalT<l1, p1> &val1, const Zoned<l2, p2> &val2) \
+	  { val1 = val1 OP val2.toPacked(); return val1; }
+	GEN_PACKED_ZONED_ASSIGN_OP(+)
+	GEN_PACKED_ZONED_ASSIGN_OP(-)
+	GEN_PACKED_ZONED_ASSIGN_OP(*)
+	GEN_PACKED_ZONED_ASSIGN_OP(/)
+#else
+// Zoned OP Zoned on the non-IBM-i path. These have to exist explicitly: Zoned converts to
+// ZonedTemp, which derives from FixedTemp, so without them `a + b` is ambiguous between
+// built-in long double arithmetic and operator+(FixedTemp, FixedTemp) -- string
+// concatenation. GCC rejects it outright; MSVC quietly picks one.
+# define GEN_ZONED_OP(OP, RTNTYP) \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Zoned<l1, p1> &val1, const Zoned<l2, p2> &val2) \
+	  { return (long double)val1 OP (long double)val2; }
+
+	GEN_ZONED_OP(==, bool)
+	GEN_ZONED_OP(!=, bool)
+	GEN_ZONED_OP(<=, bool)
+	GEN_ZONED_OP(<, bool)
+	GEN_ZONED_OP(>=, bool)
+	GEN_ZONED_OP(>, bool)
+
+	GEN_ZONED_OP(+, long double)
+	GEN_ZONED_OP(-, long double)
+	GEN_ZONED_OP(/, long double)
+	GEN_ZONED_OP(*, long double)
 #endif
 #define zoned(sz, precision) Zoned<sz, precision>
 

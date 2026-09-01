@@ -96,7 +96,7 @@ void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
 	char *str;
 	str=n.overlay;
 	*/
-	char strBuf[31];
+	char strBuf[MAX_DECIMAL_DIGITS];
 	char *str=strBuf;
 #if !defined(NO_PACKED) 
 	cpynv(NUM_DESCR(_T_ZONED, n.DigitsOf(), n.PrecisionOf()), str, NUM_DESCR(_T_PACKED, n.DigitsOf(), n.PrecisionOf()), (char *)&n);

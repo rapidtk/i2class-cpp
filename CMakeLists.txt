@@ -71,6 +71,39 @@ set_target_properties(i2class PROPERTIES
 	WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
+# unixODBC ships no CSV/text driver, so off Windows the CUSTMAST rows are read from a
+# SQLite database generated here from the same CUSTMAST.csv -- the CSV stays the single
+# source of truth. Needs the libsqliteodbc package (driver "SQLite3") plus the sqlite3 CLI.
+set(I2CLASS_DB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+set(CUSTMAST_DB_AVAILABLE FALSE)
+if(ODBC_FOUND AND NOT WIN32)
+	find_program(SQLITE3_EXECUTABLE sqlite3)
+	if(SQLITE3_EXECUTABLE)
+		set(I2CLASS_DB_DIR ${CMAKE_CURRENT_BINARY_DIR})
+		set(CUSTMAST_DB ${CMAKE_CURRENT_BINARY_DIR}/CUSTMAST.db)
+		# The SQL lives in a generated script rather than on the command line: CMake's
+		# makefile escaping backslash-escapes spaces but leaves ( ) ; alone, so passing
+		# "CREATE TABLE CUSTMAST(...)" as an argument is a /bin/sh syntax error.
+		set(CUSTMAST_SQL ${CMAKE_CURRENT_BINARY_DIR}/custmast_import.sql)
+		file(WRITE ${CUSTMAST_SQL}
+"CREATE TABLE CUSTMAST(CUSNO INTEGER, CNAME TEXT, ORDVAL REAL);
+.mode csv
+.import --skip 1 ${CMAKE_CURRENT_SOURCE_DIR}/tests/CUSTMAST.csv CUSTMAST
+")
+		add_custom_command(
+			OUTPUT ${CUSTMAST_DB}
+			COMMAND ${CMAKE_COMMAND} -E rm -f ${CUSTMAST_DB}
+			COMMAND ${SQLITE3_EXECUTABLE} ${CUSTMAST_DB} ".read ${CUSTMAST_SQL}"
+			DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CUSTMAST.csv
+			COMMENT "Generating CUSTMAST.db from CUSTMAST.csv"
+		)
+		add_custom_target(custmast_db ALL DEPENDS ${CUSTMAST_DB})
+		set(CUSTMAST_DB_AVAILABLE TRUE)
+	else()
+		message(STATUS "sqlite3 CLI not found -- CUSTMAST.db cannot be generated, ODBC file tests will be built but not run")
+	endif()
+endif()
+
 # Demo program (see i2class-cpp.cpp) -- links against the shared library like any
 # other consumer would. test_file() needs the ODBC-backed RfileODBC, so this (and its
 # CTest entry) only exist when ODBC was found above.
@@ -78,7 +111,12 @@ if(ODBC_FOUND)
 	add_executable(i2class-demo i2class-cpp.cpp)
 	target_link_libraries(i2class-demo PRIVATE i2class)
 	# Absolute path to tests/CUSTMAST.csv's folder, for test_file()'s ODBC connection string.
-	target_compile_definitions(i2class-demo PRIVATE I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+	target_compile_definitions(i2class-demo PRIVATE
+		I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests"
+		I2CLASS_DB_DIR="${I2CLASS_DB_DIR}")
+	if(CUSTMAST_DB_AVAILABLE)
+		add_dependencies(i2class-demo custmast_db)
+	endif()
 endif()
 
 enable_testing()
@@ -109,6 +147,17 @@ add_test(NAME i2compat_fallback_check COMMAND i2compat_fallback_check)
 if(ODBC_FOUND)
 	add_executable(rfileodbc_custmast_check tests/rfileodbc_custmast_check.cpp)
 	target_link_libraries(rfileodbc_custmast_check PRIVATE i2class)
-	target_compile_definitions(rfileodbc_custmast_check PRIVATE I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
-	add_test(NAME rfileodbc_custmast_check COMMAND rfileodbc_custmast_check)
+	target_compile_definitions(rfileodbc_custmast_check PRIVATE
+		I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests"
+		I2CLASS_DB_DIR="${I2CLASS_DB_DIR}")
+	# Runs against the Windows-builtin Text driver, or the generated SQLite database
+	# elsewhere; built either way so RfileODBC keeps getting compile coverage.
+	if(WIN32 OR CUSTMAST_DB_AVAILABLE)
+		add_test(NAME rfileodbc_custmast_check COMMAND rfileodbc_custmast_check)
+	else()
+		message(STATUS "rfileodbc_custmast_check will be built but not run -- no usable CSV/SQLite ODBC driver")
+	endif()
+	if(CUSTMAST_DB_AVAILABLE)
+		add_dependencies(rfileodbc_custmast_check custmast_db)
+	endif()
 endif()
