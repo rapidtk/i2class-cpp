@@ -26,22 +26,46 @@
 #endif
 
 void test_file() {
+#if RFILETYPE == RFILE400
+   std::string connStr = "localhost";
+   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST";
+#else
+# if RFILETYPE == RFILEADO
+# else
    // Full ODBC connection string for the Windows-builtin Microsoft Text Driver, targeting
    // the folder CUSTMAST.csv lives in -- AS400's single-string constructor passes this
    // straight through to SQLDriverConnect (see RfileODBC::open()).
    std::string connStr = std::string("Driver={Microsoft Access Text Driver (*.txt, *.csv)};Dbq=")
       + I2CLASS_TESTS_DIR + ";Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;";
+# endif 
+   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST.csv";
+#endif
+
    AS400 as400(connStr.c_str());
-   class Custmast_Rcd : public RRECORD {
-	public:
-	  enum FieldList {
-		CUSNO = 1,
-		CNAME = 2,
-		ORDVAL = 3
-	  };
-	  double getOrdersValue() { return readDouble(ORDVAL); }
+
+   /* The custmast.h header file would be created through a tool analogous to GENSRC but I2CLASS specific.
+   *  Included inline here for demo
+#include "custmast.h"
+   */
+   class CUSTMAST_CUSFMT : public RRECORD {
+   public:
+#if RFILETYPE == RFILE400
+	  zoned(6, 0) CUSNO;
+	  fixed(20) CNAME;
+	  zoned(7, 2) ORDVAL;
+	  CUSTMAST_CUSFMT() : RRECORD("CUSTMAST") {
+		 inputBuffer = &CUSNO;
+	  }
+#else
+	   enum FieldList {
+		  CUSNO = 1,
+		  CNAME = 2,
+		  ORDVAL = 3
+	   };
+#endif
+	  double getOrdersValue() { return getDouble(ORDVAL); }
    } custmast_rcd;
-   RFILE custmast(as400, "CUSTMAST.csv");
+   RFILE custmast(as400, CUSTMAST_FILE_NAME);
 
    // Accumulate total of order values from all customers
    double totalOrdersValue = 0.0;
@@ -79,7 +103,7 @@ void test_core()
 	Zoned<3, 1> znd31 = 12.1;
 	std::cout << "zoned(3,1): " << (double)znd31 << '\n';
 	znd31.movel('3');
-	if (znd31 == 32.1)
+	if ((double)znd31 == 32.1)
 	   std::cout << "zoned(3,1) 32.1 equal to 32.1\n";
 	Zoned<5, 2> znd52 = 123.45;
 	double diff = (double)znd52 - 123.45;
@@ -87,13 +111,13 @@ void test_core()
 	   std::cout <<	"zoned(5,2) 123.45 - 123.45 equal to 0.0\n";
 
 	packed(4, 2) pkd42;
-	pkd42.assign(znd31);
+	pkd42 = znd31;
 	if (pkd42 == znd31)
 	   std::cout << "packed(4,2) 32.10 equal to zoned(3,1) 32.1\n";
 
 
 	znd31 = LOVAL;
-	if (znd31 == -99.9)
+	if ((double)znd31 == -99.9)
 	   std::cout << "zoned(3,1) -99.9 equal to *LOVAL\n";
 	pkd42 = 99.99;
 	if (pkd42 == HIVAL)

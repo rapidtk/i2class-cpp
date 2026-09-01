@@ -52,7 +52,7 @@ void Rfile400::open(const char *OpenType, int blockingFactor, char commitLockLev
    	throw CI2ErrFile("Failed to open file");
    // If a record format has already been set, then make call to Rformat here
    if (record)
-   	_Rformat(fp, record->recordName);
+   	_Rformat(fp, (char *)record->recordName);
 }
 
 bool Rfile400::readx()
@@ -119,7 +119,7 @@ bool Rfile400::write(Rrecord400 &format, unsigned long rrn)
 void Rfile400::setRecordFormat(Rrecord400 &format)
 {
 	if (fp)
-   	_Rformat(fp, format.recordName);
+   	_Rformat(fp, (char *)format.recordName);
 	setRecord(format);
 }
 
