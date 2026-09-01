@@ -1,7 +1,7 @@
 // Regression test for RfileODBC/RrecordODBC against tests/CUSTMAST.csv (see i2class-cpp.cpp's
-// test_file() for the "showcase sample" this mirrors). Requires ODBC + the Windows-builtin
-// Microsoft Text Driver -- only built/registered when CMakeLists.txt's find_package(ODBC)
-// succeeds.
+// test_file() for the "showcase sample" this mirrors). Reads the CSV directly through the
+// Windows-builtin Text driver, or through the SQLite database CMake generates from it
+// elsewhere -- unixODBC has no CSV driver. Only built when find_package(ODBC) succeeds.
 #include <cstdio>
 #include <string>
 
@@ -9,6 +9,18 @@
 
 #ifndef I2CLASS_TESTS_DIR
 #define I2CLASS_TESTS_DIR "tests"
+#endif
+#ifndef I2CLASS_DB_DIR
+#define I2CLASS_DB_DIR I2CLASS_TESTS_DIR
+#endif
+
+#ifdef _WIN32
+# define CUSTMAST_CONN_STR (std::string("Driver={Microsoft Access Text Driver (*.txt, *.csv)};Dbq=") \
+	+ I2CLASS_TESTS_DIR + ";Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;")
+# define CUSTMAST_FILE_NAME "CUSTMAST.csv"
+#else
+# define CUSTMAST_CONN_STR (std::string("Driver=SQLite3;Database=") + I2CLASS_DB_DIR + "/CUSTMAST.db;")
+# define CUSTMAST_FILE_NAME "CUSTMAST"
 #endif
 
 static int failures = 0;
@@ -39,11 +51,10 @@ public:
 
 int main()
 {
-	std::string connStr = std::string("Driver={Microsoft Access Text Driver (*.txt, *.csv)};Dbq=")
-		+ I2CLASS_TESTS_DIR + ";Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;";
+	std::string connStr = CUSTMAST_CONN_STR;
 	AS400 as400(connStr.c_str());
 	CustmastRecord rec;
-	RFILE custmast(as400, "CUSTMAST.csv");
+	RFILE custmast(as400, CUSTMAST_FILE_NAME);
 
 	custmast.setRecordFormat(rec);
 	bool opened = true;
@@ -73,7 +84,7 @@ int main()
 	// Re-run using the exact-decimal path (readDecimal()/Zoned<>), in a separate open/read
 	// pass -- ODBC drivers generally don't support calling SQLGetData twice for the same
 	// (fixed-length) column within a single row, so this can't share the loop above.
-	RFILE custmastExact(as400, "CUSTMAST.csv");
+	RFILE custmastExact(as400, CUSTMAST_FILE_NAME);
 	CustmastRecord recExact;
 	custmastExact.setRecordFormat(recExact);
 	bool openedExact = true;
