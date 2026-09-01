@@ -32,6 +32,12 @@ void test_file() {
 #else
 # if RFILETYPE == RFILEADO
 # else
+#if RFILETYPE == RFILE400
+   std::string connStr = "localhost";
+   constexpr char *CUSTMAST_FILE_NAME = "CUSTMAST";
+#else
+# if RFILETYPE == RFILEADO
+# else
    // Full ODBC connection string for the Windows-builtin Microsoft Text Driver, targeting
    // the folder CUSTMAST.csv lives in -- AS400's single-string constructor passes this
    // straight through to SQLDriverConnect (see RfileODBC::open()).
@@ -103,7 +109,7 @@ void test_core()
 	Zoned<3, 1> znd31 = 12.1;
 	std::cout << "zoned(3,1): " << (double)znd31 << '\n';
 	znd31.movel('3');
-	if (znd31 == 32.1)
+	if ((double)znd31 == 32.1)
 	   std::cout << "zoned(3,1) 32.1 equal to 32.1\n";
 	Zoned<5, 2> znd52 = 123.45;
 	double diff = (double)znd52 - 123.45;
@@ -111,13 +117,13 @@ void test_core()
 	   std::cout <<	"zoned(5,2) 123.45 - 123.45 equal to 0.0\n";
 
 	packed(4, 2) pkd42;
-	pkd42.assign(znd31);
+	pkd42 = znd31;
 	if (pkd42 == znd31)
 	   std::cout << "packed(4,2) 32.10 equal to zoned(3,1) 32.1\n";
 
 
 	znd31 = LOVAL;
-	if (znd31 == -99.9)
+	if ((double)znd31 == -99.9)
 	   std::cout << "zoned(3,1) -99.9 equal to *LOVAL\n";
 	pkd42 = 99.99;
 	if (pkd42 == HIVAL)
