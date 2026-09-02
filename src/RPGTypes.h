@@ -86,8 +86,8 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Temporary Fixed-length string used instead of Fixed<> 
-// for certain parameters and temporary results (e.g. substring and concatenation)
+/// @brief Temporary fixed-length, (std::ranges::view-like)[https://cppreference.com/cpp/ranges/view]
+/// value used for certain parameters and temporary results (e.g. Fixed<> substring and concatenation)
 class FixedTemp
 {
 public:
@@ -253,7 +253,6 @@ public:
 	Fixed(FixedTemp &tStr)
    	{ assign(tStr.overlay, tStr.len()); }
 #ifndef NO_FUNCTION_TEMPLATE
-	// Do assignment from one Fixed to another
 	template <int fsz> inline Fixed<sz>& operator = (const Fixed<fsz>& fStr)
 	{
 		assign(fStr.overlay, fStr.len());
@@ -311,7 +310,6 @@ public:
 		{ return *overlay; }
 	*/
 
-	// Do comparisons between Fixeds
 #ifdef NO_FUNCTION_TEMPLATE
 	bool operator == (const FixedTemp &tStr) const
 		{ return (Compare(tStr.overlay, tStr.len()) == 0); }
@@ -346,7 +344,7 @@ public:
 		{ return (Compare(fStr.overlay, fStr.len()) >  0); }
 #endif
 
-	// Do comparisons between Fixeds and (null-terminated) literals
+	// Do comparisons to (char* null-terminated) strings
 	bool operator == (const char *str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) == 0); }
 	bool operator != (const char *str) const
@@ -388,21 +386,24 @@ public:
 	bool operator >  (const FigConst &fc) const
 		{ return (FigCompare(fc.fillChar) >  0); }
 
-	// Subscript operator
-	char &operator [] (const int i)
+	/// @returns The character at the 0-based `index`
+	/// @throws CI2ErrSubscript if <0 or >= `sz` size()
+	char &operator [] (const int index)
    {
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
-		if (i<0 || i>=sz)
+		if (index<0 || index>=sz)
       	throw CI2ErrSubscript();
 #endif
-		return overlay[i];
+		return overlay[index];
     }
 
-	// Return length of string
+	/// @returns The length of this field in bytes, equal to `sz` size()
 	int len() const
 		{ return sz; }
 
-	// Return position of first character that is not in cStr
+	/// @brief Check Characters [%CHECK](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-check-check-characters) equivalent.
+	/// @return 1-based position of the first character, scanning from
+	/// `start`, that is not in `cStr`; 0 if every character examined matches.
 	int check(const char *cStr, int start=1) const
 		{ return checkStr(cStr, start-1, sz, 1); }
 	int check(char c, int start=1) const
@@ -419,7 +420,9 @@ public:
       return 0;
 	}
 
-	// Return position of last character that is not in cStr
+	/// @brief Check Reverse [%CHECKR](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-checkr-check-characters-right-left) equivalent.
+	///
+	/// See: check()
 	int checkr(const char *cStr, int start=sz) const
 		{ return checkStr(cStr, start-1, -1, -1); }
 	int checkr(char c, int start=sz) const
@@ -436,21 +439,31 @@ public:
       return 0;
 	}
 
-	// Trim blanks from string
+	/// [%TRIM](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-trim-trim-characters-edges) BIF.
+	/// @returns A FixedTemp<> view of this value
+	/// with leading and trailing blanks removed
 	FixedTemp trim() const
 	{
 		int offset=check(' ')-1;
 		return FixedTemp(overlay+offset, checkr(' ')-offset);
 	}
+	/// Trim Left [%TRIML](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-triml-trim-leading-characters) BIF.
+	/// @returns A FixedTemp<> view of this value
+	/// with leading blanks removed
 	FixedTemp triml() const
 	{
 		int offset=check(' ')-1;
 		return FixedTemp(overlay+offset, sz-offset);
 	}
+	/// Trim Right [%TRIMR](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-trimr-trim-trailing-characters) equivalent.
+	/// @returns A FixedTemp<> view of this value
+	/// with trailing blanks removed
 	FixedTemp trimr() const
 		{ return FixedTemp(overlay, checkr(' ')); }
 
-	// Return substring
+	/// @brief Substring [%SUBST](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-subst-substring) equivalent.
+	/// @returns A FixedTemp<> substring view starting at the 1-based `start` position
+	/// @throws `CI2ErrSubscript` if `start` is <=0 or > `sz` size().
 	FixedTemp subst(int start) const
 		{ return subst(start, sz-start+1); }
 	FixedTemp subst(int start, int length) const
@@ -462,7 +475,13 @@ public:
 		return FixedTemp((char *)overlay+start-1, length);
    }
 
-	// Return scan (first location of a charcter in the string)
+	/// @brief Scan for characters [%SCAN](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-scan-scan-string) equivalent.
+	/// @returns 1-based position of the first occurrence of any character in `this` value 
+	/// that is also in `str`, or 0 if no match found.
+	int scan(const char *str) const
+	{
+		return scanStr(str, static_cast<int>(strlen(str)));
+	}
 	int scan(char c) const
 	{
 		const char *s=(const char *)memchr(overlay, c, sz);
@@ -470,16 +489,13 @@ public:
 			return static_cast<int>(s-overlay)+1;
 		return 0;
 	}
-	int scan(const char *str) const
-	{
-		return scanStr(str, static_cast<int>(strlen(str)));
-	}
 	int scan(const FixedTemp &tStr) const
 	{
 		return scanStr (tStr.overlay, tStr.len());
 	}
 
-	// Concatenate two strings together
+	/// @brief String concatenation [%CONCAT](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-cat-concatenate) equivalent.
+	/// @returns concatenation of `t1` and `t2`
 	void cat(FixedTemp t1, FixedTemp t2)
 		{ catStr(t1.overlay, t1.len(), t2.overlay, t2.len(), 0); }
 	void cat(FixedTemp t1, FixedTemp t2, int blanks)
@@ -488,7 +504,14 @@ public:
        checkStr(t2.overlay, t2.len()-1, -1, -1), blanks);
 	}
 
-	// Move a value to the left-most bytes of the string
+	/// @brief BIF-like [MOVEL](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movel-move-left) opcode equivalent.
+	///
+	/// Copies a value (Fixed<>, literal, or decimal) into the left-most positions of `this` field
+	Fixed<sz>& movel(const char *str)
+	{
+		memcpy(overlay, str, MIN(sz, strlen(str)));
+		return *this;
+	}
 	Fixed<sz>& movel(FixedTemp tStr)
 	{
 		memcpy(overlay, tStr.overlay, MIN(sz, tStr.len()));
@@ -534,8 +557,29 @@ public:
 		memcpy(overlay+sz-minsz, str+strLen-minsz, minsz);
 		return *this;
 	}
-	// Replace a portion of the string
-	Fixed<sz>& movea(FixedTemp tStr, int index=0)
+	/// @brief BIF-like [MOVEA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movea-move-array) opcode equivalent.
+	/// 
+	/// Implements [array-to-field](https://www.ibm.com/docs/en/i/7.4.0?topic=array-general-movea-operations#mvagen)
+	/// copying of data beginning at the 1-based `index` of `array`
+	/// @throws CI2ErrSubscript if `index` is <=0
+	Fixed<sz>& movea(T (&array)[N], int index=1) {
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
+		if (index<=0)
+      	throw CI2ErrSubscript();
+#endif
+		char* overlayPtr = overlay;
+		while (index <= n) {
+			// TODO: need to figure out if there is a function that does this
+			auto source = someFunctionThatInterprets<T>LikeRpgDoes(array[index-1]);
+			auto sourceLen = sizeof(source);
+			memcpy(overlayPtr, &source, sourceLen);
+			overlayPtr += sourceLen;
+			index++;
+		}
+	}
+	
+	/*
+	Fixed<sz>& movea(FixedTemp tStr, int index=1)
 	{
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
@@ -545,7 +589,7 @@ public:
 		return *this;
 	}
 	// Replace a portion of the string with a figurative constant
-	Fixed<sz>& movea(const FigConst &fc, int index=0)
+	Fixed<sz>& movea(const FigConst &fc, int index=1)
 	{
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
@@ -554,7 +598,7 @@ public:
 		memset(overlay+index, fc.fillChar, sz-index);
 		return *this;
 	}
-	Fixed<sz>& moveall(char c, int index=0)
+	Fixed<sz>& moveall(char c, int index=1)
 	{
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
@@ -563,6 +607,7 @@ public:
 		memset(overlay+index, c, sz-index);
 		return *this;
 	}
+	*/
 
 	// Return a null-terminated c-style string. Shared static buffer per sz, so only one
 	// result is live at a time -- see README Known Limitations. Use c_str(buf, bufSize)
@@ -727,7 +772,9 @@ template <int sz>
 	{ return fStr.trim(); }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Indicator support
+/// @brief A Fixed<1> ~boolean value containing either '0'=false, or '1'=true
+/// @note If `this` value contains anything other than '0' or '1', 
+/// then unpredictable results can occur.
 class Indicator : public Fixed<1>
 {
 public:
