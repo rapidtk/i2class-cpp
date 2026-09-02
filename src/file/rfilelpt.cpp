@@ -1,7 +1,7 @@
 #include "rfilelpt.h"
 
 
-void RfileLPT::open(const char *openType)
+void RfileLPT::open(czstring openType)
 {
 	fp=fopen(fileName, "w");
 	if (!fp)

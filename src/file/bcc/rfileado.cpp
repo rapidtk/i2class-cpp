@@ -11,7 +11,7 @@ const char COMMIT_LOCK_LEVEL_NONE='n';
 const char COMMIT_LOCK_LEVEL_DEFAULT='y';
 
 
-RfileADO::RfileADO(AS400 &as400, char *sFileName): Rfile(as400, sFileName)
+RfileADO::RfileADO(AS400 &as400, czstring sFileName): Rfile(as400, sFileName)
 {
    fp = new TADOTable(NULL);
 	fp->ConnectionString = (AnsiString)"Provider=IBMDA400; Data Source=" + server;
@@ -36,7 +36,7 @@ void RfileADO::close()
    fp->Active = false;
 }
 
-void RfileADO::open(const char *OpenType, int blockingFactor, char commitLockLevel)
+void RfileADO::open(czstring OpenType, int blockingFactor, char commitLockLevel)
 {
 
    fp->ReadOnly = (*OpenType=='I'); //I=Input=Read only

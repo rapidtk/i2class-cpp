@@ -34,12 +34,12 @@ private:
 class RfileLPT : public Rfile
 {
 public:
-	RfileLPT(AS400 &as400, char *sFileName, int rcdLength) : Rfile(as400, sFileName), fp(nullptr) {}
+	RfileLPT(AS400 &as400, czstring sFileName, int rcdLength) : Rfile(as400, sFileName), fp(nullptr) {}
 	void setRecordFormat(RrecordLPT &format);
 	bool write();
 	bool write(RrecordLPT &format);
 	void close();
-	void open(const char *openType);
+	void open(czstring openType);
 
 private:
 	FILE *fp;

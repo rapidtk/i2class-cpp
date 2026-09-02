@@ -30,7 +30,7 @@ void QXXCHGDA(_DTAA_NAME_T dtaname, short offset, short len, byte_ptr dtaptr);
 template <int sz> class Dtaara : public Fixed<sz>
 {
 public:
-	Dtaara(char *name) {dtaaraName=name; }
+	Dtaara(czstring name) {dtaaraName=name; }
 	// Retrieve the content of a Dtaara
 	void in()
 		{ QXXRTVDA(getLocation(), 0, sz, overlay); }
@@ -46,7 +46,7 @@ private:
 		return location;
 	}
 private:
-	char	*dtaaraName;
+	czstring	dtaaraName;
 };
 */
 //---------------------------------------------------------------------------

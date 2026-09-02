@@ -49,7 +49,7 @@ public:
 	/// floating-point round-trip readDouble() goes through -- the ODBC/C++ analog of
 	/// Java's RecordJDBC.getBigDecimal()/getDecimal()/getNumeric(). Returns false if the
 	/// driver reported no data (NULL) for this column.
-	bool readDecimal(SQLSMALLINT columnNumber, char *buf, int bufLen);
+	bool readDecimal(SQLSMALLINT columnNumber, zstring buf, int bufLen);
 	/// @brief Fetch a column directly into a Zoned<sz,precision> field, exactly -- see
 	/// readDecimal(SQLSMALLINT, char*, int).
 	template <int sz, int precision>
@@ -74,7 +74,7 @@ public:
 	// server (AS400::url) is a full ODBC connection string passed directly to
 	// SQLDriverConnect -- e.g. "Driver={Microsoft Access Text Driver (*.txt, *.csv)};
 	// Dbq=C:\\path\\to\\folder;Extensions=asc,csv,tab,txt;HDR=Yes;FMT=Delimited;"
-	RfileODBC(const AS400 &as400, const char *sFileName)
+	RfileODBC(const AS400 &as400, czstring sFileName)
 	 : Rfile(as400, sFileName), henv(0), hdbc(0), hstmt(0), rc(0), lastErrorText()
 	{};
 	/*
@@ -88,7 +88,7 @@ public:
 	/// @brief Close the file. Never throws (freeing ODBC handles cannot meaningfully fail here).
 	void close();
 	/// @brief Open the file. Throws CI2ErrFile (see lastError()) if the ODBC connection or query fails.
-	void open(const char *openType, int blockingFactor=0,
+	void open(czstring openType, int blockingFactor=0,
     char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
    void setRecordFormat(RrecordODBC &format);
 	/// @brief Fetch the next row. Returns true if a row was read, false at end-of-file (sets eof).
@@ -96,7 +96,7 @@ public:
 //	void template <int sz> fixedCpy(Fixed<sz> &fStr, SQLSMALLINT columnNumber);
 
 	// Text of the most recent ODBC diagnostic record, or empty if nothing failed.
-	const char *lastError() const { return lastErrorText; }
+	czstring lastError() const { return lastErrorText; }
 
 private:
 	// Not static: a static SQLHENV was shared (and freed out from under) every RfileODBC

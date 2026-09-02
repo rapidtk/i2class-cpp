@@ -38,15 +38,16 @@
 #if !defined(_MSC_VER)
 
 #include <cstddef>
+#include "compat/StringContracts.h"
 
-int _itoa_s(int value, char *buffer, std::size_t sizeInCharacters, int radix);
+int _itoa_s(int value, zstring buffer, std::size_t sizeInCharacters, int radix);
 
 // Portable equivalent of the classic ecvt()/_ecvt_s() contract: writes exactly
 // `count` significant decimal digits (no sign, no decimal point) to buffer;
 // *dec = position of the decimal point relative to the first digit (0 for a
 // zero value, negative if the value has leading zeros before its first
 // significant digit); *sign = 1 if value is negative, else 0.
-int _ecvt_s(char *buffer, std::size_t sizeInBytes, double value, int count, int *dec, int *sign);
+int _ecvt_s(zstring buffer, std::size_t sizeInBytes, double value, int count, int *dec, int *sign);
 
 #endif // !_MSC_VER
 

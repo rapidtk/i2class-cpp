@@ -13,7 +13,7 @@
 /// word automatically - e.g. inserting commas, a floating '$', or a trailing
 /// 'CR' for negative values).
 
-Rfile::Rfile(const AS400 &as400, const char *sFileName)
+Rfile::Rfile(const AS400 &as400, czstring sFileName)
  : error(false), found(false), eof(false), record(nullptr)
 {
 	fileName = sFileName;
@@ -54,7 +54,7 @@ void Rfile::setRecord(Rrecord &format)
 /// @param buf destination buffer (same length as edtWrd) to receive formatted output
 /// @param n the numeric (zoned/packed) value being formatted
 /// @param edtWrd the edit word template, as it would appear on an RPG O-spec
-void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
+void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 {
 	// Make a pass forwards through the edit word to accumulate information...
 	int wrdI=static_cast<int>(strlen(edtWrd));
@@ -105,7 +105,7 @@ void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
 #endif
 	bool negative=(isdigit(str[nlen-1]) == 0);
 	if (negative)
-		decodeSign(str+nlen-1);
+		decodeSign(reinterpret_cast<byte_ptr>(str+nlen-1));
 	// Loop past any leading zeros
 	int j=0;
 	for ( ; j<nlen-n.PrecisionOf(); j++)
@@ -178,7 +178,7 @@ void RrecordPrint::edit(char *buf, const _ConvertDecimal &n, const char *edtWrd)
 }
 
 // Print out a character value
-void RrecordPrint::printChar(const char *str, int edtLen, int col)
+void RrecordPrint::printChar(const_byte_ptr str, int edtLen, int col)
 {
 	setMaxColumn(col);
 
@@ -195,9 +195,9 @@ void RrecordPrint::printChar(const char *str, int edtLen, int col)
 	column++;
 }
 void RrecordPrint::print(const FixedTemp &f, int col)
-	{ printChar(f.overlay, f.len(), col); }
-void RrecordPrint::print(const char *str, int col)
-	{ printChar(str, static_cast<int>(strlen(str)), col); }
+	{ printChar(reinterpret_cast<const_byte_ptr>(f.overlay), f.len(), col); }
+void RrecordPrint::print(czstring str, int col)
+	{ printChar(reinterpret_cast<const_byte_ptr>(str), static_cast<int>(strlen(str)), col); }
 
 void RrecordPrint::printl(const FixedTemp &f, int col)
 {
@@ -205,7 +205,7 @@ void RrecordPrint::printl(const FixedTemp &f, int col)
 		col=column;
 	print(f, col+f.len()-1);
 }
-void RrecordPrint::printl(const char *str, int col)
+void RrecordPrint::printl(czstring str, int col)
 {
 	FixedTemp cStr((char *)str, static_cast<int>(strlen(str)));
 	printl(cStr, col);
@@ -221,7 +221,7 @@ void RrecordPrint::print(int i, int col, const char *edtWrd)
 */
 /// @brief Print a numeric field at a given column, optionally applying an
 /// explicit RPG edit word (see edit()); with no edit word the raw digits are used.
-void RrecordPrint::print(const _ConvertDecimal &n, int col, const char *edtWrd)
+void RrecordPrint::print(const _ConvertDecimal &n, int col, czstring edtWrd)
 {
 	setMaxColumn(col);
 
@@ -262,7 +262,7 @@ void RrecordPrint::print(const _ConvertDecimal &n, int col, const char *edtWrd)
 	}
 	column++;
 }
-void RrecordPrint::printl(const _ConvertDecimal &n, int col, const char *edtWrd)
+void RrecordPrint::printl(const _ConvertDecimal &n, int col, czstring edtWrd)
 {
 	if (col<=0)
 		col=column;

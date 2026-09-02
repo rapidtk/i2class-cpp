@@ -4,6 +4,7 @@
 #include <recio.h>
 #include "xxfdbk.h"
 #include "as400.h"
+#include "rfile.h"
 
 #define getInt(col) col
 #define getDouble(col) col
@@ -18,7 +19,7 @@ class Rrecord400 : public Rrecord
 {
 	friend class Rfile400;
 public:
-	Rrecord400(const char *sRecordName) : Rrecord(sRecordName) {};
+	Rrecord400(czstring sRecordName) : Rrecord(sRecordName) {};
 
 //protected:
 	void	*inputBuffer, *outputBuffer;
@@ -28,13 +29,13 @@ public:
 class RdbRecord400 : public Rrecord400, public RdbRcd
 {
 public:
-	RdbRecord400(const char *sRecordName) : Rrecord400(sRecordName) {};
+	RdbRecord400(czstring sRecordName) : Rrecord400(sRecordName) {};
 };
 
 class Rfile400 : public Rfile
 {
 public:
-	Rfile400(const AS400 &as400, const char *sFileName) : Rfile(as400, sFileName) {};
+	Rfile400(const AS400 &as400, czstring sFileName) : Rfile(as400, sFileName) {};
 	/*
 	Rfile400(const AS400 &as400, char *sFileName, Rrecord400 &format)
 	 : Rfile(as400, sFileName, format) {};
@@ -42,7 +43,7 @@ public:
 	*/
 	~Rfile400();
 	void close();
-	void open(const char *openType, int blockingFactor=0,
+	void open(czstring openType, int blockingFactor=0,
 	 char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
 	void setRecordFormat(Rrecord400 &format);
 	void feod();
@@ -67,7 +68,7 @@ protected:
 class RdbFile400 : public Rfile400
 {
 public:
-	RdbFile400(const AS400 &as400, const char *sFileName):Rfile400(as400, sFileName){};
+	RdbFile400(const AS400 &as400, czstring sFileName):Rfile400(as400, sFileName){};
    /*
 	RdbFile400(AS400 &as400, char *sFileName, Rrecord400 &format)
 	 : Rfile400(as400, sFileName, format) {};
@@ -90,7 +91,7 @@ public:
 	bool Delete(Rrecord400 &format);
 	bool Delete(Rrecord400 &format, long rrn);
 
-	static void commit(AS400 system, const char *cmtID="I2CLASS");
+	static void commit(AS400 system, czstring cmtID="I2CLASS");
 	static void rolbk(AS400 system);
 	void unlock();
 private:
@@ -102,19 +103,19 @@ private:
 class RfileDspf : public Rfile400
 {
 public:
-	RfileDspf(AS400 &as400, const char *sFileName):Rfile400(as400, sFileName){};
+	RfileDspf(AS400 &as400, czstring sFileName):Rfile400(as400, sFileName){};
    /*
    RfileDspf(AS400 &as400, char *sFileName, Rrecord400 &format)
 	 : Rfile400(as400, sFileName, format) {};
    */
-	void open(const char *openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
+	void open(czstring openType, int blockingFactor=0, char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
 	void exfmt();
 	void exfmt(Rrecord400 &format);
 	bool readc();
 	bool readc(Rrecord400 &format);
 
-	void acq(const char *dev);
-	void rel(const char *dev);
+	void acq(czstring dev);
+	void rel(czstring dev);
 protected:
 	bool readx();
 };

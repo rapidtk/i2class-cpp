@@ -35,7 +35,7 @@ int QXXZTOI(byte_ptr zptr, int digits, int fraction)
 	// A negative zoned value is 0xD0-D9 (}, J-R)
 	bool positive=isdigit(zptr[digits-1]);
 	if (!positive && fraction==0)
-		decodeSign(buf+digits-1); // last digit byte, not the null terminator at buf[digits]
+		decodeSign(reinterpret_cast<byte_ptr>(buf+digits-1)); // last digit byte, not the null terminator at buf[digits]
 	i=atoi(buf);
 	if (!positive)
 		i = i*-1;
@@ -49,7 +49,7 @@ int QXXZTOI(byte_ptr zptr, int digits, int fraction)
 /// See: @see [QXXZTOD()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-zoned-decimal-double-qxxztod)
 double QXXZTOD(byte_ptr zptr, int digits, int fraction)
 {
-	return atof(zonedToChar((const char*)zptr, digits, fraction));
+	return atof(zonedToChar(zptr, digits, fraction));
 }
 
 /// @brief Convert a double into an in-place zoned-decimal field (rounds/truncates to fit).
@@ -83,7 +83,7 @@ void QXXDTOZ(byte_ptr zptr, int digits, int fraction, double value)
 	memcpy(zptr+j, buf, digits-j);
 	// Negative values set the last digit high-order nibble to 0xD
 	if (value<0)
-		encodeSign((char *)zptr+digits-1);
+		encodeSign(zptr+digits-1);
 }
 
 /// @brief Convert an integer into an in-place zoned-decimal field.
@@ -110,6 +110,6 @@ void QXXITOZ(byte_ptr zptr, int digits, int fraction, int value)
 		memset(zptr+i, '0', fraction);
 	// Negative values set the last digit high-order nibble to 0xD
 	if (value<0)
-		encodeSign((char *)zptr+digits-1);
+		encodeSign(zptr+digits-1);
 }
 

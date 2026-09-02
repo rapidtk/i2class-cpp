@@ -16,7 +16,7 @@ using std::snprintf;
 #include <cstdlib>
 #include <cstring>
 
-int _itoa_s(int value, char *buffer, std::size_t sizeInCharacters, int radix)
+int _itoa_s(int value, zstring buffer, std::size_t sizeInCharacters, int radix)
 {
 	if (buffer == nullptr || radix != 10) // only base 10 is used anywhere in this codebase
 		return 22; // EINVAL
@@ -26,7 +26,7 @@ int _itoa_s(int value, char *buffer, std::size_t sizeInCharacters, int radix)
 	return 0;
 }
 
-int _ecvt_s(char *buffer, std::size_t sizeInBytes, double value, int count, int *dec, int *sign)
+int _ecvt_s(zstring buffer, std::size_t sizeInBytes, double value, int count, int *dec, int *sign)
 {
 	if (buffer == nullptr || dec == nullptr || sign == nullptr || count < 0
 		|| sizeInBytes < static_cast<std::size_t>(count) + 1)

@@ -174,7 +174,7 @@ Time14 TIMESTAMP;
 /// of EBCDIC '}' (zero) or 'J'-'R' (digits 1-9), e.g. 'J' means "digit 1,
 /// negative". This restores the ordinary digit character ('0'-'9') in place.
 /// @param c pointer to the last-digit byte of a zoned field known to be negative
-void decodeSign(char *c)
+void decodeSign(byte_ptr c)
 {
 	if (*c=='}')
 		*c='0';
@@ -186,7 +186,7 @@ void decodeSign(char *c)
 /// by replacing the plain digit character with its sign-bearing equivalent
 /// ('0'->'}', '1'-'9'->'J'-'R').
 /// @param c pointer to the last-digit byte of a zoned field to mark negative
-void encodeSign(char *c)
+void encodeSign(byte_ptr c)
 {
 	if (*c=='0')
 		*c='}';
@@ -198,7 +198,7 @@ void encodeSign(char *c)
 /// @param digits total number of digits (precision)
 /// @param fraction number of digits after the implied decimal point
 /// @return pointer to a static internal buffer holding the formatted number
-char *zonedToChar(const char *zptr, int digits, int fraction)
+zstring zonedToChar(const_byte_ptr zptr, int digits, int fraction)
 {
     static char	buf[MAX_DECIMAL_DIGITS + 3]; // +3 for sign, decimal point, and null terminator
 	char *bufPtr = buf;
@@ -224,7 +224,7 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 	// Decode the sign of the last digit if negative  
 	bufPtr += fraction - 1;
 	if (!positive)
-	   decodeSign(bufPtr);
+	   decodeSign(reinterpret_cast<byte_ptr>(bufPtr));
 	// Null terminate the string
     bufPtr++;
     *bufPtr='\0';
@@ -242,7 +242,7 @@ char *zonedToChar(const char *zptr, int digits, int fraction)
 /// @param digits total number of digits (precision)
 /// @param fraction number of digits after the implied decimal point
 /// @return buf
-char *zonedFormat(char *buf, const char *zptr, int digits, int fraction)
+zstring zonedFormat(zstring buf, const_byte_ptr zptr, int digits, int fraction)
 {
 	bool negative = (isdigit(zptr[digits-1]) == 0);
 	int intLen = digits - fraction;
@@ -271,7 +271,7 @@ char *zonedFormat(char *buf, const char *zptr, int digits, int fraction)
 	*out = '\0';
 	// The last digit carries the sign nibble; restore it to a plain digit
 	if (negative)
-		decodeSign(out-1);
+		decodeSign(reinterpret_cast<byte_ptr>(out-1));
 	return buf;
 }
 
@@ -286,7 +286,7 @@ char *zonedFormat(char *buf, const char *zptr, int digits, int fraction)
 /// @param str a decimal string, optionally signed ('-'/'+'), optionally containing a
 /// single '.'; integer/fraction digits that don't fit are zero-padded or truncated from
 /// the high/low order end respectively, matching RPG's MOVE/assignment truncation rules.
-void zonedFromChar(char *zptr, int digits, int fraction, const char *str)
+void zonedFromChar(byte_ptr zptr, int digits, int fraction, czstring str)
 {
 	while (*str==' ')
 		str++;

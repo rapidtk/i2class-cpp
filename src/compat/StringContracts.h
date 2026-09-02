@@ -6,11 +6,26 @@
 
 // Plain aliases for "char *"/"const char *" that are documented, null-terminated
 // C strings, as opposed to a raw fixed-length byte buffer (like Fixed<sz>::overlay)
-// that may not be null-terminated at all. No namespace, no behavior change --
-// purely so call sites can tell the two usages apart at a glance.
+// that may not be null-terminated at all. 
+
+/// @brief Pointer to null-terminated string (aka "zero-terminated string") data
+///
+/// See: gsl::czstring @link https://github.com/microsoft/gsl @endlink
 typedef char *zstring;
+/// @brief Pointer to constant null-terminated string (aka "zero-terminated string") data
+///
+/// See: gsl::czstring @link https://github.com/microsoft/gsl @endlink
 typedef const char *czstring;
+
+// Plain aliases for "unsigned char *"/"const unsigned char *" i.e. raw fixed-length byte buffers
+
+/// @brief Pointer to data of an unknown type
+///
+/// See: std::byte @link https://en.cppreference.com/cpp/types/byte @endlink
 typedef unsigned char *byte_ptr;
+/// @brief Pointer to constant data of an unknown type
+///
+/// See: std::byte @link https://en.cppreference.com/cpp/types/byte @endlink
 typedef const unsigned char *const_byte_ptr;
 
 inline czstring nonnull_or_empty(czstring value)

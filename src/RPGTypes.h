@@ -140,7 +140,7 @@ public:
 	int PrecisionOf() const
    	{ return precision; }
 	operator long double() const
-		{ return QXXZTOD((unsigned char *)overlay, sz, precision); }
+		{ return QXXZTOD((byte_ptr)overlay, sz, precision); }
 //private:
 	int	precision;
 };
@@ -941,15 +941,15 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Zoned decimal
-void decodeSign(char *c);
-void encodeSign(char *c);
-char *zonedToChar(const char *zptr, int digits, int fraction);
-void zonedFromChar(char *zptr, int digits, int fraction, const char *str);
+void decodeSign(byte_ptr c);
+void encodeSign(byte_ptr c);
+zstring zonedToChar(const_byte_ptr zptr, int digits, int fraction);
+void zonedFromChar(byte_ptr zptr, int digits, int fraction, czstring str);
 /// @brief Format a zoned field as exact decimal text (e.g. "-123.45") into a
 /// caller-supplied buffer, which must hold at least digits+3 bytes (sign, decimal
 /// point, null). Leading zeros are suppressed. Unlike zonedToChar() there is no
 /// shared static buffer, so this is safe to call from anywhere.
-char *zonedFormat(char *buf, const char *zptr, int digits, int fraction);
+zstring zonedFormat(zstring buf, const_byte_ptr zptr, int digits, int fraction);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Decimal literals -- __D()/__Z()
@@ -1078,12 +1078,12 @@ public:
 
 	// Do cast from zoned to long double
 	operator long double() const
-		{ return QXXZTOD((unsigned char *)overlay, sz, precision); }
+		{ return QXXZTOD((byte_ptr)overlay, sz, precision); }
 
 	// Do cast from zoned to int
 //	operator int() const
 	int toInt() const
-		{ return QXXZTOI((unsigned char *)overlay, sz, precision); }
+		{ return QXXZTOI((byte_ptr)overlay, sz, precision); }
 
 	// Add/subtract one rather than incrementing toPacked() -- it returns by value, and in
 	// NO_PACKED builds that value is a long double, which cannot be incremented.
@@ -1268,7 +1268,7 @@ public:
 		{ memcpy(overlay, znd.overlay, sz); }
 	// Do assignment from a long double
 	void assign(long double d)
-		{ QXXDTOZ((unsigned char *)overlay, sz, precision, static_cast<double>(d)); }
+		{ QXXDTOZ((byte_ptr)overlay, sz, precision, static_cast<double>(d)); }
 #if defined(NO_PACKED)
 	// Do assignment from a decimal literal, digit for digit (never via double)
 	void assign(const DecimalConst &d)
@@ -1771,12 +1771,12 @@ struct DtaaName {
 template <class T> class Dtaara : public T
 {
 public:
-	Dtaara(char *name) {dtaaraName=name; }
+	Dtaara(czstring name) {dtaaraName=name; }
 	// Retrieve the content of a Dtaara
 	void in()
-		{QXXRTVDA(getLocation(),0,sizeof(*this)-sizeof(dtaaraName),(char *)this);}
+		{QXXRTVDA(getLocation(),0,sizeof(*this)-sizeof(dtaaraName),(byte_ptr)this);}
 	void out()
-		{QXXCHGDA(getLocation(),0,sizeof(*this)-sizeof(dtaaraName),(char *)this);}
+		{QXXCHGDA(getLocation(),0,sizeof(*this)-sizeof(dtaaraName),(byte_ptr)this);}
 private:
 	_DTAA_NAME_T getLocation()
 	{
@@ -1789,7 +1789,7 @@ private:
 		return loc;
 	}
 private:
-	char	*dtaaraName;
+	czstring	dtaaraName;
 };
 
 /// @brief Get Number of Elements [%ELEM](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-elem-get-number-elements)

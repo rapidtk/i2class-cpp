@@ -29,11 +29,11 @@ private:
 class RfileADO : public Rfile
 {
 public:
-	RfileADO(AS400 &as400, char *sFileName);
+	RfileADO(AS400 &as400, czstring sFileName);
 	~RfileADO();
 
 	void close();
-	void open(const char *openType, int blockingFactor=0,
+	void open(czstring openType, int blockingFactor=0,
     char commitLockLevel=COMMIT_LOCK_LEVEL_NONE);
    void setRecordFormat(RrecordADO &format);
 	bool readx();

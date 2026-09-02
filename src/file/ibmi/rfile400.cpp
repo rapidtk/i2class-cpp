@@ -34,7 +34,7 @@ void Rfile400::close()
 	_Rclose(fp);
 }
 
-void Rfile400::open(const char *OpenType, int blockingFactor, char commitLockLevel)
+void Rfile400::open(czstring OpenType, int blockingFactor, char commitLockLevel)
 {
 //   string mode= (string)OpenType + ", commit=" + commitLockLevel;
 //   fp = _Ropen(fileName, mode.c_str());
@@ -264,7 +264,7 @@ bool RdbFile400::setll(Rrecord400 &format, long rrn)
 	return true;
 }
 
-/*static*/ void RdbFile400::commit(AS400 system, const char *cmtID)
+/*static*/ void RdbFile400::commit(AS400 system, czstring cmtID)
 {
 	_Rcommit((char *)cmtID);
 }
@@ -299,18 +299,18 @@ bool RdbFile400::Delete(Rrecord400 &format, long rrn)
 
 
 // Display file functions /////////////////////////////////////////
-void RfileDspf::open(const char *openType, int blockingFactor, char commitLockLevel)
+void RfileDspf::open(czstring openType, int blockingFactor, char commitLockLevel)
 {
 	Rfile400::open(openType, blockingFactor, commitLockLevel);
 	setIndara(fp);
 }
 
-void RfileDspf::acq(const char *dev)
+void RfileDspf::acq(czstring dev)
 {
 	_Racquire(fp, (char *)dev);
 }
 
-void RfileDspf::rel(const char *dev)
+void RfileDspf::rel(czstring dev)
 {
 	_Rrelease(fp, (char *)dev);
 }
