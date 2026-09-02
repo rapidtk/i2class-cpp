@@ -1360,6 +1360,14 @@ public:
 	Packed(const Backing &b)			{ overlay = b; }
 #if defined(NO_PACKED)
 	Packed(const DecimalConst &d)		{ assign(d); }
+#else
+	// Exact matches for bcd.h's types. Without these a _ConvertDecimal reaches both
+	// Packed(long double) and Packed(const Backing &) through one user-defined conversion
+	// apiece, which is ambiguous -- and _ConvertDecimal is exactly what the arithmetic
+	// operators below return.
+	Packed(const _ConvertDecimal &d)	{ assign(d); }
+	template <int d2, int p2>
+	Packed(const _DecimalT<d2, p2> &d)	{ overlay = d; }
 #endif
 
 	Packed<sz, precision>& operator = (long double d)			{ assign(d); return *this; }
@@ -1367,6 +1375,10 @@ public:
 	Packed<sz, precision>& operator = (const Backing &b)		{ overlay = b; return *this; }
 #if defined(NO_PACKED)
 	Packed<sz, precision>& operator = (const DecimalConst &d)	{ assign(d); return *this; }
+#else
+	Packed<sz, precision>& operator = (const _ConvertDecimal &d) { assign(d); return *this; }
+	template <int d2, int p2>
+	Packed<sz, precision>& operator = (const _DecimalT<d2, p2> &d) { overlay = d; return *this; }
 #endif
 	template <int l2, int p2>
 	Packed<sz, precision>& operator = (const Zoned<l2, p2> &z)	{ assign(z); return *this; }
