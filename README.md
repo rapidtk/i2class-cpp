@@ -8,7 +8,7 @@ The project addresses a fundamental skills gap: helping experienced business log
 
 **This repository is deliberately scoped to IBM i/RPG.** It's the "modernized but still IBM i-specific" half of a two-repository split:
 
-- **`i2class-cpp`** (this repo) — modernizes the existing IBM i/RPG-specific class library in place, while guaranteeing that any program compiling against it today keeps compiling unchanged.
+- **`i2class-cpp`** (this repo) — modernizes the existing IBM i/RPG-specific class library in place, keeping the public interface stable apart from a short list of deliberate, documented [Breaking Changes](#breaking-changes).
 - **[iZlib-cpp-fork](https://github.com/universal-enterprise/iZlib-cpp-fork.git)** — a fork of this codebase that expands scope beyond IBM i to mainframe COBOL and PL/I, feeding into the broader **[Universal Enterprise](https://github.com/universal-enterprise)** framework.
 
 ## Philosophy & Design Goals
@@ -17,7 +17,79 @@ The project addresses a fundamental skills gap: helping experienced business log
 - **Not** a high-performance framework or binary-compatible successor to modern libraries
 - **Focused** on converting business logic in a way that maintains developer comfort across languages
 - **Goal**: Ease the transition from legacy mainframe/IBM i code to maintainable modern codebases
-- **Strict compatibility rule**: modernization changes internals (safety fixes, portability, build tooling) but never breaks the public interface — existing generated/converted RPG code must keep compiling unmodified
+- **Compatibility rule**: modernization changes internals (safety fixes, portability, build tooling) and leaves the public interface alone by default. That rule has been *deliberately* broken in a small number of places where the original interface was unsafe or silently wrong — every one of them is listed under [Breaking Changes](#breaking-changes) with the reason and the fix.
+
+## Breaking Changes
+
+These are intentional. Each replaces something that compiled but could silently do the
+wrong thing, and each fails loudly rather than quietly, so the compiler points at every
+site that needs attention.
+
+### `packed(n,p)` is now `Packed<n,p>`, not `_DecimalT<n,p>`
+
+On IBM i, `packed(n,p)` previously expanded straight to bcd.h's `_DecimalT<n,p>`. It now
+expands to `Packed<n,p>`, a thin wrapper whose backing store *is* a `_DecimalT` on IBM i
+(and a `Zoned<>` elsewhere). Arithmetic still runs through the native packed type, so it
+stays exact decimal.
+
+Why: `packed()` used to mean a *different type with different conversion rules* depending
+on the platform, and `_DecimalT` offers none of the RPG opcodes (`move()`, `movel()`,
+`toInt()`, ...). One wrapper gives one interface and one set of rules everywhere.
+
+The wrapper is layout-compatible — single member, no virtuals, `static_assert`-enforced —
+so fields overlaid on record buffers are unaffected. What can change:
+
+- Code that named `_DecimalT<n,p>` explicitly, or passed `packed()` values to bcd.h APIs, may need `.toPacked()` (returns the native type) or the implicit `_ConvertDecimal` conversion.
+- Expressions mixing `packed()` with a raw `_DecimalT` can become ambiguous. Fix by adding an exact-match overload, or convert explicitly.
+
+### Comparing a decimal to a floating-point literal no longer compiles
+
+```cpp
+if (znd == 32.1)          // was: allowed        now: deleted overload
+if ((double)znd == 32.1)  // compare as floating point
+if (znd == __D("32.1"))   // compare exactly, digit for digit
+```
+
+Why: most decimal values have no exact binary representation, so `znd == 32.1` asks whether
+a decimal equals an *approximation* of 32.1 — rarely the intent, and it fails in ways that
+are very hard to see.
+
+Unaffected: `double d = znd;`, `znd = 3.14;` (stores the written digits), `int i = znd;`
+(truncates like the built-in types), and all integer comparisons (`znd == 42`, `znd > 0`).
+
+### Record I/O returns `bool`/`void` instead of status characters
+
+The `Rfile*` hierarchy previously returned a `char` of `'0'` or `'1'`.
+
+```cpp
+if (file.read() == '0')   // was
+while (file.read())       // now -- true means a record was read
+
+file.open(READ_ONLY);     // now returns void, throws CI2ErrFile on failure
+```
+
+`error`, `found` and `eof` are now `bool` rather than `char`.
+
+Why: `'0'` and `'1'` are *both* truthy as a `char`, so the natural-looking
+`while (file.read())` was an infinite loop. The two conventions in the codebase also
+disagreed about which character meant success. `true` now uniformly means "succeeded /
+record found", matching the Java implementation this library mirrors.
+
+### `char *` parameters and members are now `const char *`
+
+File names, record format names, connection details and `AS400`'s constructor arguments
+take `const char *`.
+
+Why: passing a string literal to a `char *` parameter has been ill-formed since C++11, so
+this was already a compile error on conforming compilers.
+
+### `MAX_DECIMAL_DIGITS` is 63, not 31
+
+It is derived from bcd.h's `DFT_DEC_DIG` where available (63 on IBM i 7.2+, 31 on 7.1 and
+earlier) and 63 otherwise. `HIVAL`/`LOVAL` for numeric fields are correspondingly larger.
+Scratch buffers were previously sized for 31 digits, which was a latent overrun on 7.2+
+where an intermediate result can legitimately be 63.
+
 
 ### Multi-Language Support (Roadmap)
 The architecture is designed to support multiple language backends:
