@@ -137,6 +137,12 @@ add_executable(negative_zoned_check tests/negative_zoned_check.cpp)
 target_link_libraries(negative_zoned_check PRIVATE i2class)
 add_test(NAME negative_zoned_check COMMAND negative_zoned_check)
 
+# RPG opcodes and BIFs that previously had no coverage (SCAN/CHECK/CAT/MOVEA/TESTN/
+# XFOOT/SORTA/LOOKUP and the numeric increment operators).
+add_executable(rpg_bif_check tests/rpg_bif_check.cpp)
+target_link_libraries(rpg_bif_check PRIVATE i2class)
+add_test(NAME rpg_bif_check COMMAND rpg_bif_check)
+
 # Forces and exercises i2compat.h's portable (non-MSVC) _itoa_s/_ecvt_s fallback branch
 # directly -- see the file's own header comment for why it #includes stdlib.cpp as source
 # instead of linking against the i2class library.

@@ -404,7 +404,7 @@ public:
 
 	// Return position of first character that is not in cStr
 	int check(const char *cStr, int start=1) const
-		{ return checkStr(cStr, start-1, sz-1, 1); }
+		{ return checkStr(cStr, start-1, sz, 1); }
 	int check(char c, int start=1) const
 	{
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
@@ -465,15 +465,14 @@ public:
 	// Return scan (first location of a charcter in the string)
 	int scan(char c) const
 	{
-		const void *s=memchr(overlay, c, sz);
+		const char *s=(const char *)memchr(overlay, c, sz);
 		if (s)
-			return (int)s-(int)overlay+1;
+			return static_cast<int>(s-overlay)+1;
 		return 0;
 	}
 	int scan(const char *str) const
 	{
-		int strLen=strlen(str);
-		return scanStr (str, strLen);
+		return scanStr(str, static_cast<int>(strlen(str)));
 	}
 	int scan(const FixedTemp &tStr) const
 	{
@@ -565,13 +564,26 @@ public:
 		return *this;
 	}
 
-	// Return a null-terminated c-style string
+	// Return a null-terminated c-style string. Shared static buffer per sz, so only one
+	// result is live at a time -- see README Known Limitations. Use c_str(buf, bufSize)
+	// below when you need your own storage.
 	char *c_str() const
 	{
 		static char str[sz+1];
 		memcpy(str, overlay, sz);
 		str[sz]='\0';
 		return str;
+	}
+
+	// Copy into a caller-supplied buffer and null-terminate it, like strlcpy(); returns
+	// buf, like strcpy(). Truncates if bufSize <= sz.
+	char *c_str(char *buf, size_t bufSize) const
+	{
+		size_t len = bufSize>0 ? MIN((size_t)sz, bufSize-1) : 0;
+		memcpy(buf, overlay, len);
+		if (bufSize>0)
+			buf[len]='\0';
+		return buf;
 	}
 
 	// Set the contents to a single character
@@ -642,31 +654,35 @@ private:
 	// Return position of character that is not in cStr
 	int checkStr(const char *cStr, int start, int end, int increment) const
 	{
-	#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
-		if (start>=sz || start<0 || end >= sz || end<0)
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
+		if (start>=sz || start<0)
       	throw CI2ErrSubscript();
 #endif
 		for (int i=start; i!=end; i=i+increment)
 		{
-			const char *s=cStr;
-			while (*s!='\0')
+			bool inSet=false;
+			for (const char *s=cStr; *s!='\0'; s++)
 			{
 				if (overlay[i]==*s)
-					goto found;
-				s++;
+				{
+					inSet=true;
+					break;
+				}
 			}
-			// If we get here, then no match was found.  Return index
-			return i+1;
+			// First character not in cStr wins; otherwise keep looking
+			if (!inSet)
+				return i+1;
 		}
-		// All of the characters match, return 0
-		found:
+		// Every character examined was in cStr
 		return 0;
 	}
 
 	// Concatenate two strings and assign to fixed
 	void catStr(const char *s1, int s1Len, const char *s2, int s2Len, int blanks)
 	{
-		static char buf[sz];
+		// Not static, and not shared: s1/s2 may alias overlay, so build the result
+		// somewhere else first, then blank-fill whatever the sources did not cover.
+		char buf[sz];
 		int len=MIN(s1Len, sz);
 		memcpy(buf, s1, len);
 		blanks=MIN(blanks, sz-len);
@@ -674,18 +690,21 @@ private:
 		len=len+blanks;
 		int len2=MIN(s2Len, sz-len);
 		memcpy(buf+len, s2, len2);
+		if (len+len2 < sz)
+			memset(buf+len+len2, ' ', sz-len-len2);
 		memcpy(overlay, buf, sz);
 	}
 
 	// Return position of string in fixed
 	int scanStr(const char *str, int strLen) const
 	{
-		char *s=(char *)overlay;
-		while (s-overlay>=strLen)
+		if (strLen<=0 || strLen>sz)
+			return 0;
+		// Last position a needle of strLen can still start at
+		for (int i=0; i<=sz-strLen; i++)
 		{
-			if (memcmp(s, str, strLen)==0)
-				return s-overlay+1;
-			s++;
+			if (memcmp(overlay+i, str, strLen)==0)
+				return i+1;
 		}
 		return 0;
 	}
@@ -1007,26 +1026,28 @@ public:
 	int toInt() const
 		{ return QXXZTOI((unsigned char *)overlay, sz, precision); }
 
+	// Add/subtract one rather than incrementing toPacked() -- it returns by value, and in
+	// NO_PACKED builds that value is a long double, which cannot be incremented.
 	Zoned<sz,precision> &operator ++ () // increment (prefix)
 	{
-		*this = ++toPacked();
+		*this = toPacked() + 1;
 		return *this;
 	}
 	Zoned<sz,precision> operator ++ (int) // increment (postfix)
 	{
 		Zoned<sz, precision> OrigVal = *this;
-		*this = ++toPacked();
+		*this = toPacked() + 1;
 		return (OrigVal);
 	}
 	Zoned<sz,precision> &operator -- () // decrement (prefix)
 	{
-		*this = --toPacked();
+		*this = toPacked() - 1;
 		return *this;
 	}
 	Zoned<sz,precision> operator -- (int) // decrement (postfix)
 	{
 		Zoned<sz, precision> OrigVal = *this;
-		*this = --toPacked();
+		*this = toPacked() - 1;
 		return (OrigVal);
 	}
 	// Add another Zoned (any size/precision) in place, matching RPG's ADD/+= semantics --
@@ -1757,13 +1778,13 @@ template<class T, class A>
 		if (compare==EQ)
 			bcomp=(ary[startIndex-1]==arg);
 		else if (compare==GT)
-			bcomp=(ary[startIndex-1]<=arg);
-		else if (compare==LT)
-			bcomp=(ary[startIndex-1]>=arg);
-		else if (compare==GE)
-			bcomp=(ary[startIndex-1]<arg);
-		else //if (compare==LE)
 			bcomp=(ary[startIndex-1]>arg);
+		else if (compare==LT)
+			bcomp=(ary[startIndex-1]<arg);
+		else if (compare==GE)
+			bcomp=(ary[startIndex-1]>=arg);
+		else //if (compare==LE)
+			bcomp=(ary[startIndex-1]<=arg);
 		if (bcomp)
 			//return '1';
 			return startIndex;
@@ -1824,8 +1845,9 @@ public:
 	/*long double xfoot() const
 		{ return ::xfoot(elem, sz); }*/
 #ifndef NO_FUNCTION_TEMPLATE
+	// Element count is measured from startIndex, matching the LOOKUP() macro
 	template<class T> int lookup(T arg, int startIndex=1)
-		{ return lookupxx(arg, elem, startIndex, sz); }
+		{ return lookupxx(arg, elem, startIndex, sz-startIndex+1, EQ); }
 	template<class T> int lookup(T arg, int startIndex, int numElems)
 		{ return lookupxx(arg, elem, startIndex, numElems, EQ); }
 #endif

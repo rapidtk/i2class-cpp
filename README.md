@@ -236,6 +236,17 @@ subset. Two constructs the library deliberately avoids, and one it relies on:
   are non-`const`, so a `const _ConvertDecimal &` cannot be converted to a numeric type.
   Take these by value or non-const reference.
 
+## Known Limitations
+
+- **`Fixed<sz>::c_str()` is not thread-safe, and only one result per `sz` is live at a
+  time.** It writes into a `static` buffer shared by every `Fixed<sz>` instance, because
+  `Fixed<sz>` must stay exactly `sz` bytes to overlay a record buffer — there is nowhere
+  in the object to put per-instance storage. This is deliberately a lightweight
+  convenience, not a general-purpose conversion: if you need the result to outlive the
+  next call on a same-size `Fixed<>`, need more than one live result at once, or are
+  calling from multiple threads, copy the string out immediately or use
+  `c_str(char *buf, size_t bufSize)`, which writes into a buffer you supply.
+
 ## Project Structure
 
 ```
