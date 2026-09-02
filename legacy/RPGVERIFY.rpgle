@@ -1,214 +1,268 @@
-      // ============================================================
-      // RPGVERIFY -- empirical probes of ambiguous/undocumented RPG
-      // MOVE/MOVEL numeric<->character formatting, plus a couple of
-      // other opcode edge cases
-      //
-      // NOTE: MOVEA cannot mix numeric and character operands at all
-      // (IBM docs: "Both factor 2 and the result field must be the
-      // same type") -- that is a *compile-time* error. The tests that
-      // exercise it are in RPGVERIFY2.rpgle instead, so a compile
-      // failure there does not block this program.
-      //
-      // This is "mixed free" source: free-form lines have columns 1-6
-      // blank; MOVEA/MOVE have no free-form syntax, so those lines are
-      // traditional fixed-form C-specs with C in column 6.
-      // ============================================================
+       // ============================================================
+       // RPGVERIFY -- empirical probes of ambiguous/undocumented RPG
+       // MOVE/MOVEL numeric<->character formatting, plus a couple of
+       // other opcode edge cases.
+       //
+       // NOTE: MOVEA cannot mix numeric and character operands at all
+       // (IBM docs: "Both factor 2 and the result field must be the
+       // same type") -- that is a *compile-time* error. The tests that
+       // exercise it are in RPGVERIFY2.rpgle instead, so a compile
+       // failure there does not block this program.
+       //
+       // Compile: CRTBNDRPG PGM(RPGVERIFY) SRCSTMF(...RPGVERIFY.rpgle)
+       // Run:     CALL RPGVERIFY, then WRKSPLF to view/copy the output.
+       // ============================================================
 
-      dcl-s int8         int(3);
-      dcl-s int16        int(5);
-      dcl-s int32        int(10);
-      dcl-s int64        int(20);
-      dcl-s uns8         uns(3);
-      dcl-s uns16        uns(5);
-      dcl-s zon8         zoned(3:0);
-      dcl-s pak8         packed(3:0);
-      dcl-s int8Arr      int(3) dim(3);
-      dcl-s uns8Arr      uns(3) dim(3);
-      dcl-s pak1Arr      packed(1:0) dim(3);
-      dcl-s charArr      char(4) dim(3);
-      dcl-s bigChar      char(20);
-      dcl-s srcChar      char(20);
-      dcl-s resInt       int(10);
-      dcl-s probeVal     zoned(10:0);
+       dcl-f qsysprt printer(100);
 
-      dsply '=== SECTION A: MOVE numeric -> char, positive 32, by size ===';
+       dcl-s int8         int(3);
+       dcl-s int16        int(5);
+       dcl-s int32        int(10);
+       dcl-s int64        int(20);
+       dcl-s uns8         uns(3);
+       dcl-s uns16        uns(5);
+       dcl-s zon8         zoned(3:0);
+       dcl-s pak8         packed(3:0);
+       dcl-s int8Arr      int(3) dim(3);
+       dcl-s uns8Arr      uns(3) dim(3);
+       dcl-s int1Arr      int(3) dim(3);
+       dcl-s charArr      char(4) dim(3);
+       dcl-s tenChar      char(10);
+       dcl-s bigChar      char(20);
+       dcl-s srcChar      char(20);
+       dcl-s resInt       int(10);
+       dcl-s probeVal     zoned(10:0);
+       dcl-s prtTxt       char(100);
 
-      int8 = 32;
-      bigChar = '####################';
-      dsply 'A1 MOVE int8(3,1byte)=32 -> char(20)';
+       prtTxt = 'SECTION A: MOVE numeric -> char, positive 32, righ' +
+       't/left justified';
+       except PRTLINE;
+
+       int8 = 32;
+       bigChar = '####################';
      C                   MOVE      int8          bigChar
-      dsply bigChar;
+       prtTxt = 'A1 MOVE int8, INT(3)/1-byte, value 32 into char(20' +
+       ') filler: ' + bigChar;
+       except PRTLINE;
 
-      int16 = 32;
-      bigChar = '####################';
-      dsply 'A2 MOVE int16(5,2byte)=32 -> char(20)';
+       int16 = 32;
+       bigChar = '####################';
      C                   MOVE      int16         bigChar
-      dsply bigChar;
+       prtTxt = 'A2 MOVE int16, INT(5)/2-byte, value 32 into char(2' +
+       '0) filler: ' + bigChar;
+       except PRTLINE;
 
-      int32 = 32;
-      bigChar = '####################';
-      dsply 'A3 MOVE int32(10,4byte)=32 -> char(20)';
+       int32 = 32;
+       bigChar = '####################';
      C                   MOVE      int32         bigChar
-      dsply bigChar;
+       prtTxt = 'A3 MOVE int32, INT(10)/4-byte, value 32 into char(' +
+       '20) filler: ' + bigChar;
+       except PRTLINE;
 
-      int64 = 32;
-      bigChar = '####################';
-      dsply 'A4 MOVE int64(20,8byte)=32 -> char(20)';
+       int64 = 32;
+       bigChar = '####################';
      C                   MOVE      int64         bigChar
-      dsply bigChar;
+       prtTxt = 'A4 MOVE int64, INT(20)/8-byte, value 32 into char(' +
+       '20) filler: ' + bigChar;
+       except PRTLINE;
 
-      uns8 = 32;
-      bigChar = '####################';
-      dsply 'A5 MOVE uns8(3,1byte)=32 -> char(20)';
+       uns8 = 32;
+       bigChar = '####################';
      C                   MOVE      uns8          bigChar
-      dsply bigChar;
+       prtTxt = 'A5 MOVE uns8, UNS(3)/1-byte, value 32 into char(20' +
+       ') filler: ' + bigChar;
+       except PRTLINE;
 
-      uns16 = 32;
-      bigChar = '####################';
-      dsply 'A6 MOVE uns16(5,2byte)=32 -> char(20)';
+       uns16 = 32;
+       bigChar = '####################';
      C                   MOVE      uns16         bigChar
-      dsply bigChar;
+       prtTxt = 'A6 MOVE uns16, UNS(5)/2-byte, value 32 into char(2' +
+       '0) filler: ' + bigChar;
+       except PRTLINE;
 
-      int32 = 32;
-      bigChar = '####################';
-      dsply 'A7 MOVEL int32(10,4byte)=32 -> char(20) (left vs right just.)';
+       int32 = 32;
+       bigChar = '####################';
      C                   MOVEL     int32         bigChar
-      dsply bigChar;
+       prtTxt = 'A7 MOVEL (left-justified) int32=32 into char(20) f' +
+       'iller: ' + bigChar;
+       except PRTLINE;
 
-      dsply '=== SECTION B: boundary and negative values ===';
+       prtTxt = 'SECTION B: boundary and negative values (sign over' +
+       'punch)';
+       except PRTLINE;
 
-      int8 = 127;
-      bigChar = '####################';
-      dsply 'B1 MOVE int8=127 (max) -> char(20)';
+       int8 = 127;
+       bigChar = '####################';
      C                   MOVE      int8          bigChar
-      dsply bigChar;
+       prtTxt = 'B1 MOVE int8=127 (max positive) into char(20) fill' +
+       'er: ' + bigChar;
+       except PRTLINE;
 
-      int8 = -32;
-      bigChar = '####################';
-      dsply 'B2 MOVE int8=-32 -> char(20)';
+       int8 = -32;
+       bigChar = '####################';
      C                   MOVE      int8          bigChar
-      dsply bigChar;
+       prtTxt = 'B2 MOVE int8=-32 into char(20) filler: ' + bigChar;
+       except PRTLINE;
 
-      int8 = -128;
-      bigChar = '####################';
-      dsply 'B3 MOVE int8=-128 (min) -> char(20)';
+       int8 = -128;
+       bigChar = '####################';
      C                   MOVE      int8          bigChar
-      dsply bigChar;
+       prtTxt = 'B3 MOVE int8=-128 (min negative) into char(20) fil' +
+       'ler: ' + bigChar;
+       except PRTLINE;
 
-      uns8 = 255;
-      bigChar = '####################';
-      dsply 'B4 MOVE uns8=255 (max) -> char(20)';
+       uns8 = 255;
+       bigChar = '####################';
      C                   MOVE      uns8          bigChar
-      dsply bigChar;
+       prtTxt = 'B4 MOVE uns8=255 (max) into char(20) filler: ' + bigChar;
+       except PRTLINE;
 
-      dsply '=== SECTION C: baseline calibration, zoned/packed ===';
+       prtTxt = 'SECTION C: baseline calibration, zoned/packed -> c' + 'har';
+       except PRTLINE;
 
-      zon8 = 32;
-      bigChar = '####################';
-      dsply 'C1 MOVE zoned(3,0)=32 -> char(20)';
+       zon8 = 32;
+       bigChar = '####################';
      C                   MOVE      zon8          bigChar
-      dsply bigChar;
+       prtTxt = 'C1 MOVE zoned(3,0)=32 into char(20) filler: ' + bigChar;
+       except PRTLINE;
 
-      pak8 = 32;
-      bigChar = '####################';
-      dsply 'C2 MOVE packed(3,0)=32 -> char(20)';
+       pak8 = 32;
+       bigChar = '####################';
      C                   MOVE      pak8          bigChar
-      dsply bigChar;
+       prtTxt = 'C2 MOVE packed(3,0)=32 into char(20) filler: ' + bigChar;
+       except PRTLINE;
 
-      dsply '=== SECTION D: reverse direction, char digit-text -> numeric ===';
+       prtTxt = 'SECTION D: reverse direction, char digit-text -> n' +
+       'umeric';
+       except PRTLINE;
 
-      srcChar = '                 032';
-      int8 = 0;
-      dsply 'D1 MOVE char(20), last 3 bytes "032" -> int8(3,1byte)';
+       srcChar = '                 032';
+       int8 = 0;
      C                   MOVE      srcChar       int8
-      dsply %char(int8);
+       prtTxt = 'D1 MOVE char(20), rightmost 3 bytes ''032'', into in' +
+       't8(3): ' + %char(int8);
+       except PRTLINE;
 
-      srcChar = '          0000000032';
-      resInt = 0;
-      dsply 'D2 MOVE char(20), last 10 bytes "0000000032" -> int32(10,4byte)';
+       srcChar = '          0000000032';
+       resInt = 0;
      C                   MOVE      srcChar       resInt
-      dsply %char(resInt);
+       prtTxt = 'D2 MOVE char(20), rightmost 10 bytes ''0000000032'',' +
+       ' into ' + 'int32(10): ' + %char(resInt);
+       except PRTLINE;
 
-      dsply '=== SECTION E: is the moved byte pattern valid digit text? ===';
+       prtTxt = 'SECTION E: is the moved byte pattern valid decimal' +
+       ' digit text?';
+       except PRTLINE;
 
-      int8 = 32;
-      bigChar = '####################';
+       int8 = 32;
+       bigChar = '####################';
      C                   MOVE      int8          bigChar
-      monitor;
-        probeVal = %dec(%subst(bigChar:%len(%trimr(bigChar))-2:3):3:0);
-        dsply 'E1 %dec succeeded on last 3 non-blank bytes, value:';
-        dsply %char(probeVal);
-      on-error;
-        dsply 'E1 %dec FAILED -- not valid digit text';
-      endmon;
+       monitor;
+         probeVal = %dec(%subst(bigChar:18:3):3:0);
+         prtTxt = 'E1 %dec succeeded on bigChar bytes 18-20, value: ' +
+           %char(probeVal);
+         except PRTLINE;
+       on-error;
+         prtTxt = 'E1 %dec FAILED -- bytes 18-20 are not valid digit text';
+         except PRTLINE;
+       endmon;
 
-      dsply '=== SECTION F: valid numeric MOVEA, same byte length ===';
+       prtTxt = 'SECTION F: valid numeric MOVEA, same byte length';
+       except PRTLINE;
 
-      int8Arr(1) = 1;
-      int8Arr(2) = 2;
-      int8Arr(3) = 3;
-      uns8Arr(1) = 0;
-      uns8Arr(2) = 0;
-      uns8Arr(3) = 0;
-      dsply 'F1 MOVEA int(3) dim(3)=[1,2,3] -> uns(3) dim(3), same 1-byte length';
+       int8Arr(1) = 1;
+       int8Arr(2) = 2;
+       int8Arr(3) = 3;
+       uns8Arr(1) = 0;
+       uns8Arr(2) = 0;
+       uns8Arr(3) = 0;
+       monitor;
      C                   MOVEA     int8Arr       uns8Arr
-      dsply %char(uns8Arr(1));
-      dsply %char(uns8Arr(2));
-      dsply %char(uns8Arr(3));
+         prtTxt = 'F1 MOVEA int(3)[1,2,3] -> uns(3), elems now: ' +
+           %char(uns8Arr(1)) + ' ' + %char(uns8Arr(2)) + ' ' +
+           %char(uns8Arr(3));
+         except PRTLINE;
+       on-error;
+         prtTxt = 'F1 MOVEA raised a runtime error';
+         except PRTLINE;
+       endmon;
 
-      int8Arr(1) = -1;
-      uns8 = 0;
-      dsply 'F2 MOVEA int8Arr(1)=-1 (all bits set) -> uns8, same 1-byte len';
+       int8Arr(1) = -1;
+       uns8 = 0;
+       monitor;
      C                   MOVEA     int8Arr(1)    uns8
-      dsply %char(uns8);
+         prtTxt = 'F2 MOVEA int8Arr(1)=-1 (all bits set) -> uns8, result: ' +
+           %char(uns8);
+         except PRTLINE;
+       on-error;
+         prtTxt = 'F2 MOVEA raised a runtime error (value -1 invalid' +
+           ' for UNS)';
+         except PRTLINE;
+       endmon;
 
-      pak1Arr(1) = 5;
-      pak1Arr(2) = 6;
-      pak1Arr(3) = 7;
-      int8Arr(1) = 0;
-      int8Arr(2) = 0;
-      int8Arr(3) = 0;
-      dsply 'F3 MOVEA packed(1,0) dim(3)=[5,6,7] -> int(3) dim(3), 1-byte each';
-     C                   MOVEA     pak1Arr       int8Arr
-      dsply %char(int8Arr(1));
-      dsply %char(int8Arr(2));
-      dsply %char(int8Arr(3));
+       int1Arr(1) = 5;
+       int1Arr(2) = 6;
+       int1Arr(3) = 7;
+       int8Arr(1) = 0;
+       int8Arr(2) = 0;
+       int8Arr(3) = 0;
+       monitor;
+     C                   MOVEA     int1Arr       int8Arr
+         prtTxt = 'F3 MOVEA int(3)[5,6,7] -> int(3), same-type baseline,' +
+           ' elems now: ' + %char(int8Arr(1)) + ' ' +
+           %char(int8Arr(2)) + ' ' + %char(int8Arr(3));
+         except PRTLINE;
+       on-error;
+         prtTxt = 'F3 MOVEA raised a runtime error';
+         except PRTLINE;
+       endmon;
 
-      dsply '=== SECTION G: valid character MOVEA, crossing element bounds ===';
+       prtTxt = 'SECTION G: valid character MOVEA, crossing array-e' +
+       'lement bounds';
+       except PRTLINE;
 
-      charArr(1) = 'AAAA';
-      charArr(2) = 'BBBB';
-      charArr(3) = 'CCCC';
-      bigChar = '####################';
-      dsply 'G1 MOVEA char(4) dim(3) -> char(20), starting mid-element';
-     C     2             MOVEA     charArr       bigChar
-      dsply bigChar;
+       charArr(1) = 'AAAA';
+       charArr(2) = 'BBBB';
+       charArr(3) = 'CCCC';
+       bigChar = '####################';
+     C                   MOVEA     charArr(2)    bigChar
+       prtTxt = 'G1 MOVEA char(4)[3], starting at element 2, into c' +
+       'har(20): ' + bigChar;
+       except PRTLINE;
 
-      bigChar = 'XY';
-      charArr(1) = '....';
-      charArr(2) = '....';
-      charArr(3) = '....';
-      dsply 'G2 MOVEA char(20)="XY..." -> char(4) dim(3), ends mid-element';
-     C                   MOVEA     bigChar       charArr
-      dsply charArr(1);
-      dsply charArr(2);
-      dsply charArr(3);
+       tenChar = 'ABCDEFGHIJ';
+       charArr(1) = 'WWWW';
+       charArr(2) = 'XXXX';
+       charArr(3) = 'YYYY';
+     C                   MOVEA     tenChar       charArr
+         prtTxt = 'G2 MOVEA char(10) into char(4)[3] (stops mid-element' +
+           ' 3), elems now: ' + charArr(1) + ' / ' + charArr(2) +
+           ' / ' + charArr(3);
+         except PRTLINE;
 
-      dsply '=== SECTION H: a couple of other undocumented edge cases ===';
+       prtTxt = 'SECTION H: a couple of other undocumented edge cas' + 'es';
+       except PRTLINE;
 
-      dsply 'H1 %scan needle longer than haystack, expect 0';
-      dsply %char(%scan('LONGNEEDLE':'shrt'));
+         prtTxt = 'H1 %scan needle longer than haystack, expect 0, got:' +
+           ' ' + %char(%scan('LONGNEEDLE':'shrt'));
+         except PRTLINE;
 
-      dsply 'H2 integer divide by zero';
-      int8 = 5;
-      int16 = 0;
-      monitor;
-        resInt = int8 / int16;
-        dsply 'H2 no error, result:';
-        dsply %char(resInt);
-      on-error;
-        dsply 'H2 runtime error raised (as expected)';
-      endmon;
+       int8 = 5;
+       int16 = 0;
+       monitor;
+         resInt = int8 / int16;
+         prtTxt = 'H2 integer divide by zero: no error, result: ' +
+           %char(resInt);
+         except PRTLINE;
+       on-error;
+         prtTxt = 'H2 integer divide by zero: runtime error raised' +
+           ' (as expected)';
+         except PRTLINE;
+       endmon;
 
-      dsply '=== DONE ===';
-      *inlr = *on;
+       prtTxt = '=== DONE ===';
+       except PRTLINE;
+       *inlr = *on;
+
+     OQSYSPRT   E            PRTLINE        1
+     O                       prtTxt             100

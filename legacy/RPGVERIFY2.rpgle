@@ -3,11 +3,12 @@
       // should NOT compile. 
       // ============================================================
 
-      dcl-s int8         int(3);
-      dcl-s int16        int(5);
-      dcl-s bigChar      char(20);
-      dcl-s int8Arr      int(3) dim(3);
-      dcl-s int16Arr     int(5) dim(3);
+       dcl-s int8         int(3);
+       dcl-s int16        int(5);
+       dcl-s pak1Arr      packed(3:0) dim(3);
+       dcl-s bigChar      char(20);
+       dcl-s int8Arr      int(3) dim(3);
+       dcl-s int16Arr     int(5) dim(3);
 
       // TEST 1: MOVEA numeric -> character. Expect a compile error --
       // "Both factor 2 and the result field must be the same type."
@@ -21,5 +22,10 @@
       // TEST 3: MOVEA where NEITHER side is an array. Expect a compile
       // error -- "Factor 2 or the result field must contain an array."
      C                   MOVEA     int8          int16
+
+      // TEST 4: MOVEA packed(3,0) array -> int(3) array. Even though the
+      // element storage size appears compatible, IBM i rejects this as not
+      // the same numeric data type/length (RNF7262).
+     C                   MOVEA     pak1Arr       int8Arr
 
       *inlr = *on;
