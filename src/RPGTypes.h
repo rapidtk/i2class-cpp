@@ -47,23 +47,22 @@ constexpr double compile_pow(int base, int exp) {
 constexpr double MAX_DECIMAL_VALUE = compile_pow(10, MAX_DECIMAL_DIGITS) - 1;
 constexpr double MIN_DECIMAL_VALUE = -MAX_DECIMAL_VALUE;
 // The preprocessor cannot stringify a computed constexpr value, so these are spelled out
-// in groups of ten digits; the static_asserts verify the length really does match.
+// in groups of ten digits. They are arrays rather than pointers so the static_asserts can
+// measure them with sizeof -- ILE C++ rejects calling a constexpr function on a pointer in
+// a constant expression (CZP0016).
 #if I2_MAX_DECIMAL_DIGITS == 31
-static constexpr const char* MAX_DECIMAL_STR = "9999999999" "9999999999" "9999999999" "9";
-static constexpr const char* MIN_DECIMAL_STR = "-" "9999999999" "9999999999" "9999999999" "9";
+static const char MAX_DECIMAL_STR[] = "9999999999" "9999999999" "9999999999" "9";
+static const char MIN_DECIMAL_STR[] = "-" "9999999999" "9999999999" "9999999999" "9";
 #else
-static constexpr const char* MAX_DECIMAL_STR =
+static const char MAX_DECIMAL_STR[] =
 	"9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "999";
-static constexpr const char* MIN_DECIMAL_STR =
+static const char MIN_DECIMAL_STR[] =
 	"-" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "999";
 #endif
-constexpr int const_strlen(const char *s) { return *s ? 1 + const_strlen(s + 1) : 0; }
-/*
-static_assert(const_strlen(MAX_DECIMAL_STR) == MAX_DECIMAL_DIGITS,
+static_assert(sizeof(MAX_DECIMAL_STR) - 1 == MAX_DECIMAL_DIGITS,
 	"MAX_DECIMAL_STR must hold exactly MAX_DECIMAL_DIGITS digits");
-static_assert(const_strlen(MIN_DECIMAL_STR) == MAX_DECIMAL_DIGITS + 1,
+static_assert(sizeof(MIN_DECIMAL_STR) - 1 == MAX_DECIMAL_DIGITS + 1,
 	"MIN_DECIMAL_STR must be MAX_DECIMAL_STR with a leading '-'");
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Errors thrown by i2class

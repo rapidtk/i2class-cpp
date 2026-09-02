@@ -143,7 +143,7 @@ static void test_decimal_literal()
 	hugeOs << huge;
 	CHECK(hugeOs.str() == "12345678901234567890123456789012345678.99");
 	CHECK(MAX_DECIMAL_DIGITS == 63);
-	CHECK(const_strlen(MAX_DECIMAL_STR) == MAX_DECIMAL_DIGITS);
+	CHECK(sizeof(MAX_DECIMAL_STR) - 1 == MAX_DECIMAL_DIGITS);
 }
 
 static void test_zoned_arithmetic()
