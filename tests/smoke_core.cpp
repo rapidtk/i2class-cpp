@@ -159,6 +159,54 @@ static void test_zoned_arithmetic()
 	CHECK(a != b);
 }
 
+static void test_packed()
+{
+	// packed(n,p) is Packed<n,p> on every platform now, wrapping the native packed
+	// decimal on IBM i and Zoned<> elsewhere -- same interface either way.
+	packed(9, 2) p = __D("60145.76");
+	std::ostringstream os;
+	os << p;
+	CHECK(os.str() == "60145.76");
+	CHECK(p.len() == 9);
+	CHECK(p.DigitsOf() == 9);
+	CHECK(p.PrecisionOf() == 2);
+	CHECK(p.toInt() == 60145);
+
+	packed(5, 2) fromInt = 123;
+	CHECK(fromInt.toInt() == 123);
+	packed(5, 2) fromDouble = 123.45;
+	CHECK(std::fabs((double)fromDouble - 123.45) < 0.001);
+
+	// assign() is the exact path; the double constructor is the convenience one
+	packed(7, 2) assigned;
+	assigned.assign(__D("-12.34"));
+	std::ostringstream negOs;
+	negOs << assigned;
+	CHECK(negOs.str() == "-12.34");
+
+	// Packed <-> Packed and Packed <-> Zoned comparison and arithmetic
+	packed(9, 2) x = __D("100.25");
+	packed(7, 2) y = __D("23.50");
+	Zoned<7, 2> z = __D("23.50");
+	CHECK(x > y);
+	CHECK(y == z);
+	CHECK(z == y);
+	CHECK(x != z);
+	CHECK(std::fabs((double)(x + y) - 123.75) < 0.001);
+	CHECK(std::fabs((double)(x - z) - 76.75) < 0.001);
+
+	// Figurative constants and round-tripping through the zoned form
+	packed(4, 2) hi;
+	hi.assign(HIVAL);
+	CHECK(hi == HIVAL);
+	packed(5, 2) zeros;
+	zeros.assign(ZEROS);
+	CHECK(zeros.toInt() == 0);
+
+	// Must stay the same size as what it wraps, so it can overlay a record buffer
+	CHECK(sizeof(packed(9, 2)) == sizeof(packed(9, 2)::Backing));
+}
+
 static void test_ds()
 {
 	// A 3-occurrence data structure; verify each occurrence keeps its own value.
@@ -194,6 +242,7 @@ int main()
 	test_zoned_stream();
 	test_decimal_literal();
 	test_zoned_arithmetic();
+	test_packed();
 	test_ds();
 	test_as400();
 

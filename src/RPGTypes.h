@@ -1327,21 +1327,236 @@ FIGCONSTNUM_COMP(>)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Packed decimal
-#if !defined(NO_PACKED)
-/// @brief A numeric [packed-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-packed-decimal-format) value 
-/// where each 4-bit nibble stores a BCD digit (0-9) and the final trailing nibble holds the hexadecimal sign indicator (C/D/F).
+/// @brief A numeric [packed-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-packed-decimal-format) value
+/// where each 4-bit nibble stores a BCD digit (0-9) and the final trailing nibble holds
+/// the hexadecimal sign indicator (C/D/F).
+///
+/// A thin wrapper over whatever packed-decimal representation the platform provides
+/// (_DecimalT from bcd.h on IBM i, Zoned<> elsewhere) so that packed(n,p) is one type with
+/// one interface and one set of conversion rules everywhere, and so it offers the same
+/// assign()/move()/movel()/toInt() surface as Zoned<> rather than bcd.h's separate one.
+///
+/// The single `overlay` member and absence of virtuals keep this layout-compatible with
+/// the backing type, so a Packed field can still be overlaid directly on a record buffer.
 /// @tparam sz The total number of digits
 /// @tparam precision The number of digits to the right of the decimal point
-# define packed(sz, precision) _DecimalT<sz, precision>
-template <int l1, int p1>
- inline int operator % (const _DecimalT<l1,p1> &val1, int val2)
-	{ return val1-((long)(val1/val2))*val2;
-}
+template <int sz, int precision> class Packed
+{
+public:
+#if !defined(NO_PACKED)
+	typedef _DecimalT<sz, precision> Backing;
 #else
-/// @brief If [packed-decimal](https://www.ibm.com/docs/en/i/7.4.0?topic=type-packed-decimal-format) values
-/// are not supported, Zoned<> is unsed instead
-# define packed(sz, precision) Zoned<sz, precision>
+	typedef Zoned<sz, precision> Backing;
 #endif
+
+	Packed()							{ assignInt(0); }
+	Packed(short s)						{ assignInt(s); }
+	Packed(int i)						{ assignInt(i); }
+	Packed(long l)						{ assignInt(static_cast<int>(l)); }
+	Packed(float f)						{ assign(static_cast<long double>(f)); }
+	Packed(double d)					{ assign(static_cast<long double>(d)); }
+	Packed(long double d)				{ assign(d); }
+	Packed(const FigConstNum &fc)		{ assign(fc); }
+	Packed(const Backing &b)			{ overlay = b; }
+#if defined(NO_PACKED)
+	Packed(const DecimalConst &d)		{ assign(d); }
+#endif
+
+	Packed<sz, precision>& operator = (long double d)			{ assign(d); return *this; }
+	Packed<sz, precision>& operator = (const FigConstNum &fc)	{ assign(fc); return *this; }
+	Packed<sz, precision>& operator = (const Backing &b)		{ overlay = b; return *this; }
+#if defined(NO_PACKED)
+	Packed<sz, precision>& operator = (const DecimalConst &d)	{ assign(d); return *this; }
+#endif
+	template <int l2, int p2>
+	Packed<sz, precision>& operator = (const Zoned<l2, p2> &z)	{ assign(z); return *this; }
+
+	/// @brief Value as a double. Exact for fields inside a double's ~15 significant
+	/// digits; use toChars()/operator<< when every digit has to survive.
+	operator long double() const		{ return overlay; }
+	int toInt() const;
+	int len() const						{ return sz; }
+	int DigitsOf() const				{ return sz; }
+	int PrecisionOf() const				{ return precision; }
+
+	/// @brief The native packed representation, for interop with bcd.h on IBM i.
+	const Backing &toPacked() const		{ return overlay; }
+	Zoned<sz, precision> toZoned() const;
+	void fromZoned(const Zoned<sz, precision> &z);
+#if !defined(NO_PACKED)
+	/// @brief Convert to bcd.h's intermediate type so a Packed can be handed straight to
+	/// the native packed-decimal operators. Copies first because _DecimalT's conversion
+	/// operator is non-const and `overlay` is const here.
+	operator _ConvertDecimal() const		{ Backing tmp = overlay; return tmp; }
+#endif
+
+	void assign(long double d);
+	void assign(const FigConstNum &fc);
+	template <int l2, int p2>
+	void assign(const Zoned<l2, p2> &z)	{ fromZoned(Zoned<sz, precision>(static_cast<long double>(z))); }
+#if defined(NO_PACKED)
+	void assign(const DecimalConst &d)	{ overlay.assign(d); }
+#else
+	void assign(const _ConvertDecimal &d) { overlay = d; }
+#endif
+
+	// RPG MOVE/MOVEL operate on the digit positions, so they route through the zoned form
+	Packed<sz, precision>& move(const FixedTemp &tStr)
+	{
+		Zoned<sz, precision> z = toZoned();
+		z.move(tStr);
+		fromZoned(z);
+		return *this;
+	}
+	Packed<sz, precision>& movel(const FixedTemp &tStr)
+	{
+		Zoned<sz, precision> z = toZoned();
+		z.movel(tStr);
+		fromZoned(z);
+		return *this;
+	}
+
+	int operator % (int val2) const
+	{
+		int val1 = toInt();
+		return val1 - ((long)(val1 / val2)) * val2;
+	}
+
+public:
+	Backing overlay;
+
+private:
+	void assignInt(int i);
+};
+
+template <int sz, int precision>
+inline int Packed<sz, precision>::toInt() const
+{
+#if !defined(NO_PACKED)
+	return static_cast<int>(overlay);
+#else
+	return overlay.toInt();
+#endif
+}
+
+template <int sz, int precision>
+inline void Packed<sz, precision>::assign(long double d)
+{
+#if !defined(NO_PACKED)
+	overlay = d;
+#else
+	overlay.assign(d);
+#endif
+}
+
+template <int sz, int precision>
+inline void Packed<sz, precision>::assignInt(int i)
+{
+#if !defined(NO_PACKED)
+	overlay = i;
+#else
+	overlay = Zoned<sz, precision>(i);
+#endif
+}
+
+template <int sz, int precision>
+inline void Packed<sz, precision>::assign(const FigConstNum &fc)
+{
+	Zoned<sz, precision> z;
+	z.assign(fc);
+	fromZoned(z);
+}
+
+template <int sz, int precision>
+inline Zoned<sz, precision> Packed<sz, precision>::toZoned() const
+{
+#if !defined(NO_PACKED)
+	Zoned<sz, precision> z;
+	cpynv(NUM_DESCR(_T_ZONED, sz, precision), z.overlay,
+	 NUM_DESCR(_T_PACKED, sz, precision), (char *)&overlay);
+	return z;
+#else
+	return overlay;
+#endif
+}
+
+template <int sz, int precision>
+inline void Packed<sz, precision>::fromZoned(const Zoned<sz, precision> &z)
+{
+#if !defined(NO_PACKED)
+	cpynv(NUM_DESCR(_T_PACKED, sz, precision), &overlay,
+	 NUM_DESCR(_T_ZONED, sz, precision), (_SPCPTRCN)z.overlay);
+#else
+	overlay = z;
+#endif
+}
+
+static_assert(sizeof(Packed<9, 2>) == sizeof(Packed<9, 2>::Backing),
+	"Packed<> must stay layout-compatible with its backing type so it can overlay a record buffer");
+
+/// @brief Stream a Packed as exact decimal text -- see operator<<(ostream, Zoned).
+template <class charT, class traits, int sz, int precision>
+inline std::basic_ostream<charT, traits> &
+ operator << (std::basic_ostream<charT, traits> &os, const Packed<sz, precision> &pkd)
+{
+	return os << pkd.toZoned();
+}
+
+// Arithmetic and comparison. On IBM i these forward to the native packed type so the
+// arithmetic stays exact decimal (and picks up bcd.h's RPG-style intermediate result
+// widening); elsewhere Packed is zoned-backed and forwards to Zoned's operators.
+#if !defined(NO_PACKED)
+# define GEN_PACKED_OP(OP, RTNTYP) \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Packed<l1, p1> &val1, const Packed<l2, p2> &val2) \
+	  { return val1.overlay OP val2.overlay; } \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Packed<l1, p1> &val1, const Zoned<l2, p2> &val2) \
+	  { return val1.overlay OP val2.toPacked(); } \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Zoned<l1, p1> &val1, const Packed<l2, p2> &val2) \
+	  { return val1.toPacked() OP val2.overlay; }
+	GEN_PACKED_OP(==, bool)
+	GEN_PACKED_OP(!=, bool)
+	GEN_PACKED_OP(<=, bool)
+	GEN_PACKED_OP(<, bool)
+	GEN_PACKED_OP(>=, bool)
+	GEN_PACKED_OP(>, bool)
+	GEN_PACKED_OP(+, _ConvertDecimal)
+	GEN_PACKED_OP(-, _ConvertDecimal)
+	GEN_PACKED_OP(*, _ConvertDecimal)
+	GEN_PACKED_OP(/, _ConvertDecimal)
+#else
+# define GEN_PACKED_OP(OP, RTNTYP) \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Packed<l1, p1> &val1, const Packed<l2, p2> &val2) \
+	  { return val1.overlay OP val2.overlay; } \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Packed<l1, p1> &val1, const Zoned<l2, p2> &val2) \
+	  { return val1.overlay OP val2; } \
+	template <int l1, int p1, int l2, int p2> \
+	 inline RTNTYP operator OP (const Zoned<l1, p1> &val1, const Packed<l2, p2> &val2) \
+	  { return val1 OP val2.overlay; }
+	GEN_PACKED_OP(==, bool)
+	GEN_PACKED_OP(!=, bool)
+	GEN_PACKED_OP(<=, bool)
+	GEN_PACKED_OP(<, bool)
+	GEN_PACKED_OP(>=, bool)
+	GEN_PACKED_OP(>, bool)
+	GEN_PACKED_OP(+, long double)
+	GEN_PACKED_OP(-, long double)
+	GEN_PACKED_OP(*, long double)
+	GEN_PACKED_OP(/, long double)
+#endif
+
+template<int sz, int precision>
+ inline bool operator == (const Packed<sz, precision> &val1, const FigConstNum &val2)
+	{ return val1.toZoned() == (Zoned<sz, precision>)val2; }
+template<int sz, int precision>
+ inline bool operator != (const Packed<sz, precision> &val1, const FigConstNum &val2)
+	{ return val1.toZoned() != (Zoned<sz, precision>)val2; }
+
+#define packed(sz, precision) Packed<sz, precision>
 
 #ifndef NO_PACKED
 ////////////////////////////////////////////////////////////////////////////////
