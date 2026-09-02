@@ -34,61 +34,104 @@
        dcl-s probeVal     zoned(10:0);
        dcl-s prtTxt       char(100);
 
+<<<<<<< Updated upstream
        prtTxt = 'SECTION A: MOVE numeric -> char, positive 32, righ' +
        't/left justified';
+=======
+       prtTxt = 'SECTION A: MOVE numeric -> char, positive 32, ' +
+        'right/left justified';
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int8 = 32;
        bigChar = '####################';
      C                   MOVE      int8          bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A1 MOVE int8, INT(3)/1-byte, value 32 into char(20' +
        ') filler: ' + bigChar;
+=======
+       prtTxt = 'A1 MOVE int8, INT(3)/1-byte, value 32 into char(20) ' +
+        'filler: ' + bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int16 = 32;
        bigChar = '####################';
      C                   MOVE      int16         bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A2 MOVE int16, INT(5)/2-byte, value 32 into char(2' +
        '0) filler: ' + bigChar;
+=======
+       prtTxt = 'A2 MOVE int16, INT(5)/2-byte, value 32 into char(20) ' +
+        'filler: ' + bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int32 = 32;
        bigChar = '####################';
      C                   MOVE      int32         bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A3 MOVE int32, INT(10)/4-byte, value 32 into char(' +
        '20) filler: ' + bigChar;
+=======
+       prtTxt = 'A3 MOVE int32, INT(10)/4-byte, value 32 into char(20) ' +
+        'filler: ' + bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int64 = 32;
        bigChar = '####################';
      C                   MOVE      int64         bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A4 MOVE int64, INT(20)/8-byte, value 32 into char(' +
        '20) filler: ' + bigChar;
+=======
+       prtTxt = 'A4 MOVE int64, INT(20)/8-byte, value 32 into char(20) ' +
+        'filler: ' + bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        uns8 = 32;
        bigChar = '####################';
      C                   MOVE      uns8          bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A5 MOVE uns8, UNS(3)/1-byte, value 32 into char(20' +
        ') filler: ' + bigChar;
+=======
+       prtTxt = 'A5 MOVE uns8, UNS(3)/1-byte, value 32 into char(20) ' +
+        'filler: ' + bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        uns16 = 32;
        bigChar = '####################';
      C                   MOVE      uns16         bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A6 MOVE uns16, UNS(5)/2-byte, value 32 into char(2' +
        '0) filler: ' + bigChar;
+=======
+       prtTxt = 'A6 MOVE uns16, UNS(5)/2-byte, value 32 into char(20) ' +
+        'filler: ' + bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int32 = 32;
        bigChar = '####################';
      C                   MOVEL     int32         bigChar
+<<<<<<< Updated upstream
        prtTxt = 'A7 MOVEL (left-justified) int32=32 into char(20) f' +
        'iller: ' + bigChar;
        except PRTLINE;
 
        prtTxt = 'SECTION B: boundary and negative values (sign over' +
        'punch)';
+=======
+       prtTxt = 'A7 MOVEL (left-justified) int32=32 into char(20) ' +
+        'filler: ' + bigChar;
+       except PRTLINE;
+
+       prtTxt = 'SECTION B: boundary and negative values (sign over punch)';
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int8 = 127;
@@ -117,7 +160,11 @@
        prtTxt = 'B4 MOVE uns8=255 (max) into char(20) filler: ' + bigChar;
        except PRTLINE;
 
+<<<<<<< Updated upstream
        prtTxt = 'SECTION C: baseline calibration, zoned/packed -> c' + 'har';
+=======
+       prtTxt = 'SECTION C: baseline calibration, zoned/packed -> char';
+>>>>>>> Stashed changes
        except PRTLINE;
 
        zon8 = 32;
@@ -132,26 +179,43 @@
        prtTxt = 'C2 MOVE packed(3,0)=32 into char(20) filler: ' + bigChar;
        except PRTLINE;
 
+<<<<<<< Updated upstream
        prtTxt = 'SECTION D: reverse direction, char digit-text -> n' +
        'umeric';
+=======
+       prtTxt = 'SECTION D: reverse direction, char digit-text -> numeric';
+>>>>>>> Stashed changes
        except PRTLINE;
 
        srcChar = '                 032';
        int8 = 0;
      C                   MOVE      srcChar       int8
+<<<<<<< Updated upstream
        prtTxt = 'D1 MOVE char(20), rightmost 3 bytes ''032'', into in' +
        't8(3): ' + %char(int8);
+=======
+       prtTxt = 'D1 MOVE char(20), rightmost 3 bytes ''032'', into int8(3): ' + 
+        %char(int8);
+>>>>>>> Stashed changes
        except PRTLINE;
 
        srcChar = '          0000000032';
        resInt = 0;
      C                   MOVE      srcChar       resInt
+<<<<<<< Updated upstream
        prtTxt = 'D2 MOVE char(20), rightmost 10 bytes ''0000000032'',' +
        ' into ' + 'int32(10): ' + %char(resInt);
        except PRTLINE;
 
        prtTxt = 'SECTION E: is the moved byte pattern valid decimal' +
        ' digit text?';
+=======
+       prtTxt = 'D2 MOVE char(20), rightmost 10 bytes ''0000000032'', ' +
+        'into int32(10): ' + %char(resInt);
+       except PRTLINE;
+
+       prtTxt = 'SECTION E: is moved byte pattern valid decimal digit text?';
+>>>>>>> Stashed changes
        except PRTLINE;
 
        int8 = 32;
@@ -195,8 +259,12 @@
            %char(uns8);
          except PRTLINE;
        on-error;
+<<<<<<< Updated upstream
          prtTxt = 'F2 MOVEA raised a runtime error (value -1 invalid' +
            ' for UNS)';
+=======
+         prtTxt = 'F2 MOVEA raised a runtime error (value -1 invalid for UNS)';
+>>>>>>> Stashed changes
          except PRTLINE;
        endmon;
 
@@ -208,8 +276,13 @@
        int8Arr(3) = 0;
        monitor;
      C                   MOVEA     int1Arr       int8Arr
+<<<<<<< Updated upstream
          prtTxt = 'F3 MOVEA int(3)[5,6,7] -> int(3), same-type baseline,' +
            ' elems now: ' + %char(int8Arr(1)) + ' ' +
+=======
+         prtTxt = 'F3 MOVEA int(3)[5,6,7] -> int(3), same-type baseline, ' +
+           'elems now: ' + %char(int8Arr(1)) + ' ' +
+>>>>>>> Stashed changes
            %char(int8Arr(2)) + ' ' + %char(int8Arr(3));
          except PRTLINE;
        on-error;
@@ -217,8 +290,13 @@
          except PRTLINE;
        endmon;
 
+<<<<<<< Updated upstream
        prtTxt = 'SECTION G: valid character MOVEA, crossing array-e' +
        'lement bounds';
+=======
+       prtTxt = 'SECTION G: valid character MOVEA, crossing ' +
+        'array-element bounds';
+>>>>>>> Stashed changes
        except PRTLINE;
 
        charArr(1) = 'AAAA';
@@ -226,8 +304,13 @@
        charArr(3) = 'CCCC';
        bigChar = '####################';
      C                   MOVEA     charArr(2)    bigChar
+<<<<<<< Updated upstream
        prtTxt = 'G1 MOVEA char(4)[3], starting at element 2, into c' +
        'har(20): ' + bigChar;
+=======
+       prtTxt = 'G1 MOVEA char(4)[3], starting at element 2, into char(20): ' + 
+        bigChar;
+>>>>>>> Stashed changes
        except PRTLINE;
 
        tenChar = 'ABCDEFGHIJ';
@@ -235,12 +318,20 @@
        charArr(2) = 'XXXX';
        charArr(3) = 'YYYY';
      C                   MOVEA     tenChar       charArr
+<<<<<<< Updated upstream
          prtTxt = 'G2 MOVEA char(10) into char(4)[3] (stops mid-element' +
            ' 3), elems now: ' + charArr(1) + ' / ' + charArr(2) +
            ' / ' + charArr(3);
          except PRTLINE;
 
        prtTxt = 'SECTION H: a couple of other undocumented edge cas' + 'es';
+=======
+         prtTxt = 'G2 MOVEA char(10) into char(4)[3] (stops mid-element 3), ' +
+          'elems now: ' + charArr(1) + ' / ' + charArr(2) + ' / ' + charArr(3);
+         except PRTLINE;
+
+       prtTxt = 'SECTION H: a couple of other undocumented edge cases';
+>>>>>>> Stashed changes
        except PRTLINE;
 
          prtTxt = 'H1 %scan needle longer than haystack, expect 0, got:' +
@@ -255,8 +346,13 @@
            %char(resInt);
          except PRTLINE;
        on-error;
+<<<<<<< Updated upstream
          prtTxt = 'H2 integer divide by zero: runtime error raised' +
            ' (as expected)';
+=======
+         prtTxt = 'H2 integer divide by zero: runtime error raised ' +
+           '(as expected)';
+>>>>>>> Stashed changes
          except PRTLINE;
        endmon;
 
