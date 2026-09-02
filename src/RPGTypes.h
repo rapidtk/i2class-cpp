@@ -595,6 +595,11 @@ public:
 	/// in-memory layout *is* its RPG storage representation -- the same guarantee the
 	/// `static_assert(sizeof(...) == sz)` checks in this file enforce. `&array[i]` and
 	/// `sizeof(T)` are already the bytes RPG's MOVEA would move.
+	///
+	/// @note Known divergence from real RPG: this is a raw byte copy, not the
+	/// value-preserving range-checked move real MOVEA does between differently-signed
+	/// numeric types of the same byte length (see legacy-uef/RPGLE-NOTES.md) --
+	/// intentional simplification, not a bug.
 	/// @throws CI2ErrSubscript if `index` is <=0 or > N
 	template <class T, int N>
 	Fixed<sz>& movea(T (&array)[N], int index=1)

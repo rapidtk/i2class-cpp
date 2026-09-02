@@ -1,6 +1,7 @@
       // ============================================================
       // RPGVERIFY2 -- lines that, per current IBM documentation,
-      // should NOT compile. 
+      // should NOT compile (TEST 4 is the one confirmed exception --
+      // see its comment below).
       // ============================================================
 
        dcl-s int8         int(3);
@@ -23,9 +24,15 @@
       // error -- "Factor 2 or the result field must contain an array."
      C                   MOVEA     int8          int16
 
-      // TEST 4: MOVEA packed(3,0) array -> int(3) array. Even though the
-      // element storage size appears compatible, IBM i rejects this as not
-      // the same numeric data type/length (RNF7262).
+      // TEST 4: MOVEA packed(3,0) array -> int(3) array. Both have the
+      // same DIGIT length (3), even though their underlying byte storage
+      // differs (packed(3,0) is 2 bytes, int(3) is 1 byte). Confirmed via
+      // real compile: this is accepted with NO error -- MOVEA's type
+      // check apparently matches declared digit length, not byte storage
+      // size. (Compilation of the whole program still fails overall
+      // because of TESTs 1-3, so this line's runtime behavior is
+      // untested; a real move between packed and binary storage would
+      // need to be checked in RPGVERIFY.rpgle if that matters.)
      C                   MOVEA     pak1Arr       int8Arr
 
-      *inlr = *on;
+       *inlr = *on;
