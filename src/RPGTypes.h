@@ -1320,7 +1320,7 @@ inline std::basic_ostream<charT, traits> &
  operator << (std::basic_ostream<charT, traits> &os, const Zoned<sz, precision> &znd)
 {
 	char buf[sz + 3]; // sign, decimal point, null terminator
-	return os << zonedFormat(buf, znd.overlay, sz, precision);
+	return os << zonedFormat(buf, (const_byte_ptr)znd.overlay, sz, precision);
 }
 
 #if !defined(NO_PACKED)
