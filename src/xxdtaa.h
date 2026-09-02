@@ -3,15 +3,21 @@
 #ifndef XXDTAA_H
 #define XXDTAA_H
 
+/// @file xxdtaa.h
+/// @brief This header and the accompanying `xxdtaa.cpp` are a thin compatibility
+/// layer to add data area support on platforms other than IBM i
+/// where xxdta.h is part of the operating system QSYSINC/H includes.
+/// @note There is a `/legacy/xxdta.hpp` which is a renamed copy of the IBM i
+/// version of `xxdta.h` and what this copy was based on at the time.
 
 struct _DTAA_NAME_T {
 	char	dtaa_name[10];
 	char	dtaa_lib[10];
 };
-/// Retrieve data area [QXXRTVDA](https://www.ibm.com/docs/en/i/7.5.0?topic=q-retrieve-data-area-qxxrtvda#qxxrtvd) API equivalent
+/// @brief Retrieve data area [QXXRTVDA](https://www.ibm.com/docs/en/i/7.4.0?topic=q-retrieve-data-area-qxxrtvda) API equivalent
 void QXXRTVDA(_DTAA_NAME_T dtaname, short offset, short len, char *dtaptr);
 //void QXXRTVDA(DtaaName dtaname, short offset, short len, char *dtaptr);
-/// Change data area [QXXCHGDA](https://www.ibm.com/docs/en/i/7.5.0?topic=q-change-data-area-qxxchgda#qxxchgd) API equivalent
+/// @brief Change data area [QXXCHGDA](https://www.ibm.com/docs/en/i/7.4.0?topic=q-change-data-area-qxxchgda) API equivalent
 void QXXCHGDA(_DTAA_NAME_T dtaname, short offset, short len, char *dtaptr);
 //void QXXCHGDA(DtaaName dtaname, short offset, short len, char *dtaptr);
 
