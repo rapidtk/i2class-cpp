@@ -177,6 +177,100 @@ void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 	}
 }
 
+std::string EDITWRD(const _ConvertDecimal &value, czstring editWord)
+{
+	std::string result(strlen(editWord), ' ');
+	RrecordPrint::edit(&result[0], value, editWord);
+	return result;
+}
+
+std::string EDITC(const _ConvertDecimal &value, char editCode, char fillChar)
+{
+	int nlen=value.DigitsOf();
+	int precision=value.PrecisionOf();
+	if (editCode=='X')
+		return EDITWRD(value, std::string(nlen, ' ').c_str());
+	if (value==0 && strchr("2BKO4DMQZ", editCode)!=NULL)
+		return std::string(nlen, ' ');
+
+	char editWord[45];
+	if (editCode=='Y')
+	{
+		if (nlen==7)
+			strcpy(editWord, " 0 /  /  ");
+		else
+		{
+			strcpy(editWord, "0 /  /    ");
+			if (nlen<8)
+				editWord[nlen+(nlen-1)/2]='\0';
+		}
+	}
+	else if (editCode=='W')
+	{
+		if (nlen==5)
+			strcpy(editWord, "0 /   ");
+		else if (nlen==7)
+			strcpy(editWord, "  0 /  ");
+		else
+		{
+			strcpy(editWord, "  0 /  /  ");
+			if (nlen<8)
+			{
+				int i=nlen;
+				if (i>2)
+					i=i-2;
+				editWord[nlen+(i-1)/2]='\0';
+			}
+		}
+	}
+	else
+	{
+		char *out=editWord;
+		if (editCode>='N' && editCode<='Q')
+			*out++='-';
+		const char *comma=strchr("12ABJKNO", editCode);
+		int scale=nlen-precision;
+		int scale3=scale%3;
+		if (scale3>0)
+		{
+			memset(out, ' ', scale3);
+			out+=scale3;
+			scale-=scale3;
+		}
+		while (scale>0)
+		{
+			if (comma)
+				*out++=',';
+			memset(out, ' ', 3);
+			out+=3;
+			scale-=3;
+		}
+		if (fillChar!=' ')
+		{
+			if (out>editWord)
+				out--;
+			*out++=fillChar;
+			if (fillChar!='*')
+				*out++='0';
+		}
+		if (precision>0)
+		{
+			*out++='.';
+			memset(out, ' ', precision);
+			out+=precision;
+		}
+		if (editCode>='A' && editCode<='D')
+			strcpy(out, "CR");
+		else
+		{
+			if (editCode>='J' && editCode<='M')
+				*out++='-';
+			*out='\0';
+		}
+	}
+	return EDITWRD(value, editWord);
+}
+
 // Print out a character value
 void RrecordPrint::printChar(const_byte_ptr str, int edtLen, int col)
 {

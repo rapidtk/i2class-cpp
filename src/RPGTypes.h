@@ -9,6 +9,7 @@
 #include <math.h>
 #include <cstddef>
 #include <iosfwd>
+#include <string>
 
 #include "compat/xxcvt.h" // For zoned conversion
 #include "i2compat.h"
@@ -146,6 +147,9 @@ public:
 };
 #define _ConvertDecimal ZonedTemp
 #endif
+
+std::string EDITWRD(const _ConvertDecimal &value, czstring editWord);
+std::string EDITC(const _ConvertDecimal &value, char editCode, char fillChar=' ');
 
 const char OFF='0';
 const char ON='1';
@@ -1202,9 +1206,9 @@ public:
 
 #if defined(NO_PACKED)
 	// Cast to a ZonedTemp
-	operator ZonedTemp()
+	operator ZonedTemp() const
 	{
-		ZonedTemp z(overlay, sz, precision);
+		ZonedTemp z(const_cast<char *>(overlay), sz, precision);
 		return z;
 	}
 #endif
@@ -1218,6 +1222,10 @@ public:
 
 	int len() const {return sz;}
 	int PrecisionOf() const {return precision;}
+	std::string editwrd(czstring editWord) const
+		{ return EDITWRD(*this, editWord); }
+	std::string editc(char editCode, char fillChar=' ') const
+		{ return EDITC(*this, editCode, fillChar); }
 
 	// Move a value to the left-most bytes of the number
 	Zoned<sz, precision>& movel(const FixedTemp &tStr)
@@ -1470,6 +1478,22 @@ public:
 	int len() const						{ return sz; }
 	int DigitsOf() const				{ return sz; }
 	int PrecisionOf() const				{ return precision; }
+	std::string editwrd(czstring editWord) const
+	{
+#if defined(NO_PACKED)
+		return toZoned().editwrd(editWord);
+#else
+		return EDITWRD(*this, editWord);
+#endif
+	}
+	std::string editc(char editCode, char fillChar=' ') const
+	{
+#if defined(NO_PACKED)
+		return toZoned().editc(editCode, fillChar);
+#else
+		return EDITC(*this, editCode, fillChar);
+#endif
+	}
 
 	/// @brief The native packed representation, for interop with bcd.h on IBM i.
 	const Backing &toPacked() const		{ return overlay; }

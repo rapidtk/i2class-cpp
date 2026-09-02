@@ -48,6 +48,14 @@ static void test_edit_word()
 	checkEditWord(0.00, "  0.  ", "  0.00");
 	// No '-'/"CR" in the edit word -- RPG shows no sign at all, just the magnitude.
 	checkEditWord(-3.45, "  0.  ", "  3.45");
+
+	Zoned<5,2> value(123.45);
+	CHECK(EDITWRD(value, "  0.  ") == "123.45");
+	CHECK(value.editwrd("  0.  ") == "123.45");
+	CHECK(value.editc('1') == "1,23.45");
+	Packed<5,2> packedValue(value);
+	CHECK(packedValue.editwrd("  0.  ") == "123.45");
+	CHECK(packedValue.editc('1') == "1,23.45");
 }
 
 static void checkEditCode(Zoned<7,2> value, int col, char edtCde, char fillChar, const char *expectedTail)
