@@ -118,18 +118,41 @@ static void test_move_ops()
 	shortR.move(FixedTemp("abcde"));
 	CHECK(std::strcmp(shortR.c_str(), "cde") == 0);
 
-	// MOVEA replaces from an index onward; MOVEALL fills from an index onward
+	// MOVEA replaces from a 1-based index onward; MOVEALL fills from a 1-based index onward
 	Fixed<6> a = "......";
-	a.movea(FixedTemp("XY"), 2);
+	a.movea(FixedTemp("XY"), 3);
 	CHECK(std::strcmp(a.c_str(), "..XY..") == 0);
 
 	Fixed<6> all = "......";
-	all.moveall('Z', 3);
+	all.moveall('Z', 4);
 	CHECK(std::strcmp(all.c_str(), "...ZZZ") == 0);
 
 	Fixed<6> fig = "......";
-	fig.movea(BLANKS, 4);
+	fig.movea(BLANKS, 5);
 	CHECK(std::strcmp(fig.c_str(), "....  ") == 0);
+
+	// MOVEA from a plain array packs each element's raw bytes contiguously, starting
+	// at the 1-based index, same as RPG packing an array into a field
+	int nums[3] = {1, 2, 3};
+	Fixed<sizeof(nums)> packedAll;
+	packedAll.movea(nums);
+	int unpacked[3];
+	memcpy(unpacked, packedAll.overlay, sizeof(unpacked));
+	CHECK(unpacked[0]==1 && unpacked[1]==2 && unpacked[2]==3);
+
+	Fixed<sizeof(int)*2> packedTail;
+	packedTail.movea(nums, 2);
+	int unpackedTail[2];
+	memcpy(unpackedTail, packedTail.overlay, sizeof(unpackedTail));
+	CHECK(unpackedTail[0]==2 && unpackedTail[1]==3);
+
+	// A plain char array binds to the same template (T=char, N=array size) rather than
+	// going through FixedTemp's implicit conversion -- exact reference binding beats a
+	// user-defined conversion. sizeof(char)==1 makes the result identical either way.
+	char letters[4] = {'W','X','Y','Z'};
+	Fixed<4> fromCharArray;
+	fromCharArray.movea(letters);
+	CHECK(std::strcmp(fromCharArray.c_str(), "WXYZ") == 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -517,11 +517,6 @@ public:
 		memcpy(overlay, tStr.overlay, MIN(sz, tStr.len()));
 		return *this;
 	}
-	Fixed<sz>& movel(const char *str)
-	{
-		memcpy(overlay, str, MIN(sz, strlen(str)));
-		return *this;
-	}
 #if !defined(NO_PACKED)
 	Fixed<sz>& movel(const _ConvertDecimal p)
 	{
@@ -557,35 +552,17 @@ public:
 		memcpy(overlay+sz-minsz, str+strLen-minsz, minsz);
 		return *this;
 	}
-	/// @brief BIF-like [MOVEA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movea-move-array) opcode equivalent.
-	/// 
-	/// Implements [array-to-field](https://www.ibm.com/docs/en/i/7.4.0?topic=array-general-movea-operations#mvagen)
-	/// copying of data beginning at the 1-based `index` of `array`
-	/// @throws CI2ErrSubscript if `index` is <=0
-	Fixed<sz>& movea(T (&array)[N], int index=1) {
-#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
-		if (index<=0)
-      	throw CI2ErrSubscript();
-#endif
-		char* overlayPtr = overlay;
-		while (index <= n) {
-			// TODO: need to figure out if there is a function that does this
-			auto source = someFunctionThatInterprets<T>LikeRpgDoes(array[index-1]);
-			auto sourceLen = sizeof(source);
-			memcpy(overlayPtr, &source, sourceLen);
-			overlayPtr += sourceLen;
-			index++;
-		}
-	}
-	
-	/*
+	/// @brief BIF-like [MOVEA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movea-move-array) opcode
+	/// equivalent for a single field: overwrites `this` starting at the 1-based `index`
+	/// with `tStr`/`fc`/`c`, leaving bytes before `index` untouched.
+	/// @throws CI2ErrSubscript if `index` is <=0 or > `sz` size().
 	Fixed<sz>& movea(FixedTemp tStr, int index=1)
 	{
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (index<=0 || index>sz)
       	throw CI2ErrSubscript();
 #endif
-		memcpy(overlay+index, tStr.overlay, MIN(sz-index, tStr.len()));
+		memcpy(overlay+index-1, tStr.overlay, MIN(sz-(index-1), tStr.len()));
 		return *this;
 	}
 	// Replace a portion of the string with a figurative constant
@@ -595,7 +572,7 @@ public:
 		if (index<=0 || index>sz)
       	throw CI2ErrSubscript();
 #endif
-		memset(overlay+index, fc.fillChar, sz-index);
+		memset(overlay+index-1, fc.fillChar, sz-(index-1));
 		return *this;
 	}
 	Fixed<sz>& moveall(char c, int index=1)
@@ -604,10 +581,39 @@ public:
 		if (index<=0 || index>sz)
       	throw CI2ErrSubscript();
 #endif
-		memset(overlay+index, c, sz-index);
+		memset(overlay+index-1, c, sz-(index-1));
 		return *this;
 	}
-	*/
+
+	/// @brief BIF-like [MOVEA](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movea-move-array) opcode
+	/// equivalent for an array source: packs `array`'s elements, starting at the 1-based
+	/// `index`, as a contiguous stream of raw bytes into the start of `this` field,
+	/// stopping when either `array` or `this` field is exhausted.
+	///
+	/// This works for any element type used elsewhere in this file (Fixed<>/Zoned<>/
+	/// Packed<>, or a plain numeric type) with no per-type conversion, because each one's
+	/// in-memory layout *is* its RPG storage representation -- the same guarantee the
+	/// `static_assert(sizeof(...) == sz)` checks in this file enforce. `&array[i]` and
+	/// `sizeof(T)` are already the bytes RPG's MOVEA would move.
+	/// @throws CI2ErrSubscript if `index` is <=0 or > N
+	template <class T, int N>
+	Fixed<sz>& movea(T (&array)[N], int index=1)
+	{
+#if I2_RUNTIME_ENABLE_BOUNDS_CHECK
+		if (index<=0 || index>N)
+      	throw CI2ErrSubscript();
+#endif
+		char *dest = overlay;
+		int remaining = sz;
+		for (int i=index-1; i<N && remaining>0; i++)
+		{
+			int n = MIN(static_cast<int>(sizeof(T)), remaining);
+			memcpy(dest, &array[i], n);
+			dest += n;
+			remaining -= n;
+		}
+		return *this;
+	}
 
 	// Return a null-terminated c-style string. Shared static buffer per sz, so only one
 	// result is live at a time -- see README Known Limitations. Use c_str(buf, bufSize)
