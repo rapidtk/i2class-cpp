@@ -3,7 +3,7 @@
 
 #include "rfile400.h"
 #include "rglobal.h"
-#include <xxcvt.h>
+#include <compat/xxcvt.h>
 
 const char *READ_ONLY="rr";
 const char *READ_WRITE="rr+";

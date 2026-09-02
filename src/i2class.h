@@ -51,7 +51,7 @@
 # endif
 #endif
 
-#include "xxdtaa.h"
+#include "compat/xxdtaa.h"
 #include "rglobal.h"
 #endif
 

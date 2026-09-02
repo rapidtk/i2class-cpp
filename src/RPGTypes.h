@@ -10,8 +10,9 @@
 #include <cstddef>
 #include <iosfwd>
 
-#include "xxcvt.h" // For zoned conversion
+#include "compat/xxcvt.h" // For zoned conversion
 #include "i2compat.h"
+#include "compat/StringContracts.h"
 #if !defined(NO_PACKED)
 # include <MIH/CPYNV.h>
 # include <bcd.h> // For packed decimal
@@ -76,7 +77,7 @@ class CI2ErrSubscript : public CI2Err { };
 class CI2ErrFile : public CI2Err
 {
 public:
-	explicit CI2ErrFile(const char *msg = "")
+	explicit CI2ErrFile(czstring msg = "")
 	{
 		strncpy(message, msg, sizeof(message) - 1);
 		message[sizeof(message) - 1] = '\0';
@@ -94,7 +95,7 @@ public:
 	FixedTemp() : overlay(nullptr), sz(0) {}
 	FixedTemp(const char *tBuf, int tsz) : sz(tsz), overlay((char *)tBuf) {}
 	FixedTemp(const char &c) : sz(1), overlay((char *)&c) {}
-	FixedTemp(const char *str) : overlay((char *)str)
+	FixedTemp(czstring str) : overlay((char *)str)
 		{ sz=static_cast<int>(strlen(str)); }
 	inline int len() const
 		{ return sz; }
@@ -123,8 +124,8 @@ public:
 };
 // This allows assignment of A="B" + C as well as A=B + "C" (above)
 StringTemp operator + (const FixedTemp &fStr1, const FixedTemp &fStr2);
-StringTemp operator + (const FixedTemp &fStr1, const char *str);
-StringTemp operator + (const char *str, const FixedTemp &fStr2);
+StringTemp operator + (const FixedTemp &fStr1, czstring str);
+StringTemp operator + (czstring str, const FixedTemp &fStr2);
 
 #if defined(NO_PACKED)
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +245,7 @@ template <int sz> class Fixed
 public:
 	Fixed()
 		{ memset(overlay, ' ', sz); } // Always initialize to blanks
-	Fixed(const char *str)
+	Fixed(czstring str)
    	{ assign(str, static_cast<int>(strlen(str))); }
 	Fixed(char c)
    	{ assign(c); }
@@ -267,7 +268,7 @@ public:
 	}
 
 	// Do assignment from a character string literal
-	inline Fixed<sz>& operator = (const char *str)
+	inline Fixed<sz>& operator = (czstring str)
 	{
 		assign(str, strlen(str));
 		return *this;
@@ -345,17 +346,17 @@ public:
 #endif
 
 	// Do comparisons to (char* null-terminated) strings
-	bool operator == (const char *str) const
+	bool operator == (czstring str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) == 0); }
-	bool operator != (const char *str) const
+	bool operator != (czstring str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) != 0); }
-	bool operator <= (const char *str) const
+	bool operator <= (czstring str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) <= 0); }
-	bool operator <  (const char *str) const
+	bool operator <  (czstring str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) <  0); }
-	bool operator >= (const char *str) const
+	bool operator >= (czstring str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) >= 0); }
-	bool operator >  (const char *str) const
+	bool operator >  (czstring str) const
 		{ return (Compare(str, static_cast<int>(strlen(str))) >  0); }
 
 	// Do comparisons between Fixeds and char
@@ -404,7 +405,7 @@ public:
 	/// @brief Check Characters [%CHECK](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-check-check-characters) equivalent.
 	/// @return 1-based position of the first character, scanning from
 	/// `start`, that is not in `cStr`; 0 if every character examined matches.
-	int check(const char *cStr, int start=1) const
+	int check(czstring cStr, int start=1) const
 		{ return checkStr(cStr, start-1, sz, 1); }
 	int check(char c, int start=1) const
 	{
@@ -423,7 +424,7 @@ public:
 	/// @brief Check Reverse [%CHECKR](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-checkr-check-characters-right-left) equivalent.
 	///
 	/// See: check()
-	int checkr(const char *cStr, int start=sz) const
+	int checkr(czstring cStr, int start=sz) const
 		{ return checkStr(cStr, start-1, -1, -1); }
 	int checkr(char c, int start=sz) const
 	{
@@ -478,7 +479,7 @@ public:
 	/// @brief Scan for characters [%SCAN](https://www.ibm.com/docs/en/i/7.4.0?topic=functions-scan-scan-string) equivalent.
 	/// @returns 1-based position of the first occurrence of any character in `this` value 
 	/// that is also in `str`, or 0 if no match found.
-	int scan(const char *str) const
+	int scan(czstring str) const
 	{
 		return scanStr(str, static_cast<int>(strlen(str)));
 	}
@@ -507,7 +508,7 @@ public:
 	/// @brief BIF-like [MOVEL](https://www.ibm.com/docs/en/i/7.4.0?topic=codes-movel-move-left) opcode equivalent.
 	///
 	/// Copies a value (Fixed<>, literal, or decimal) into the left-most positions of `this` field
-	Fixed<sz>& movel(const char *str)
+	Fixed<sz>& movel(czstring str)
 	{
 		memcpy(overlay, str, MIN(sz, strlen(str)));
 		return *this;
@@ -545,7 +546,7 @@ public:
 		return *this;
 	}
 #endif
-	Fixed<sz>& move(const char *str)
+	Fixed<sz>& move(czstring str)
 	{
 		int strLen=strlen(str);
 		int minsz=MIN(sz, strLen);
@@ -623,7 +624,7 @@ public:
 	// Return a null-terminated c-style string. Shared static buffer per sz, so only one
 	// result is live at a time -- see README Known Limitations. Use c_str(buf, bufSize)
 	// below when you need your own storage.
-	char *c_str() const
+	zstring c_str() const
 	{
 		static char str[sz+1];
 		memcpy(str, overlay, sz);
@@ -633,7 +634,7 @@ public:
 
 	// Copy into a caller-supplied buffer and null-terminate it, like strlcpy(); returns
 	// buf, like strcpy(). Truncates if bufSize <= sz.
-	char *c_str(char *buf, size_t bufSize) const
+	zstring c_str(zstring buf, size_t bufSize) const
 	{
 		size_t len = bufSize>0 ? MIN((size_t)sz, bufSize-1) : 0;
 		memcpy(buf, overlay, len);
@@ -708,7 +709,7 @@ protected:
 	}
 private:
 	// Return position of character that is not in cStr
-	int checkStr(const char *cStr, int start, int end, int increment) const
+	int checkStr(czstring cStr, int start, int end, int increment) const
 	{
 #if I2_RUNTIME_ENABLE_BOUNDS_CHECK
 		if (start>=sz || start<0)
@@ -717,7 +718,7 @@ private:
 		for (int i=start; i!=end; i=i+increment)
 		{
 			bool inSet=false;
-			for (const char *s=cStr; *s!='\0'; s++)
+			for (czstring s=cStr; *s!='\0'; s++)
 			{
 				if (overlay[i]==*s)
 				{
@@ -1766,7 +1767,7 @@ struct DtaaName {
 	Fixed<10>	dtaa_name;
 	Fixed<10>	dtaa_lib;
 };
-#include "xxdtaa.h"
+#include "compat/xxdtaa.h"
 template <class T> class Dtaara : public T
 {
 public:

@@ -24,7 +24,7 @@
 /// @param fraction number of digits to the right of the implied decimal point
 ///
 /// See: @see [QXXITOZ()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-integer-zoned-decimal-qxxitoz)
-int QXXZTOI(unsigned char *zptr, int digits, int fraction)
+int QXXZTOI(byte_ptr zptr, int digits, int fraction)
 {
 	int i=digits-fraction;
 	if (i<=0)
@@ -47,7 +47,7 @@ int QXXZTOI(unsigned char *zptr, int digits, int fraction)
 /// @param fraction number of digits to the right of the implied decimal point
 ///
 /// See: @see [QXXZTOD()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-zoned-decimal-double-qxxztod)
-double QXXZTOD(unsigned char *zptr, int digits, int fraction)
+double QXXZTOD(byte_ptr zptr, int digits, int fraction)
 {
 	return atof(zonedToChar((const char*)zptr, digits, fraction));
 }
@@ -59,7 +59,7 @@ double QXXZTOD(unsigned char *zptr, int digits, int fraction)
 /// @param value the value to encode; negative values set the sign nibble via encodeSign()
 ///
 /// See: @see [QXXDTOZ()](https://www.ibm.com/docs/en/i/7.4.0?topic=q-convert-double-zoned-decimal-qxxdtoz)
-void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
+void QXXDTOZ(byte_ptr zptr, int digits, int fraction, double value)
 {
 	// Copy in everything to the left of the decimal point
 	char buf[MAX_DECIMAL_DIGITS+1];
@@ -91,7 +91,7 @@ void QXXDTOZ(unsigned char *zptr, int digits, int fraction, double value)
 /// @param digits total number of digits (precision) in the field
 /// @param fraction number of digits to the right of the implied decimal point (padded with zeros)
 /// @param value the integer value to encode; negative values set the sign nibble via encodeSign()
-void QXXITOZ(unsigned char *zptr, int digits, int fraction, int value)
+void QXXITOZ(byte_ptr zptr, int digits, int fraction, int value)
 {
 	// Copy in everything to the left of the decimal point
 	char	buf[MAX_DECIMAL_DIGITS+1];

@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # and the header-only backend stubs (rfile400/rfileodbc/rfileado/rfilelpt) are excluded.
 add_library(i2class SHARED
 	src/RPGTypes.cpp
-	src/xxcvt.cpp
-	src/xxdtaa.cpp
+	src/compat/xxcvt.cpp
+	src/compat/xxdtaa.cpp
 	src/as400.cpp
 	src/compat/stdlib.cpp
 	src/file/rfile.cpp

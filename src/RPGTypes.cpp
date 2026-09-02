@@ -48,12 +48,12 @@ StringTemp operator + (const FixedTemp &fStr1, const FixedTemp &fStr2)
 {
 	return StringTemp(fStr1, fStr2);
 }
-StringTemp operator + (const char *str, const FixedTemp &fStr2)
+StringTemp operator + (czstring str, const FixedTemp &fStr2)
 {
 	FixedTemp fStr1((char *)str, static_cast<int>(strlen(str)));
 	return fStr1 + fStr2;
 }
-StringTemp operator + (const FixedTemp &fStr1, const char *str)
+StringTemp operator + (const FixedTemp &fStr1, czstring str)
 {
 	FixedTemp fStr2((char *)str, static_cast<int>(strlen(str)));
 	return fStr1 + fStr2;

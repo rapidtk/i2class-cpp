@@ -1,7 +1,7 @@
 #include "rpgtypes.h"
 #pragma hdrstop
 
-#include "xxdtaa.h"
+#include "compat/xxdtaa.h"
 #include <stdio.h>
 
 /// @file xxdtaa.cpp
@@ -25,7 +25,7 @@
 namespace {
 	/// @brief Compose the on-disk file name used to emulate a given data area.
 	/// @param dn qualified data area name (library + object name, IBM i style)
-	char *getDtaaraFileName(_DTAA_NAME_T dn)
+	zstring getDtaaraFileName(_DTAA_NAME_T dn)
 	{
 		DtaaName	dtaname;
 		memcpy(&dtaname, &dn, sizeof(dtaname));
@@ -52,7 +52,7 @@ namespace {
 /// @param dtaptr destination buffer, at least len bytes
 ///
 /// See: [QXXRTVDA() — Retrieve Data Area](https://www.ibm.com/docs/en/i/7.4.0?topic=q-retrieve-data-area-qxxrtvda)
-void QXXRTVDA(_DTAA_NAME_T dtaname, short offset, short len, char *dtaptr)
+void QXXRTVDA(_DTAA_NAME_T dtaname, short offset, short len, byte_ptr dtaptr)
 /*
 	{ return QXXRTVDA((DtaaName)dtaname, offset, len, dtaptr); }
 void QXXRTVDA(DtaaName dtaname, short offset, short len, char *dtaptr)
@@ -74,7 +74,7 @@ void QXXRTVDA(DtaaName dtaname, short offset, short len, char *dtaptr)
 /// @param dtaptr source buffer, at least len bytes
 ///
 /// See: [QXXCHGDA() — Change Data Area](https://www.ibm.com/docs/en/i/7.4.0?topic=q-change-data-area-qxxchgda)
-void QXXCHGDA(_DTAA_NAME_T dtaname, short offset, short len, char *dtaptr)
+void QXXCHGDA(_DTAA_NAME_T dtaname, short offset, short len, byte_ptr dtaptr)
 /*
 	{ return QXXCHGDA((DtaaName)dtaname, offset, len, dtaptr); }
 void QXXCHGDA(DtaaName dtaname, short offset, short len, char *dtaptr)

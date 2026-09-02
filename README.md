@@ -256,8 +256,8 @@ i2class-cpp/
   src/                   # Core library headers and implementations
     i2compat.h          # Compatibility layer: platform detection, portable fallback declarations
     RPGTypes.h/.cpp     # Fixed<N>, Zoned<P,D>, Indicator, DS<N,Occurs>, figurative constants
-    xxcvt.h/.cpp        # Zoned-decimal <-> native numeric conversions (QXX* functions)
-    xxdtaa.h/.cpp       # Data area emulation
+    compat/xxcvt.h/.cpp # Zoned-decimal <-> native numeric conversions (QXX* functions)
+    compat/xxdtaa.h/.cpp # Data area emulation
     as400.h/.cpp        # AS/400 connection info
     compat/             # Portable implementations of platform-specific compatibility functions
     file/               # File access classes (record, ODBC, ADO, printer)
