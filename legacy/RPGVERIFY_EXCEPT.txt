@@ -1,0 +1,32 @@
+SECTION A: MOVE numeric -> char, positive 32, right/left justified                    
+A1 MOVE int8, INT(3)/1-byte, value 32 into char(20) filler: #################032      
+A2 MOVE int16, INT(5)/2-byte, value 32 into char(20) filler: ###############00032     
+A3 MOVE int32, INT(10)/4-byte, value 32 into char(20) filler: ##########0000000032    
+A4 MOVE int64, INT(20)/8-byte, value 32 into char(20) filler: 00000000000000000032    
+A5 MOVE uns8, UNS(3)/1-byte, value 32 into char(20) filler: #################032      
+A6 MOVE uns16, UNS(5)/2-byte, value 32 into char(20) filler: ###############00032     
+A7 MOVEL (left-justified) int32=32 into char(20) filler: 0000000032##########         
+SECTION B: boundary and negative values (sign over punch)                             
+B1 MOVE int8=127 (max positive) into char(20) filler: #################127            
+B2 MOVE int8=-32 into char(20) filler: #################03K                           
+B3 MOVE int8=-128 (min negative) into char(20) filler: #################12Q           
+B4 MOVE uns8=255 (max) into char(20) filler: #################255                     
+SECTION C: baseline calibration, zoned/packed -> char                                 
+C1 MOVE zoned(3,0)=32 into char(20) filler: #################032                      
+C2 MOVE packed(3,0)=32 into char(20) filler: #################032                     
+SECTION D: reverse direction, char digit-text -> numeric                              
+D1 MOVE char(20), rightmost 3 bytes '032', into int8(3): 32                           
+D2 MOVE char(20), rightmost 10 bytes '0000000032', into int32(10): 32                 
+SECTION E: is moved byte pattern valid decimal digit text?                             
+E1 %dec succeeded on bigChar bytes 18-20, value: 32                                    
+SECTION F: valid numeric MOVEA, same byte length                                       
+F1 MOVEA int(3)[1,2,3] -> uns(3), elems now: 1 2 3                                     
+F2 MOVEA raised a runtime error (value -1 invalid for UNS)                             
+F3 MOVEA int(3)[5,6,7] -> int(3), same-type baseline, elems now: 5 6 7                 
+SECTION G: valid character MOVEA, crossing array-element bounds                        
+G1 MOVEA char(4)[3], starting at element 2, into char(20): BBBBCCCC############        
+G2 MOVEA char(10) into char(4)[3] (stops mid-element 3), elems now: ABCD / EFGH / IJYY 
+SECTION H: a couple of other undocumented edge cases                                   
+H1 %scan needle longer than haystack, expect 0, got: 0                                 
+H2 integer divide by zero: runtime error raised (as expected)                          
+=== DONE ===                                                                           
