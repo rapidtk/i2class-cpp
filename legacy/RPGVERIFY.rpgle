@@ -87,7 +87,7 @@
         'filler: ' + bigChar;
        except PRTLINE;
 
-       prtTxt = 'SECTION B: boundary and negative values (sign over punch)';
+       prtTxt = 'SECTION B: boundary and negative values (sign overpunch)';
        except PRTLINE;
 
        int8 = 127;
@@ -148,7 +148,8 @@
         'into int32(10): ' + %char(resInt);
        except PRTLINE;
 
-       prtTxt = 'SECTION E: is moved byte pattern valid decimal digit text?';
+       prtTxt = 'SECTION E: is the moved byte pattern valid decimal ' +
+        'digit text?';
        except PRTLINE;
 
        int8 = 32;
