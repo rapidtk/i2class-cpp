@@ -1570,6 +1570,51 @@ template<int sz, int precision>
 
 #define packed(sz, precision) Packed<sz, precision>
 
+////////////////////////////////////////////////////////////////////////////////
+// Comparing a decimal field directly against a floating-point literal is deleted.
+// Most decimal values have no exact binary representation, so `z == 32.1` asks whether a
+// decimal equals an approximation of 32.1 -- which is rarely the intent and fails for
+// reasons that are hard to see. Say what you mean instead:
+//     (double)z == 32.1     compare as floating point
+//     z == __D("32.1")      compare exactly, digit for digit
+// Assignment and conversion are unaffected: `double d = z;` and `z = 3.14;` still work,
+// the latter storing the written digits (see QXXDTOZ).
+//
+// The integer overloads are not optional. Deleting only the floating-point ones would
+// capture `z == 42` as well, because int converts to double by a standard conversion while
+// the built-in candidate needs a user-defined conversion on the decimal -- so the deleted
+// overload would win. Declaring the integer forms explicitly keeps them exact matches.
+// Integers convert to decimal without losing decimal precision, which is why they stay.
+#define GEN_DECIMAL_CMP_DELETED(TYPE, OP, FLT) \
+	template <int sz, int precision> \
+	 bool operator OP (const TYPE<sz, precision> &, FLT) = delete; \
+	template <int sz, int precision> \
+	 bool operator OP (FLT, const TYPE<sz, precision> &) = delete;
+#define GEN_DECIMAL_CMP_INT(TYPE, OP, INT) \
+	template <int sz, int precision> \
+	 inline bool operator OP (const TYPE<sz, precision> &val1, INT val2) \
+	  { return (long double)val1 OP (long double)val2; } \
+	template <int sz, int precision> \
+	 inline bool operator OP (INT val1, const TYPE<sz, precision> &val2) \
+	  { return (long double)val1 OP (long double)val2; }
+#define GEN_DECIMAL_CMP(TYPE, OP) \
+	GEN_DECIMAL_CMP_DELETED(TYPE, OP, float) \
+	GEN_DECIMAL_CMP_DELETED(TYPE, OP, double) \
+	GEN_DECIMAL_CMP_DELETED(TYPE, OP, long double) \
+	GEN_DECIMAL_CMP_INT(TYPE, OP, short) \
+	GEN_DECIMAL_CMP_INT(TYPE, OP, int) \
+	GEN_DECIMAL_CMP_INT(TYPE, OP, long)
+#define GEN_DECIMAL_CMPS(TYPE) \
+	GEN_DECIMAL_CMP(TYPE, ==) \
+	GEN_DECIMAL_CMP(TYPE, !=) \
+	GEN_DECIMAL_CMP(TYPE, <=) \
+	GEN_DECIMAL_CMP(TYPE, <) \
+	GEN_DECIMAL_CMP(TYPE, >=) \
+	GEN_DECIMAL_CMP(TYPE, >)
+
+GEN_DECIMAL_CMPS(Zoned)
+GEN_DECIMAL_CMPS(Packed)
+
 #ifndef NO_PACKED
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Generic numeric class

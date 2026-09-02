@@ -207,6 +207,40 @@ static void test_packed()
 	CHECK(sizeof(packed(9, 2)) == sizeof(packed(9, 2)::Backing));
 }
 
+static void test_integer_comparison()
+{
+	// Comparing a decimal against a float literal is a deleted overload (say
+	// (double)z == 32.1, or z == __D("32.1"), instead). Integer comparisons stay
+	// enabled and have to be declared explicitly, or int would convert to double and
+	// bind to the deleted overload -- so they need real coverage.
+	Zoned<5, 2> z = __D("42.00");
+	CHECK(z == 42);
+	CHECK(42 == z);
+	CHECK(!(z != 42));
+	CHECK(z >= 42);
+	CHECK(z <= 42);
+	CHECK(z > 41);
+	CHECK(z < 43);
+	CHECK(41 < z);
+
+	// A fractional value must not compare equal to its truncation
+	Zoned<5, 2> frac = __D("42.50");
+	CHECK(frac != 42);
+	CHECK(frac > 42);
+	CHECK(42 < frac);
+
+	Zoned<5, 2> neg = __D("-7.25");
+	CHECK(neg < 0);
+	CHECK(neg > -8);
+	CHECK(0 > neg);
+
+	packed(7, 2) p = __D("123.00");
+	CHECK(p == 123);
+	CHECK(123 == p);
+	CHECK(p > 122);
+	CHECK(p < 124);
+}
+
 static void test_ds()
 {
 	// A 3-occurrence data structure; verify each occurrence keeps its own value.
@@ -243,6 +277,7 @@ int main()
 	test_decimal_literal();
 	test_zoned_arithmetic();
 	test_packed();
+	test_integer_comparison();
 	test_ds();
 	test_as400();
 
