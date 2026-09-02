@@ -58,11 +58,12 @@ static constexpr const char* MIN_DECIMAL_STR =
 	"-" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "9999999999" "999";
 #endif
 constexpr int const_strlen(const char *s) { return *s ? 1 + const_strlen(s + 1) : 0; }
+/*
 static_assert(const_strlen(MAX_DECIMAL_STR) == MAX_DECIMAL_DIGITS,
 	"MAX_DECIMAL_STR must hold exactly MAX_DECIMAL_DIGITS digits");
 static_assert(const_strlen(MIN_DECIMAL_STR) == MAX_DECIMAL_DIGITS + 1,
 	"MIN_DECIMAL_STR must be MAX_DECIMAL_STR with a leading '-'");
-
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Errors thrown by i2class

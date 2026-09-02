@@ -264,9 +264,9 @@ bool RdbFile400::setll(Rrecord400 &format, long rrn)
 	return true;
 }
 
-/*static*/ void RdbFile400::commit(AS400 system, char *cmtID)
+/*static*/ void RdbFile400::commit(AS400 system, const char *cmtID)
 {
-	_Rcommit(cmtID);
+	_Rcommit((char *)cmtID);
 }
 
 /*static*/ void RdbFile400::rolbk(AS400 system)
@@ -305,14 +305,14 @@ void RfileDspf::open(const char *openType, int blockingFactor, char commitLockLe
 	setIndara(fp);
 }
 
-void RfileDspf::acq(char *dev)
+void RfileDspf::acq(const char *dev)
 {
-	_Racquire(fp, dev);
+	_Racquire(fp, (char *)dev);
 }
 
-void RfileDspf::rel(char *dev)
+void RfileDspf::rel(const char *dev)
 {
-	_Rrelease(fp, dev);
+	_Rrelease(fp, (char *)dev);
 }
 
 void RfileDspf::exfmt()
