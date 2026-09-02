@@ -89,7 +89,80 @@ ctest --test-dir build -C Release --output-on-failure   # add -C Debug to also e
 - `tests/smoke_core.cpp` — core data type smoke tests (`Fixed`, `Zoned`, `Indicator`, `DS`, `AS400`)
 - `tests/bounds_check.cpp` — verifies `I2_RUNTIME_ENABLE_BOUNDS_CHECK` actually throws when enabled
 - `tests/negative_zoned_check.cpp` — negative-value zoned-decimal encode/decode regression coverage
+- `tests/rfile_print_check.cpp` — `RrecordPrint` edit-word/edit-code formatting regressions
 - `tests/i2compat_fallback_check.cpp` — exercises `i2compat.h`'s portable (non-MSVC) fallback path directly, even on a machine that only has MSVC available
+- `tests/rfileodbc_custmast_check.cpp` — end-to-end `RfileODBC` read against a real data source (see below)
+
+### The ODBC test fixture
+
+`tests/CUSTMAST.csv` is the single source of truth for the ODBC read tests, but the two
+platforms reach it differently:
+
+- **Windows** queries the CSV in place through the built-in *Microsoft Access Text Driver*, so there is no ODBC setup to do after cloning.
+- **Linux** has no CSV/text driver in unixODBC, so CMake generates an equivalent SQLite database from the same CSV at build time and queries that (`libsqliteodbc` + the `sqlite3` CLI). The generated `.db` is a build artifact and is gitignored.
+
+The connection string is selected by `#ifdef` in [i2class-cpp.cpp](i2class-cpp.cpp) and
+[tests/rfileodbc_custmast_check.cpp](tests/rfileodbc_custmast_check.cpp). Where ODBC is
+present but no usable driver is, the test still *builds* (keeping `RfileODBC` under
+compile coverage) and is simply not registered to run.
+
+## Cross-Compiler Portability Notes
+
+The library is built with three quite different compilers — MSVC, GCC, and IBM's ILE C++
+on IBM i. The notes below record behaviour we ran into and adapted to, so contributors
+don't have to rediscover it. None of it is a defect in any of these compilers; it is
+mostly the ordinary consequence of a large C++11 feature surface landing in different
+front ends at different times.
+
+### ILE C++ (IBM i)
+
+Compiled with `LANGLVL(*EXTENDED0X)`, which provides a substantial and very usable C++11
+subset. Two constructs the library deliberately avoids, and one it relies on:
+
+- **Default member initializers are not available.** Write `int x;` on the member and
+  initialize it in the constructor's mem-initializer-list rather than `int x{};` on the
+  declaration. (List members in declaration order — they are initialized in that order
+  regardless of how the list is written, and most compilers will warn if the two differ.)
+- **A `constexpr` function call is not accepted inside a constant expression** in the
+  cases we tried — e.g. a `constexpr` string-length helper applied to a
+  `constexpr const char *` inside a `static_assert` reports
+  `CZP0016 The expression must be an integral non-volatile constant expression`.
+  `static_assert` itself works fine; the workaround is to declare the data as an array
+  (`static const char NAME[] = "...";`) and assert on `sizeof(NAME) - 1`, which is an
+  integral constant expression in any C++ dialect. `RPGTypes.h` uses this for the
+  `MAX_DECIMAL_STR`/`MIN_DECIMAL_STR` length checks.
+- **`= delete` is fully supported and enforced**, for plain functions *and* function
+  templates — a call to a deleted overload is rejected with
+  `CZP1307 The declaration of "..." is deleted and cannot be used.` This is load-bearing:
+  it is how the decimal types can accept a conversion in one direction while making the
+  lossy direction a clear compile-time error rather than a silent surprise.
+
+### MSVC vs GCC
+
+- GCC is the stricter of the two on overload ambiguity, and is worth building against even
+  if Windows is your primary target. An ambiguous `operator+` between two `Zoned<>` values
+  compiled silently under MSVC while GCC correctly rejected it — the fix (giving `Zoned`
+  its own operators rather than letting it borrow them from an implicit conversion) was
+  the right one on both compilers.
+- CMake's makefile generator escapes spaces in custom-command arguments but not `(`, `)`
+  or `;`, so SQL or shell metacharacters passed inline can reach `/bin/sh` unquoted. The
+  SQLite fixture generation keeps its SQL in a generated script file for this reason.
+
+### Working with packed decimal (`bcd.h`)
+
+- `bcd.h` provides `operator<<` for `_DecimalT`, but only under `IOSTREAMH` (the
+  pre-standard `<iostream.h>`) or when `__POSIX_LOCALE__` is defined. Without one of those
+  in scope, `std::cout << packedValue` falls back to an implicit conversion to a built-in
+  type. `Zoned<>` supplies its own `operator<<` so it prints every digit on all platforms.
+- Relatedly: `std::cout`'s default precision is **6 significant digits**, so an exact
+  `60145.76` displays as `60145.8`. That looks like decimal precision loss but isn't —
+  ILE C's `printf` supports `%D(n,p)` for packed decimal when you want the exact digits.
+- `DFT_DEC_DIG` is 63 on IBM i 7.2 and later, and 31 before that. `MAX_DECIMAL_DIGITS` is
+  derived from it rather than hardcoded, so scratch buffers and the figurative constants
+  stay correctly sized on any release.
+- The conversion operators on `_ConvertDecimal`, and `_DecimalT::operator _ConvertDecimal()`,
+  are non-`const`, so a `const _ConvertDecimal &` cannot be converted to a numeric type.
+  Take these by value or non-const reference.
 
 ## Project Structure
 
@@ -114,11 +187,11 @@ i2class-cpp/
 
 ### Current State
 - **No namespace organization** — all symbols at global scope (legacy design); this is intentional for now, since namespacing would break the "existing code keeps compiling unchanged" guarantee without a compatibility shim
-- **Single platform focus for file backends** — `RFile400`/`RfileODBC`/`RfileADO` aren't part of the portable CMake build (ODBC/native-i dependencies); only the stable core (`RPGTypes`, `xxcvt`, `xxdtaa`, `as400`, `compat/stdlib`, `file/rfile`) is built and tested today
+- **Backend coverage varies by platform** — `RfileODBC` is built and tested on Windows and Linux; `RFile400` compiles natively on IBM i (where `<recio.h>` exists) and is exercised by the demo program there, but cannot be built off-platform; `RfileADO` is Borland-era and is not part of any current build
 - **Runtime bounds checking is opt-in** — only active when `I2_RUNTIME_ENABLE_BOUNDS_CHECK` is defined (CMake enables it for Debug builds); raw arrays (`Fixed<sz>::overlay`, etc.) stay plain C arrays rather than `std::array` since they're public members other code accesses by pointer decay
 
 ### Planned Improvements
-1. Extend the ODBC/native-i file backends to build under the same portable CMake setup
+1. **`Packed<>` wrapper** — a thin, layout-compatible wrapper over the platform's native packed-decimal type (`_DecimalT` on IBM i), so `packed(n,p)` means the same thing with the same conversion rules on every platform, and provides the same `assign()`/`move()`/`movel()` interface as `Zoned<>`
 2. **Namespace reorganization** (breaking change, would need a compatibility facade) — hierarchical namespaces to reduce global symbol pollution, mirroring the approach already taken in `iZlib-cpp-fork`
 3. **PL/I & COBOL support** — being pursued in `iZlib-cpp-fork`, not this repository
 4. **Enhanced type safety** — compile-time checks and runtime validation for file operations
