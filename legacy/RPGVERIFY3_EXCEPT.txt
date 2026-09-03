@@ -1,0 +1,22 @@
+SECTION A: %DECH to zero decimal places                
+A1 %DECH(1.49:7:0) = 1                                 
+A2 %DECH(1.50:7:0) = 2                                 
+A3 %DECH(1.51:7:0) = 2                                 
+A4 %DECH(-1.49:7:0) = -1                               
+A5 %DECH(-1.50:7:0) = -2                               
+A6 %DECH(-1.51:7:0) = -2                               
+SECTION B: %DECH reducing two fractional digits to one 
+B1 %DECH(12.34:7:1) = 12.3                             
+B2 %DECH(12.35:7:1) = 12.4                             
+B3 %DECH(-12.34:7:1) = -12.3                           
+B4 %DECH(-12.35:7:1) = -12.4                           
+SECTION C: %INTH signed half-adjust                    
+C1 %INTH(1.49) = 1                                     
+C2 %INTH(1.50) = 2                                     
+C3 %INTH(-1.49) = -1                                   
+C4 %INTH(-1.50) = -2                                   
+SECTION D: %UNSH unsigned half-adjust                  
+D1 %UNSH(1.49) = 1                                     
+D2 %UNSH(1.50) = 2                   
+D3 %UNSH(-1.50) raised runtime error 
+=== DONE ===                         
