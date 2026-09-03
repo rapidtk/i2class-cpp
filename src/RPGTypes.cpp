@@ -84,7 +84,7 @@ std::string replace(czstring replacementText, czstring source, int start, int le
 {
 	std::string result(source);
 	if (start < 1 || start > static_cast<int>(result.size()) + 1)
-		throw CI2ErrSubscript();
+		throw CI2Err();
 	std::size_t position = static_cast<std::size_t>(start - 1);
 	std::size_t count = length < 0 ? result.size() - position : static_cast<std::size_t>(length);
 	result.replace(position, count, replacementText);
@@ -133,7 +133,7 @@ std::string upper(czstring source)
 {
 	std::string result(source);
 	for (std::size_t i=0; i<result.size(); ++i)
-		result[i] = static_cast<char>(std::toupper(static_cast<unsigned char>(result[i])));
+		result[i] = static_cast<char>(::toupper(static_cast<unsigned char>(result[i])));
 	return result;
 }
 
@@ -141,7 +141,7 @@ std::string lower(czstring source)
 {
 	std::string result(source);
 	for (std::size_t i=0; i<result.size(); ++i)
-		result[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(result[i])));
+		result[i] = static_cast<char>(::tolower(static_cast<unsigned char>(result[i])));
 	return result;
 }
 
