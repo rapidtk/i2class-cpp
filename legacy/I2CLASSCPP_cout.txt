@@ -1,0 +1,28 @@
+char(10): abcdef                             
+char(10) 'abcdef' not equal to char(3) 'abc' 
+char(3) 'abc' equal to 'abc'                 
+char(3) '000' equal to *ZEROS                
+zoned(3,1): 12.1                             
+zoned(3,1) 32.1 equal to 32.1                
+zoned(5,2) 123.45 - 123.45 equal to 0.0      
+packed(4,2) 32.10 equal to zoned(3,1) 32.1   
+zoned(3,1) -99.9 equal to *LOVAL             
+packed(4,2) 99.99 equal to *HIVAL            
+EDITWRD zoned(5,2) 123.45: 123.45                        
+EDITC zoned(5,2) 123.45 code 1:  123.45                  
+zoned member editwrd: 123.45                             
+zoned member editc:  123.45                              
+packed member editc: 99.99                               
+zoned round<1>(12.35): 12.4                              
+zoned round<0>(12.35): 12                                
+zoned inth(12.35): 12                                    
+packed inth(12.35): 12                                   
+SCANRPL: dog sdog                                        
+REPLACE: abXYef                                          
+SPLIT count: 4                                           
+XLATE: 312                                               
+UPPER: ABC 123                                           
+LOWER: abc 123                                           
+Total float orders value to 4 decimal points: 60145.7617 
+Total packed(9,2) orders value {exact}: 60145.76         
+Press ENTER to end terminal session.                     
