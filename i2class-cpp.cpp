@@ -147,6 +147,35 @@ void test_core()
 	if (pkd42 == HIVAL)
 	   std::cout << "packed(4,2) 99.99 equal to *HIVAL\n";
 
+	std::cout << "EDITWRD zoned(5,2) 123.45: "
+		<< EDITWRD(znd52, "  0.  ") << '\n';
+	std::cout << "EDITC zoned(5,2) 123.45 code 1: "
+		<< EDITC(znd52, '1') << '\n';
+	std::cout << "zoned member editwrd: "
+		<< znd52.editwrd("  0.  ") << '\n';
+	std::cout << "zoned member editc: "
+		<< znd52.editc('1') << '\n';
+	std::cout << "packed member editc: "
+		<< pkd42.editc('1') << '\n';
+
+	Zoned<5, 2> roundedSource = 12.35;
+	Zoned<5, 1> roundedOne = roundedSource.round<1>();
+	Zoned<5, 0> roundedWhole = roundedSource.round<0>();
+	std::cout << "zoned round<1>(12.35): " << roundedOne << '\n';
+	std::cout << "zoned round<0>(12.35): " << roundedWhole << '\n';
+	std::cout << "zoned inth(12.35): " << roundedSource.inth() << '\n';
+	packed(5,2) packedRounded;
+	packedRounded = roundedSource;
+	std::cout << "packed inth(12.35): " << packedRounded.inth() << '\n';
+
+	std::cout << "SCANRPL: " << SCANRPL("cat", "dog", "cat scat") << '\n';
+	std::cout << "REPLACE: " << REPLACE("XY", "abcdef", 3, 2) << '\n';
+	std::vector<std::string> splitResult = SPLIT("a,,b,", ",");
+	std::cout << "SPLIT count: " << splitResult.size() << '\n';
+	std::cout << "XLATE: " << XLATE("abc", "123", "cab") << '\n';
+	std::cout << "UPPER: " << UPPER("Abc 123") << '\n';
+	std::cout << "LOWER: " << LOWER("AbC 123") << '\n';
+
 }
 
 int main()
