@@ -32,8 +32,8 @@ extern IND INOA, INOB, INOC, INOD, INOE, INOF, INOG, INOV;
 #endif
 #define UDATE XUDATE
 #define DATE XDATE
-extern FmtDate<6>	XUDATE;
-extern FmtDate<8>	XDATE;
+extern I2CLASS_API FmtDate<6>	XUDATE;
+extern I2CLASS_API FmtDate<8>	XDATE;
 extern I2CLASS_API Zoned<4,0>	&YEAR;
 extern I2CLASS_API Zoned<2,0>	&UYEAR;
 extern I2CLASS_API Zoned<2,0>	&MONTH;

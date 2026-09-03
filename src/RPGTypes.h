@@ -1890,7 +1890,13 @@ struct DtaaName {
 template <class T> class Dtaara : public T
 {
 public:
-	Dtaara(czstring name) {dtaaraName=name; }
+	// explicit: without it, `dtaara = "some value"` silently converts the
+	// string into a *new* Dtaara (naming a data area) and copy-assigns that
+	// blank buffer, instead of assigning the value to the existing one.
+	explicit Dtaara(czstring name) {dtaaraName=name; }
+	// The implicitly-declared copy assignment operator hides T's assignment
+	// operators; re-expose them so a Dtaara<Fixed<n> > assigns like a Fixed<n>.
+	using T::operator=;
 	// Retrieve the content of a Dtaara
 	void in()
 		{QXXRTVDA(getLocation(),0,sizeof(*this)-sizeof(dtaaraName),(byte_ptr)this);}
