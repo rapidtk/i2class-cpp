@@ -228,6 +228,23 @@ static void test_numeric_operators()
 	CHECK((p % 5) == 2);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// String BIF helpers
+static void test_string_bifs()
+{
+	CHECK(SCANRPL("cat", "dog", "cat scat") == "dog sdog");
+	CHECK(REPLACE("XY", "abcdef", 3, 2) == "abXYef");
+	CHECK(REPLACE("!", "abc", 4, 0) == "abc!");
+
+	std::vector<std::string> parts = SPLIT("a,,b,", ",");
+	CHECK(parts.size() == 4);
+	CHECK(parts[0] == "a" && parts[1].empty() && parts[2] == "b" && parts[3].empty());
+
+	CHECK(XLATE("abc", "123", "cab") == "312");
+	CHECK(UPPER("Abc 123") == "ABC 123");
+	CHECK(LOWER("AbC 123") == "abc 123");
+}
+
 int main()
 {
 	test_scan();
@@ -238,6 +255,7 @@ int main()
 	test_array_bifs();
 	test_array_class();
 	test_numeric_operators();
+	test_string_bifs();
 
 	if (failures == 0)
 	{

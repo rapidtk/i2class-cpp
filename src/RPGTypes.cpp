@@ -65,6 +65,86 @@ std::string half_adjust_text(czstring value, int sourceDigits, int sourcePrecisi
 	return result;
 }
 
+std::string scanrpl(czstring search, czstring replacement, czstring source)
+{
+	std::string result(source);
+	std::string needle(search);
+	if (needle.empty())
+		return result;
+	std::size_t position = 0;
+	while ((position = result.find(needle, position)) != std::string::npos)
+	{
+		result.replace(position, needle.size(), replacement);
+		position += std::strlen(replacement);
+	}
+	return result;
+}
+
+std::string replace(czstring replacementText, czstring source, int start, int length)
+{
+	std::string result(source);
+	if (start < 1 || start > static_cast<int>(result.size()) + 1)
+		throw CI2ErrSubscript();
+	std::size_t position = static_cast<std::size_t>(start - 1);
+	std::size_t count = length < 0 ? result.size() - position : static_cast<std::size_t>(length);
+	result.replace(position, count, replacementText);
+	return result;
+}
+
+std::vector<std::string> split(czstring source, czstring separator)
+{
+	std::vector<std::string> result;
+	std::string text(source);
+	std::string delimiter(separator);
+	if (delimiter.empty())
+	{
+		for (std::size_t i=0; i<text.size(); ++i)
+			result.push_back(text.substr(i, 1));
+		return result;
+	}
+	std::size_t start = 0;
+	std::size_t position;
+	while ((position = text.find(delimiter, start)) != std::string::npos)
+	{
+		result.push_back(text.substr(start, position - start));
+		start = position + delimiter.size();
+	}
+	result.push_back(text.substr(start));
+	return result;
+}
+
+std::string xlate(czstring from, czstring to, czstring source)
+{
+	std::string result(source);
+	for (std::size_t i=0; i<result.size(); ++i)
+	{
+		const char *match = std::strchr(from, result[i]);
+		if (match != nullptr)
+		{
+			std::size_t index = static_cast<std::size_t>(match - from);
+			if (index < std::strlen(to))
+				result[i] = to[index];
+		}
+	}
+	return result;
+}
+
+std::string upper(czstring source)
+{
+	std::string result(source);
+	for (std::size_t i=0; i<result.size(); ++i)
+		result[i] = static_cast<char>(std::toupper(static_cast<unsigned char>(result[i])));
+	return result;
+}
+
+std::string lower(czstring source)
+{
+	std::string result(source);
+	for (std::size_t i=0; i<result.size(); ++i)
+		result[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(result[i])));
+	return result;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Figurative constant declaration

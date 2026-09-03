@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 #include "compat/xxcvt.h" // For zoned conversion
 #include "i2compat.h"
@@ -152,6 +153,18 @@ std::string EDITWRD(const _ConvertDecimal &value, czstring editWord);
 std::string EDITC(const _ConvertDecimal &value, char editCode, char fillChar=' ');
 std::string half_adjust_text(czstring value, int sourceDigits, int sourcePrecision,
 	int targetDigits, int targetPrecision);
+std::string scanrpl(czstring search, czstring replacement, czstring source);
+std::string replace(czstring replacement, czstring source, int start=1, int length=-1);
+std::vector<std::string> split(czstring source, czstring separator);
+std::string xlate(czstring from, czstring to, czstring source);
+std::string upper(czstring source);
+std::string lower(czstring source);
+#define SCANRPL(search, replacement, source) scanrpl(search, replacement, source)
+#define REPLACE(replacement, source, start, length) replace(replacement, source, start, length)
+#define SPLIT(source, separator) split(source, separator)
+#define XLATE(from, to, source) xlate(from, to, source)
+#define UPPER(source) upper(source)
+#define LOWER(source) lower(source)
 
 const char OFF='0';
 const char ON='1';
