@@ -59,7 +59,9 @@ void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 	// Make a pass forwards through the edit word to accumulate information...
 	int wrdI=static_cast<int>(strlen(edtWrd));
 	char	fillChar=' ';
-	int currency=0, decimal=0, precision=0;
+	// -1 means "no floating currency symbol"; a '$' in the leftmost position is a
+	// fixed symbol that prints in place, so it deliberately never sets this.
+	int currency=-1, decimal=0, precision=0;
 	int lastBlank=-1000; // no blank/zero-suppress position seen yet; keeps wrdI-lastBlank from
 	                      // ever accidentally matching 1 or 2 below if edtWrd has none
 	int zeroSuppress=wrdI;
@@ -81,7 +83,8 @@ void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 				precision++;
 			break;
 		case '$':
-			currency=i;
+			if (i>0)
+				currency=i;
 			break;
 		case '.':
 			decimal=i;
@@ -116,6 +119,13 @@ void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 			break;
 	}
 	int strI=nlen-j;
+	bool currencyPlaced=false;
+	// Edit codes N-Q put the minus in front, and the reference shows it hugging
+	// the first significant digit (-.125, not "-     .125"), so a leading '-'
+	// floats the same way a currency symbol does. With a currency symbol present
+	// both would want the same slot, so there it stays put.
+	bool floatMinus = negative && edtWrd[0]=='-' && currency<0;
+	bool minusPlaced=false;
 	while (wrdI>0)
 	{
 		wrdI--;
@@ -136,6 +146,14 @@ void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 			else
 				goto dft;
 		case '-':
+			if (wrdI==0 && floatMinus)
+			{
+				// Placed against the digits below unless they reached this far, in
+				// which case there was nowhere to float to and it belongs here.
+				if (!minusPlaced)
+					buf[wrdI]='-';
+				break;
+			}
 			if (wrdI-lastBlank==1 || wrdI==0)
 			{
 				if (negative)
@@ -156,11 +174,24 @@ void RrecordPrint::edit(zstring buf, const _ConvertDecimal &n, czstring edtWrd)
 				buf[wrdI]=str[strI];
 			// wrdI==zeroSuppress is the '0'/'*' marker itself -- it must always show a
 			// digit (typically '0' for an all-zero value), not fall through to blank.
-			else if (wrdI>=zeroSuppress)
+			// Asterisk protection is the exception: a zero balance is a full field of
+			// asterisks, so the marker takes the fill instead.
+			else if (wrdI>=zeroSuppress && fillChar!='*')
 				buf[wrdI]='0';
-			// Insert floating currency symbol
-			else if (currency>0 && (strI==-1 || (strI<0 && wrdI==currency)))
+			// Insert floating currency symbol. strI==-1 is the position just left of
+			// the leftmost digit; wrdI==currency is the fallback for when that position
+			// was already claimed (an all-zero value takes it for the '0' marker).
+			// Only ever one symbol, whichever comes first walking right to left.
+			else if (currency>=0 && !currencyPlaced && (strI==-1 || wrdI==currency))
+			{
 				buf[wrdI]='$';
+				currencyPlaced=true;
+			}
+			else if (floatMinus && !minusPlaced && strI==-1)
+			{
+				buf[wrdI]='-';
+				minusPlaced=true;
+			}
 			else
 				buf[wrdI]=fillChar;
 			break;
@@ -184,6 +215,108 @@ std::string EDITWRD(const _ConvertDecimal &value, czstring editWord)
 	return result;
 }
 
+/// @brief Build the edit word that an RPG edit code stands for.
+/// @param buf destination, must hold at least 45 characters
+/// @param edtCde the single-character RPG edit code
+/// @param fillChar zero-suppression fill override ('*' for check protection, a
+///        currency symbol to float it, ' ' for none)
+/// @param nlen total digits in the field
+/// @param precision digits to the right of the decimal point
+///
+/// Shared by EDITC() and RrecordPrint::print(n, col, edtCde, fillChar) so the
+/// two cannot drift apart.
+static void editCodeToWord(zstring buf, char edtCde, char fillChar, int nlen, int precision)
+{
+	if (edtCde=='Y')
+	{
+		if (nlen==7)
+			strcpy(buf, " 0 /  /  ");
+		else
+		{
+			strcpy(buf, "0 /  /    ");
+			if (nlen<8)
+				buf[nlen+(nlen-1)/2]='\0';
+		}
+		return;
+	}
+	if (edtCde=='W')
+	{
+		if (nlen==5)
+			strcpy(buf, "0 /   ");
+		else if (nlen==7)
+			strcpy(buf, "  0 /  ");
+		else
+		{
+			strcpy(buf, "  0 /  /  ");
+			if (nlen<8)
+			{
+				int i=nlen;
+				if (i>2)
+					i=i-2;
+				buf[nlen+(i-1)/2]='\0';
+			}
+		}
+		return;
+	}
+
+	char *out=buf;
+	if (edtCde>='N' && edtCde<='Q')
+		*out++='-';
+	// A currency symbol reserves the leftmost position and is not a digit
+	// position, so it cannot displace the comma groups. Asterisk protection
+	// works differently -- it replaces the zero-suppression stop, below.
+	if (fillChar!=' ' && fillChar!='*')
+		*out++=fillChar;
+	const char *comma=strchr("12ABJKNO", edtCde);
+	// Where the digit positions start, so the leading group can be told apart
+	// from the rest once the prefixes above have been written.
+	char *digitsStart=out;
+	int scale=nlen-precision;
+	int scale3=scale%3;
+	if (scale3>0)
+	{
+		memset(out, ' ', scale3);
+		out+=scale3;
+		scale-=scale3;
+	}
+	while (scale>0)
+	{
+		// A separator goes *between* groups of three, never before the first
+		// one -- an exact multiple of 3 has no partial leading group to absorb it.
+		if (comma && out>digitsStart)
+			*out++=',';
+		memset(out, ' ', 3);
+		out+=3;
+		scale-=3;
+	}
+	if (out>digitsStart)
+	{
+		if (fillChar=='*')
+			out[-1]='*';
+		else if (fillChar!=' ')
+			out[-1]='0';
+		else if (precision==0 && strchr("13ACJLNP", edtCde)!=NULL)
+			// Codes that show a zero balance need a stop-zero-suppression
+			// character at the units digit, or an all-zero value edits to
+			// blanks. With decimals the fraction digits already force ".00".
+			out[-1]='0';
+	}
+	if (precision>0)
+	{
+		*out++='.';
+		memset(out, ' ', precision);
+		out+=precision;
+	}
+	if (edtCde>='A' && edtCde<='D')
+		strcpy(out, "CR");
+	else
+	{
+		if (edtCde>='J' && edtCde<='M')
+			*out++='-';
+		*out='\0';
+	}
+}
+
 std::string EDITC(const _ConvertDecimal &value, char editCode, char fillChar)
 {
 	int nlen=value.DigitsOf();
@@ -194,80 +327,7 @@ std::string EDITC(const _ConvertDecimal &value, char editCode, char fillChar)
 		return std::string(nlen, ' ');
 
 	char editWord[45];
-	if (editCode=='Y')
-	{
-		if (nlen==7)
-			strcpy(editWord, " 0 /  /  ");
-		else
-		{
-			strcpy(editWord, "0 /  /    ");
-			if (nlen<8)
-				editWord[nlen+(nlen-1)/2]='\0';
-		}
-	}
-	else if (editCode=='W')
-	{
-		if (nlen==5)
-			strcpy(editWord, "0 /   ");
-		else if (nlen==7)
-			strcpy(editWord, "  0 /  ");
-		else
-		{
-			strcpy(editWord, "  0 /  /  ");
-			if (nlen<8)
-			{
-				int i=nlen;
-				if (i>2)
-					i=i-2;
-				editWord[nlen+(i-1)/2]='\0';
-			}
-		}
-	}
-	else
-	{
-		char *out=editWord;
-		if (editCode>='N' && editCode<='Q')
-			*out++='-';
-		const char *comma=strchr("12ABJKNO", editCode);
-		int scale=nlen-precision;
-		int scale3=scale%3;
-		if (scale3>0)
-		{
-			memset(out, ' ', scale3);
-			out+=scale3;
-			scale-=scale3;
-		}
-		while (scale>0)
-		{
-			if (comma)
-				*out++=',';
-			memset(out, ' ', 3);
-			out+=3;
-			scale-=3;
-		}
-		if (fillChar!=' ')
-		{
-			if (out>editWord)
-				out--;
-			*out++=fillChar;
-			if (fillChar!='*')
-				*out++='0';
-		}
-		if (precision>0)
-		{
-			*out++='.';
-			memset(out, ' ', precision);
-			out+=precision;
-		}
-		if (editCode>='A' && editCode<='D')
-			strcpy(out, "CR");
-		else
-		{
-			if (editCode>='J' && editCode<='M')
-				*out++='-';
-			*out='\0';
-		}
-	}
+	editCodeToWord(editWord, editCode, fillChar, nlen, precision);
 	return EDITWRD(value, editWord);
 }
 
@@ -399,109 +459,10 @@ void RrecordPrint::print(const _ConvertDecimal &n, int col, char edtCde, char fi
 	{
 		// If the value of n is 0, then skip this entirely for edit codes that
 		// don't print a zero balance.
-		//int nlen=n.len();
-		int nlen=n.DigitsOf();
-		int precision=n.PrecisionOf();
-		//if (QXXZTOD((unsigned char *)n.overlay, nlen, precision) !=0 ||
 		if (n !=0 || strchr("2BKO4DMQZ", edtCde)==NULL)
 		{
-			// Generate appropriate edit word from edit code
 			char edtWrd[45];
-			// Generate 'W'/'Y' date edit code
-			if (edtCde=='Y')
-			{
-				if (nlen==7)
-					strcpy(edtWrd, " 0 /  /  ");
-				else
-				{
-					strcpy(edtWrd, "0 /  /    ");
-					if (nlen<8)
-						edtWrd[nlen+(nlen-1)/2]='\0';
-				}
-			}
-			else if (edtCde=='W')
-			{
-				if (nlen==5)
-					strcpy(edtWrd, "0 /   ");
-				else if (nlen==7)
-					strcpy(edtWrd, "  0 /  ");
-				else
-				{
-					strcpy(edtWrd, "  0 /  /  ");
-					if (nlen<8)
-					{
-						int i=nlen;
-						if (i>2)
-							i=i-2;
-						edtWrd[nlen+(i-1)/2]='\0';
-					}
-				}
-			}
-			else {
-				char *e=edtWrd;
-				// Add leading minus
-				if (edtCde>='N' && edtCde<='Q')
-				{
-					edtWrd[0]='-';
-					e++;
-				}
-				// Figure out if commas are needed
-			const char *comma;
-				comma=strchr("12ABJKNO", edtCde);
-				int scale=nlen-precision;
-				int scale3=scale%3;
-				if (scale3 > 0)
-				{
-					memset(e, ' ', scale3);
-					e += scale3;
-					scale -= scale3;
-				}
-				// If the length is >3, print out comma-separated 3 letter chunks
-				while (scale>0)
-				{
-					if (comma) {
-						*e=',';
-						e++;
-					}
-					memset(e, ' ', 3);
-					e += 3;
-					scale -= 3;
-				}
-				// Add asterisk or floating currency symbol
-				if (fillChar != ' ')
-				{
-					if (e>edtWrd)
-						e--;
-					*e=fillChar;
-					e++;
-					if (fillChar != '*')
-					{
-						*e='0';
-						e++;
-					}
-				}
-				// Add decimal point if needed
-				if (precision>0)
-				{
-					*e='.';
-					e++;
-					memset(e, ' ', precision);
-					e += precision;
-				}
-				// Add trailing CR
-				if (edtCde>='A' && edtCde<='D')
-					strcpy(e, "CR");
-				else
-				{
-					// Add trailing minus
-					if (edtCde>='J' && edtCde<='M')
-					{
-						*e='-';
-						e++;
-					}
-					*e='\0';
-				}
-			}
+			editCodeToWord(edtWrd, edtCde, fillChar, n.DigitsOf(), n.PrecisionOf());
 			print(n, col, edtWrd);
 		}
 	}

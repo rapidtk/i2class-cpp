@@ -52,10 +52,43 @@ static void test_edit_word()
 	Zoned<5,2> value(123.45);
 	CHECK(EDITWRD(value, "  0.  ") == "123.45");
 	CHECK(value.editwrd("  0.  ") == "123.45");
-	CHECK(value.editc('1') == "1,23.45");
+	// 3 integer digits is a single group, so edit code 1 inserts no separator.
+	CHECK(value.editc('1') == "123.45");
 	Packed<5,2> packedValue(value);
 	CHECK(packedValue.editwrd("  0.  ") == "123.45");
-	CHECK(packedValue.editc('1') == "1,23.45");
+	CHECK(packedValue.editc('1') == "123.45");
+	// 4 integer digits do span a separator position.
+	Zoned<6,2> thousands(1234.56);
+	CHECK(thousands.editc('1') == "1,234.56");
+	// 6 integer digits: separator only between the two groups, not before the first.
+	Zoned<8,2> sixDigits(123456.78);
+	CHECK(sixDigits.editc('1') == "123,456.78");
+}
+
+// The worked examples from IBM's EDTCDE reference, which pin down where the
+// digit-grouping separator does and does not belong.
+// https://www.ibm.com/docs/en/i/7.4.0?topic=e-edtcde-display-files
+static void test_edit_code_ibm_examples()
+{
+	// "PRICE 5 2 EDTCDE(J)" is documented as displaying 7 wide, as ddd.dd-
+	// -- 3 integer digits are one group, so there is no separator.
+	Zoned<5,2> price(123.45);
+	CHECK(price.editc('J') == "123.45 ");
+	Zoned<5,2> negPrice(-123.45);
+	CHECK(negPrice.editc('J') == "123.45-");
+
+	// "SALARY 8 2 EDTCDE(1)" is documented as displaying 10 wide, as ddd,ddd.dd
+	// -- 6 integer digits are two groups with a single separator between them.
+	Zoned<8,2> salary(123456.78);
+	CHECK(salary.editc('1') == "123,456.78");
+
+	// Edit code table: 1234567 with 2 decimals edits to 12,345.67 under code 1.
+	Zoned<7,2> table1(12345.67);
+	CHECK(table1.editc('1') == "12,345.67");
+
+	// Same digits with no decimals edit to 1,234,567.
+	Zoned<7,0> table2(1234567);
+	CHECK(table2.editc('1') == "1,234,567");
 }
 
 static void checkEditCode(Zoned<7,2> value, int col, char edtCde, char fillChar, const char *expectedTail)
@@ -86,6 +119,7 @@ static void test_edit_code()
 int main()
 {
 	test_edit_word();
+	test_edit_code_ibm_examples();
 	test_edit_code();
 
 	if (failures == 0)

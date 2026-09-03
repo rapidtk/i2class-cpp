@@ -1,0 +1,14 @@
+                        Sales Register                     Page    1
+Run Date      09/03/26
+
+Item   Description             Qty          Amount          Extended
+----   --------------------  -----  --------------    --------------
+A100   Widget, Large            12       1,234.56         14,814.72 
+B205   Gear Assembly             3         899.00          2,697.00 
+C310   Bracket, Stainless      250          17.25          4,312.50 
+D415   Returned Goods            5         320.75-         1,603.75 
+E520   No Charge Sample          1            .00               .00 
+
+       GRAND TOTAL                                      $23,427.97  
+
+END OF REPORT

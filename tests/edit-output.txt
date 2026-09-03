@@ -1,0 +1,196 @@
+                        Edit Code / Edit Word Reference
+
+Edit codes (EDTCDE), no fill character
+
+Code   12345.67         1234567          -.125            -125             0.00             0
+----   ---------------  ---------------  ---------------  ---------------  ---------------  ---------------
+1      [12,345.67]      [1,234,567]      [     .125]      [125]            [     .00]       [      0]
+2      [12,345.67]      [1,234,567]      [     .125]      [125]            [      ]         [      ]
+3      [12345.67]       [1234567]        [    .125]       [125]            [    .00]        [     0]
+4      [12345.67]       [1234567]        [    .125]       [125]            [      ]         [      ]
+A      [12,345.67  ]    [1,234,567  ]    [     .125CR]    [125CR]          [     .00  ]     [      0  ]
+B      [12,345.67  ]    [1,234,567  ]    [     .125CR]    [125CR]          [      ]         [      ]
+C      [12345.67  ]     [1234567  ]      [    .125CR]     [125CR]          [    .00  ]      [     0  ]
+D      [12345.67  ]     [1234567  ]      [    .125CR]     [125CR]          [      ]         [      ]
+J      [12,345.67 ]     [1,234,567 ]     [     .125-]     [125-]           [     .00 ]      [      0 ]
+K      [12,345.67 ]     [1,234,567 ]     [     .125-]     [125-]           [      ]         [      ]
+L      [12345.67 ]      [1234567 ]       [    .125-]      [125-]           [    .00 ]       [     0 ]
+M      [12345.67 ]      [1234567 ]       [    .125-]      [125-]           [      ]         [      ]
+N      [ 12,345.67]     [ 1,234,567]     [     -.125]     [-125]           [      .00]      [       0]
+O      [ 12,345.67]     [ 1,234,567]     [     -.125]     [-125]           [      ]         [      ]
+P      [ 12345.67]      [ 1234567]       [    -.125]      [-125]           [     .00]       [      0]
+Q      [ 12345.67]      [ 1234567]       [    -.125]      [-125]           [      ]         [      ]
+W      [2345/67]        [2345/67]        [  01/25]        [125]            [  00/00]        [  00/00]
+Y      [123/45/67]      [123/45/67]      [ 00/01/25]      [12/5]           [00/00/00]       [00/00/00]
+Z      [12345.67]       [1234567]        [    .125]       [125]            [      ]         [      ]
+X      [1234567]        [1234567]        [    125]        [125]            [    00]         [      ]
+
+
+Edit codes with asterisk fill, EDTCDE(c *)
+
+Code   12345.67         1234567          -.125            -125             0.00             0
+----   ---------------  ---------------  ---------------  ---------------  ---------------  ---------------
+1      [12,345.67]      [1,234,567]      [*****.125]      [125]            [*****.**]       [*******]
+2      [12,345.67]      [1,234,567]      [*****.125]      [125]            [      ]         [      ]
+3      [12345.67]       [1234567]        [****.125]       [125]            [****.**]        [******]
+4      [12345.67]       [1234567]        [****.125]       [125]            [      ]         [      ]
+A      [12,345.67  ]    [1,234,567  ]    [*****.125CR]    [125CR]          [*****.**  ]     [*******  ]
+B      [12,345.67  ]    [1,234,567  ]    [*****.125CR]    [125CR]          [      ]         [      ]
+C      [12345.67  ]     [1234567  ]      [****.125CR]     [125CR]          [****.**  ]      [******  ]
+D      [12345.67  ]     [1234567  ]      [****.125CR]     [125CR]          [      ]         [      ]
+J      [12,345.67 ]     [1,234,567 ]     [*****.125-]     [125-]           [*****.** ]      [******* ]
+K      [12,345.67 ]     [1,234,567 ]     [*****.125-]     [125-]           [      ]         [      ]
+L      [12345.67 ]      [1234567 ]       [****.125-]      [125-]           [****.** ]       [****** ]
+M      [12345.67 ]      [1234567 ]       [****.125-]      [125-]           [      ]         [      ]
+N      [ 12,345.67]     [ 1,234,567]     [ ****-.125]     [-125]           [ *****.**]      [ *******]
+O      [ 12,345.67]     [ 1,234,567]     [ ****-.125]     [-125]           [      ]         [      ]
+P      [ 12345.67]      [ 1234567]       [ ***-.125]      [-125]           [ ****.**]       [ ******]
+Q      [ 12345.67]      [ 1234567]       [ ***-.125]      [-125]           [      ]         [      ]
+
+
+Edit codes with floating currency, EDTCDE(c $)
+
+Code   12345.67         1234567          -.125            -125             0.00             0
+----   ---------------  ---------------  ---------------  ---------------  ---------------  ---------------
+1      [$12,345.67]     [$1,234,567]     [$    0.125]     [$125]           [$    0.00]      [$      0]
+2      [$12,345.67]     [$1,234,567]     [$    0.125]     [$125]           [      ]         [      ]
+3      [$12345.67]      [$1234567]       [$   0.125]      [$125]           [$   0.00]       [$     0]
+4      [$12345.67]      [$1234567]       [$   0.125]      [$125]           [      ]         [      ]
+A      [$12,345.67  ]   [$1,234,567  ]   [$    0.125CR]   [$125CR]         [$    0.00  ]    [$      0  ]
+B      [$12,345.67  ]   [$1,234,567  ]   [$    0.125CR]   [$125CR]         [      ]         [      ]
+C      [$12345.67  ]    [$1234567  ]     [$   0.125CR]    [$125CR]         [$   0.00  ]     [$     0  ]
+D      [$12345.67  ]    [$1234567  ]     [$   0.125CR]    [$125CR]         [      ]         [      ]
+J      [$12,345.67 ]    [$1,234,567 ]    [$    0.125-]    [$125-]          [$    0.00 ]     [$      0 ]
+K      [$12,345.67 ]    [$1,234,567 ]    [$    0.125-]    [$125-]          [      ]         [      ]
+L      [$12345.67 ]     [$1234567 ]      [$   0.125-]     [$125-]          [$   0.00 ]      [$     0 ]
+M      [$12345.67 ]     [$1234567 ]      [$   0.125-]     [$125-]          [      ]         [      ]
+N      [ $12,345.67]    [ $1,234,567]    [-$    0.125]    [-$125]          [ $    0.00]     [ $      0]
+O      [ $12,345.67]    [ $1,234,567]    [-$    0.125]    [-$125]          [      ]         [      ]
+P      [ $12345.67]     [ $1234567]      [-$   0.125]     [-$125]          [ $   0.00]      [ $     0]
+Q      [ $12345.67]     [ $1234567]      [-$   0.125]     [-$125]          [      ]         [      ]
+
+
+Digit grouping, edit code 1, integer widths 1-9
+
+Digits     Displayed as        Groups of 3
+------     ----------------    -----------
+1          [5]                 partial
+2          [45]                partial
+3          [345]               exact
+4          [2,345]             partial
+5          [12,345]            partial
+6          [123,456]           exact
+7          [1,234,567]         partial
+8          [12,345,678]        partial
+9          [123,456,789]       exact
+
+
+DDS examples from the EDTCDE reference
+
+Field      Definition              Documented    Width   Displayed as
+------     ----------------------  -----------   -----   ------------------
+PRICE      5  2   EDTCDE(J)        ddd.dd-       7       [123.45-]
+SALES      7  2   EDTCDE(K $)      $dd,ddd.dd-   11      [$12,345.67-]
+SALARY     8  2   EDTCDE(1 *)      ddd,ddd.dd    10      [123,456.78]
+
+
+Edit words (EDTWRD)
+
+Edit word          Field   Value        Displayed as         Note
+-----------------  -----   ----------   ------------------   ---------------------------------
+[       ]          7,0     1234567      [1234567]            all blanks, no stop
+[       ]          7,0     35           [     35]            all blanks, leading zeros gone
+[      0]          7,0     35           [     35]            stop at units
+[      0]          7,0     0            [      0]            stop shows a zero balance
+[     0 ]          7,0     0            [     00]            stop one left of units
+[  ,  0.  ]        7,2     12345.67     [12,345.67]          commas and decimal point
+[  ,  0.  ]        7,2     0.07         [     0.07]          separators left of digits blanked
+[  ,  0.  ]        7,2     0.00         [     0.00]          zero balance
+[  ,  0.  CR]      7,2     -12345.67    [12,345.67CR]        CR status, negative
+[  ,  0.  CR]      7,2     12345.67     [12,345.67  ]        CR status, positive
+[  ,  0.  -]       7,2     -12345.67    [12,345.67-]         minus status, negative
+[  ,  0.  -]       7,2     12345.67     [12,345.67 ]         minus status, positive
+[       -]         7,0     -35          [     35-]           minus, no stop character
+[  ,  *.  ]        7,2     1357.92      [*1,357.92]          asterisk fill
+[  ,  *.  ]        7,2     0.00         [******.**]          asterisk fill, zero balance
+[      *]          7,0     35           [*****35]            asterisk fill, no decimals
+[    $0.  ]        7,2     12345.67     [$12345.67]          floating $, reference example
+[    $0.  ]        7,2     0.05         [    $0.05]          floating $, follows the digits
+[    $0.  ]        7,2     0.00         [    $0.00]          floating $, zero balance
+[$    0.  ]        7,2     12345.67     [$12345.67]          fixed $, leftmost position
+[$    0.  ]        7,2     0.05         [$    0.05]          fixed $ stays put
+[$    0.  ]        7,2     0.00         [$    0.00]          fixed $, zero balance
+[  ,  $0.  ]       7,2     12345.67     [$1,2345.67]         floating $, no room -- see (h)
+[  ,  $0.  ]       7,2     0.05         [     $0.05]         floating $ with commas, short value
+[   &  &  ]        7,0     1234567      [123 45 67]          ampersand blanks
+[  0&  ]           5,0     12345        [123 45]             ampersand mid-body
+[  ,  0.  &NET]    7,2     12345.67     [12,345.67 NET]      trailing constant
+[  ,  0.  CR&NET]  7,2     -12345.67    [12,345.67CR NET]    CR then constant
+[  ,  0.  CR&NET]  7,2     12345.67     [12,345.67   NET]    constant prints, CR does not
+[    0&DOLLARS]    5,0     12345        [12345 DOLLARS]      word constant
+[  0/  /  ]        7,0     1230576      [123/05/76]          date-style constants
+[0 /  /  ]         6,0     93076        [09/30/76]           leading constant after a stop
+
+
+Deviations from the reference, and open questions:
+
+FIXED, having been caught by this report:
+
+  a. A '$' in the leftmost position of an edit word is a fixed currency
+     symbol and prints in place. It previously vanished entirely.
+
+  b. EDTCDE(c $) emitted the symbol next to the zero-suppression stop,
+     mid-number, where it displaced the digit grouping: the reference's
+     own SALES example rendered as $1,2345.67- instead of $12,345.67-.
+     The symbol now reserves the leftmost position and is not a digit
+     position, so it cannot shift the commas.
+
+  c. Edit codes N-Q put the minus in front, and the reference shows it
+     against the first significant digit (-.125). It was pinned to the
+     far left instead (-     .125), so it now floats like the currency
+     symbol, falling back to the coded position when the digits fill the
+     field and there is nowhere to float to.
+
+  d. Asterisk protection left the zero-suppression stop showing a '0', so
+     a zero balance edited to ******0 rather than a full field of
+     asterisks as the reference requires.
+
+  e. Codes 1/3/A/C/J/L/N/P showed blanks instead of 0 for a zero balance
+     in a field with no decimals.
+
+WHERE THE REFERENCE LOOKS WRONG:
+
+  f. EDTWRD gives the floating currency example as EDTWRD('    $0. '),
+     which is only 6 digit positions for a 7 digit field. The trailing
+     blank is lost in the text rendering; it has to be '    $0.  '.
+     This report uses the corrected form.
+
+OPEN QUESTIONS, worth confirming against a real system:
+
+  g. EDTCDE(c $) is called a floating symbol, but the only worked example
+     is full width, where floating and fixed are indistinguishable. We
+     reserve the leftmost position, which reproduces that example exactly;
+     a short value therefore renders $     0.05 rather than      $0.05.
+     Which is correct is not documented.
+
+  h. A hand-written edit word that codes the symbol next to the stop, as
+     the EDTWRD rules describe, has no spare position for it once the
+     value fills every digit position -- '  ,  $0.  ' on 12345.67 has to
+     put the symbol somewhere and there is no room to the left. The
+     reference's own rule that at least one leading zero is suppressed
+     suggests such a word is simply not meant to be used at full width.
+
+  i. A floating minus and a floating currency symbol would want the same
+     position. EDTCDE(N $) therefore leaves the minus at the far left.
+     The reference does not show this combination.
+
+  k. With asterisk protection and a floating minus, the minus leaves its
+     coded position blank rather than filled -- see the N and P rows of the
+     asterisk grid, which read ' ****-.125'. Whether that leading position
+     should be an asterisk is not documented.
+
+  j. Edit codes W and Y build their date pattern from the digit count
+     alone, so a field whose width is not a date shape gives odd output
+     (see the W and Y rows). The reference does not say what should
+     happen there.
+END OF REPORT

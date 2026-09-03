@@ -4,6 +4,7 @@
 // negative values previously silently dropped their last digit -- see decodeSign() call
 // site in xxcvt.cpp's QXXZTOI).
 #include <cstdio>
+#include <cstring>
 #include "RPGTypes.h"
 
 int main()
@@ -21,6 +22,26 @@ int main()
 	Zoned<9,0> c(int(-123456789));
 	if (c.toInt() != -123456789) { std::printf("FAIL: Zoned<9,0> int(-123456789) -> %d\n", c.toInt()); ++failures; }
 	else std::printf("PASS: Zoned<9,0> int(-123456789) round-trip via QXXITOZ\n");
+
+	// toInt() goes through QXXZTOI, but every arithmetic/printing path goes
+	// through zonedToChar()/QXXZTOD instead. With fraction == 0 that used to
+	// decode the sign nibble off the '.' rather than the last digit, so any
+	// negative whole-number Zoned read back as 0.
+	Zoned<5,0> e(int(-5));
+	if ((double)e != -5.0) { std::printf("FAIL: Zoned<5,0> int(-5) -> %f (QXXZTOD)\n", (double)e); ++failures; }
+	else std::printf("PASS: Zoned<5,0> int(-5) round-trip via QXXZTOD\n");
+
+	if (std::strcmp(zonedToChar((const_byte_ptr)e.overlay, 5, 0), "-00005.") != 0) {
+		std::printf("FAIL: zonedToChar(Zoned<5,0>(-5)) -> %s\n",
+			zonedToChar((const_byte_ptr)e.overlay, 5, 0));
+		++failures;
+	}
+	else std::printf("PASS: zonedToChar renders fraction==0 negative correctly\n");
+
+	// Signed arithmetic on a fraction == 0 operand.
+	Zoned<11,2> f = Zoned<9,2>(-320.75) * Zoned<5,0>(int(-5));
+	if ((double)f != 1603.75) { std::printf("FAIL: -320.75 * -5 -> %f\n", (double)f); ++failures; }
+	else std::printf("PASS: negative * negative (fraction==0 operand) -> 1603.75\n");
 
 	Zoned<7,3> d = -12.345;
 	if ((double)d != -12.345) { std::printf("FAIL: Zoned<7,3> -12.345 -> %f\n", (double)d); ++failures; }

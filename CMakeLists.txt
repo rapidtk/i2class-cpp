@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # The stable, portable core (see COMPILATION_STATUS.md) -- parsers/, legacy/, benchmarks/,
-# and the header-only backend stubs (rfile400/rfileodbc/rfileado/rfilelpt) are excluded.
+# and the header-only backend stubs (rfile400/rfileodbc/rfileado) are excluded.
 add_library(i2class SHARED
 	src/RPGTypes.cpp
 	src/compat/xxcvt.cpp
@@ -13,6 +13,7 @@ add_library(i2class SHARED
 	src/as400.cpp
 	src/compat/stdlib.cpp
 	src/file/rfile.cpp
+	src/file/rfilelpt.cpp
 )
 
 target_include_directories(i2class PUBLIC
@@ -149,6 +150,32 @@ add_test(NAME rpg_bif_check COMMAND rpg_bif_check)
 add_executable(i2compat_fallback_check tests/i2compat_fallback_check.cpp)
 target_include_directories(i2compat_fallback_check PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_test(NAME i2compat_fallback_check COMMAND i2compat_fallback_check)
+
+# Step 1b: Date/time regression tests
+add_executable(date_check tests/date_check.cpp)
+target_link_libraries(date_check PRIVATE i2class)
+add_test(NAME date_check COMMAND date_check)
+
+# Step 1c: Data area (Dtaara) regression tests
+add_executable(dtaa_check tests/dtaa_check.cpp)
+target_link_libraries(dtaa_check PRIVATE i2class)
+target_compile_definitions(dtaa_check PRIVATE
+	I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+add_test(NAME dtaa_check COMMAND dtaa_check)
+
+# Step 1d: Printer file (RrecordLPT) regression tests
+add_executable(printer_check tests/printer_check.cpp)
+target_link_libraries(printer_check PRIVATE i2class)
+target_compile_definitions(printer_check PRIVATE
+	I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+add_test(NAME printer_check COMMAND printer_check)
+
+# Edit code / edit word reference report, checked against IBM's EDTCDE tables.
+add_executable(edit_check tests/edit_check.cpp)
+target_link_libraries(edit_check PRIVATE i2class)
+target_compile_definitions(edit_check PRIVATE
+	I2CLASS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+add_test(NAME edit_check COMMAND edit_check)
 
 if(ODBC_FOUND)
 	add_executable(rfileodbc_custmast_check tests/rfileodbc_custmast_check.cpp)

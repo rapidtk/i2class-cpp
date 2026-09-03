@@ -221,7 +221,6 @@ FmtDate<8>	YYMD("%Y%m%d");
 
 FmtDate<6>	XUDATE(_DATFMT);
 FmtDate<8>	XDATE(_DATFMT);
-
 ////////////////////////////////////////////////////////////////////////////////
 // Global Indicator space
 /// RPG's 99 numbered indicators (*IN01-*IN99), a global array of boolean flags
@@ -354,17 +353,25 @@ zstring zonedToChar(const_byte_ptr zptr, int digits, int fraction)
 	int precision = digits - fraction;
 	memcpy(bufPtr, zptr, precision);
 	bufPtr += precision;
+	// Track where the sign-bearing (last) digit actually landed in buf. With
+	// fraction==0 there are no digits after the '.', so the last digit is the
+	// one just copied -- advancing by `fraction - 1` as if there were would
+	// step *backwards* onto the '.' and decode that instead, losing the sign.
+	char *lastDigit = bufPtr - 1;
 	// Add '.' to buffer
 	*bufPtr='.';
 	bufPtr++;
 	// Copy in everything to the right of the decimal point
-	memcpy(bufPtr, zptr + precision, fraction);
-	// Decode the sign of the last digit if negative  
-	bufPtr += fraction - 1;
+	if (fraction > 0)
+	{
+		memcpy(bufPtr, zptr + precision, fraction);
+		lastDigit = bufPtr + fraction - 1;
+		bufPtr += fraction;
+	}
+	// Decode the sign of the last digit if negative
 	if (!positive)
-	   decodeSign(reinterpret_cast<byte_ptr>(bufPtr));
+	   decodeSign(reinterpret_cast<byte_ptr>(lastDigit));
 	// Null terminate the string
-    bufPtr++;
     *bufPtr='\0';
 	return buf;
 }
