@@ -40,13 +40,7 @@ public:
 	double getOrdersValue() { return readDouble(ORDVAL); }
 	// Exact-decimal path (see RrecordODBC::readDecimal()) -- no binary floating-point
 	// round-trip, unlike getOrdersValue() above.
-	double getOrdersValueExact()
-	{
-		Zoned<9,2> z;
-		if (!readDecimal(ORDVAL, z))
-			return 0.0;
-		return (double)(long double)z;
-	}
+	bool getOrdersValueExact(Zoned<9,2> &dest) { return readDecimal(ORDVAL, dest); }
 };
 
 int main()
@@ -98,17 +92,23 @@ int main()
 		openedExact = false;
 	}
 	CHECK(openedExact);
-	double totalExact = 0.0;
+	// Accumulated as a decimal, and compared as exact digits -- converting back to
+	// double and comparing with a tolerance would not test what this path is for.
+	Zoned<11,2> totalExact(0);
 	int rowCountExact = 0;
 	while (custmastExact.read())
 	{
-		totalExact += recExact.getOrdersValueExact();
+		Zoned<9,2> ordValue;
+		if (recExact.getOrdersValueExact(ordValue))
+			totalExact = totalExact + ordValue;
 		++rowCountExact;
 	}
 	custmastExact.close();
 
 	CHECK(rowCountExact == 3);
-	CHECK(totalExact > 60145.75 && totalExact < 60145.77);
+	// 5299.99 + 50328.00 + 4517.77, compared as an exact decimal
+	Zoned<11,2> expectedExact(__D("60145.76"));
+	CHECK(totalExact == expectedExact);
 
 	if (failures == 0)
 	{

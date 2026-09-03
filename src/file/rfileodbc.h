@@ -58,7 +58,7 @@ public:
 		char buf[MAX_DECIMAL_DIGITS + 3];
 		if (!readDecimal(columnNumber, buf, sizeof(buf)))
 			return false;
-		zonedFromChar(dest.overlay, sz, precision, buf);
+		zonedFromChar(reinterpret_cast<byte_ptr>(dest.overlay), sz, precision, buf);
 		return true;
 	}
 protected:
