@@ -150,6 +150,8 @@ public:
 
 std::string EDITWRD(const _ConvertDecimal &value, czstring editWord);
 std::string EDITC(const _ConvertDecimal &value, char editCode, char fillChar=' ');
+std::string half_adjust_text(czstring value, int sourceDigits, int sourcePrecision,
+	int targetDigits, int targetPrecision);
 
 const char OFF='0';
 const char ON='1';
@@ -1226,6 +1228,12 @@ public:
 		{ return EDITWRD(*this, editWord); }
 	std::string editc(char editCode, char fillChar=' ') const
 		{ return EDITC(*this, editCode, fillChar); }
+	template <int decimalPlaces>
+	Zoned<sz, decimalPlaces> round() const;
+	template <int targetDigits, int targetPrecision>
+	Zoned<targetDigits, targetPrecision> dech() const;
+	int inth() const;
+	unsigned int unsh() const;
 
 	// Move a value to the left-most bytes of the number
 	Zoned<sz, precision>& movel(const FixedTemp &tStr)
@@ -1233,6 +1241,7 @@ public:
 		memcpy(overlay, tStr.overlay, MIN(sz, tStr.len()));
 		return *this;
 	}
+
 #if !defined(NO_PACKED)
 	Zoned<sz, precision>& movel(const _ConvertDecimal p)
 	{
@@ -1280,7 +1289,7 @@ public:
 #if defined(NO_PACKED)
 	// Do assignment from a decimal literal, digit for digit (never via double)
 	void assign(const DecimalConst &d)
-		{ zonedFromChar(overlay, sz, precision, d.str()); }
+		{ zonedFromChar((byte_ptr)overlay, sz, precision, d.str()); }
 #endif
 
 //protected:
@@ -1317,6 +1326,43 @@ private:
 		return cmp;
 	}
 };
+
+template <int sz, int precision>
+template <int decimalPlaces>
+inline Zoned<sz, decimalPlaces> Zoned<sz, precision>::round() const
+{
+	std::string rounded = half_adjust_text(zonedToChar((const_byte_ptr)overlay, sz, precision),
+		sz, precision, sz, decimalPlaces);
+	Zoned<sz, decimalPlaces> result;
+	zonedFromChar((byte_ptr)result.overlay, sz, decimalPlaces, rounded.c_str());
+	return result;
+}
+
+template <int sz, int precision>
+template <int targetDigits, int targetPrecision>
+inline Zoned<targetDigits, targetPrecision> Zoned<sz, precision>::dech() const
+{
+	std::string rounded = half_adjust_text(zonedToChar((const_byte_ptr)overlay, sz, precision),
+		sz, precision, targetDigits, targetPrecision);
+	Zoned<targetDigits, targetPrecision> result;
+	zonedFromChar((byte_ptr)result.overlay, targetDigits, targetPrecision, rounded.c_str());
+	return result;
+}
+
+template <int sz, int precision>
+inline int Zoned<sz, precision>::inth() const
+{
+	return round<0>().toInt();
+}
+
+template <int sz, int precision>
+inline unsigned int Zoned<sz, precision>::unsh() const
+{
+	Zoned<sz, 0> rounded = round<0>();
+	if (!isdigit(rounded.overlay[sz - 1]))
+		throw CI2Err();
+	return static_cast<unsigned int>(rounded.toInt());
+}
 
 /// @brief Stream a Zoned as exact decimal text.
 ///
@@ -1494,6 +1540,12 @@ public:
 		return EDITC(*this, editCode, fillChar);
 #endif
 	}
+	template <int decimalPlaces>
+	Packed<sz, decimalPlaces> round() const;
+	template <int targetDigits, int targetPrecision>
+	Packed<targetDigits, targetPrecision> dech() const;
+	int inth() const;
+	unsigned int unsh() const;
 
 	/// @brief The native packed representation, for interop with bcd.h on IBM i.
 	const Backing &toPacked() const		{ return overlay; }
@@ -1544,6 +1596,36 @@ public:
 private:
 	void assignInt(int i);
 };
+
+template <int sz, int precision>
+template <int decimalPlaces>
+inline Packed<sz, decimalPlaces> Packed<sz, precision>::round() const
+{
+	Packed<sz, decimalPlaces> result;
+	result.fromZoned(toZoned().template round<decimalPlaces>());
+	return result;
+}
+
+template <int sz, int precision>
+template <int targetDigits, int targetPrecision>
+inline Packed<targetDigits, targetPrecision> Packed<sz, precision>::dech() const
+{
+	Packed<targetDigits, targetPrecision> result;
+	result.fromZoned(toZoned().template dech<targetDigits, targetPrecision>());
+	return result;
+}
+
+template <int sz, int precision>
+inline int Packed<sz, precision>::inth() const
+{
+	return round<0>().toInt();
+}
+
+template <int sz, int precision>
+inline unsigned int Packed<sz, precision>::unsh() const
+{
+	return round<0>().toZoned().unsh();
+}
 
 template <int sz, int precision>
 inline int Packed<sz, precision>::toInt() const

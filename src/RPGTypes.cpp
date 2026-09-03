@@ -2,10 +2,68 @@
 #include "rpgtypes.h"
 #include "rglobal.h"
 
+#include <string>
+
 #ifdef __OS400__
 #include "recio.h"
 #include "xxfdbk.h"
 #endif
+
+std::string half_adjust_text(czstring value, int sourceDigits, int sourcePrecision,
+	int targetDigits, int targetPrecision)
+{
+	std::string digits;
+	bool negative = value[0] == '-';
+	for (const char *p = value; *p != '\0'; ++p)
+		if (*p >= '0' && *p <= '9')
+			digits += *p;
+	while (static_cast<int>(digits.size()) < sourceDigits)
+		digits.insert(digits.begin(), '0');
+
+	int discarded = sourcePrecision - targetPrecision;
+	if (discarded > 0 && discarded <= static_cast<int>(digits.size()))
+	{
+		int firstDiscarded = static_cast<int>(digits.size()) - discarded;
+		bool adjust = digits[firstDiscarded] >= '5';
+		digits.erase(firstDiscarded);
+		if (adjust)
+		{
+			for (int i = static_cast<int>(digits.size()) - 1; i >= 0; --i)
+			{
+				if (digits[i] == '9')
+					digits[i] = '0';
+				else
+				{
+					++digits[i];
+					break;
+				}
+			}
+		}
+	}
+	else if (discarded < 0)
+		digits.append(static_cast<std::size_t>(-discarded), '0');
+
+	while (static_cast<int>(digits.size()) < targetDigits)
+		digits.insert(digits.begin(), '0');
+	if (static_cast<int>(digits.size()) > targetDigits)
+		digits = digits.substr(digits.size() - targetDigits);
+
+	std::string result;
+	if (negative)
+		result += '-';
+	int integerDigits = targetDigits - targetPrecision;
+	if (integerDigits <= 0)
+		result += '0';
+	else
+		result.append(digits, 0, static_cast<std::size_t>(integerDigits));
+	if (targetPrecision > 0)
+	{
+		result += '.';
+		result.append(digits, static_cast<std::size_t>(integerDigits),
+			static_cast<std::size_t>(targetPrecision));
+	}
+	return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
