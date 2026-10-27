@@ -289,7 +289,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 - **[iZlib-cpp-fork](https://github.com/universal-enterprise/iZlib-cpp-fork.git)** — the fork of this repository where that generalization happens; this repo (`i2class-cpp`) stays the IBM i/RPG-specific, backward-compatible core
 - **[i2class-java](https://github.com/rapidtk/i2class-java)**: Java equivalent of this library (proof-of-concept, legacy)
 - **iz2class**: Intermediate representation and transpilation tools for multi-language support
-- **IBM i C++ Documentation**: GENCSRC and native C++ file I/O patterns
+- **IBM i C++ Documentation**: [GENCSRC](https://www.ibm.com/docs/en/i/7.4.0?topic=g-generate-cc-source) and native C [record-oriented I/O functions](https://www.ibm.com/docs/en/i/7.4.0?topic=files-ile-c-record-io-functions)
 
 ---
 
