@@ -287,7 +287,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 - **[Universal Enterprise](https://github.com/universal-enterprise)** — the broader framework this project feeds into, generalizing beyond IBM i/RPG to mainframe COBOL and PL/I
 - **[iZlib-cpp-fork](https://github.com/universal-enterprise/iZlib-cpp-fork.git)** — the fork of this repository where that generalization happens; this repo (`i2class-cpp`) stays the IBM i/RPG-specific, backward-compatible core
-- **i2class-java**: Java equivalent of this library (proof-of-concept, legacy)
+- **[i2class-java](https://github.com/rapidtk/i2class-java)**: Java equivalent of this library (proof-of-concept, legacy)
 - **iz2class**: Intermediate representation and transpilation tools for multi-language support
 - **IBM i C++ Documentation**: GENCSRC and native C++ file I/O patterns
 
